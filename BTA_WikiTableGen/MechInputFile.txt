@@ -1,0 +1,6 @@
+﻿Name
+BaseTonnage
+FreeTonage
+Walk
+Sprint
+Jump
