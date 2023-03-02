@@ -77,7 +77,7 @@ class Program
         List<FoundFile> files = SearchFiles(mechModel, filePath);
 
         Console.WriteLine("");
-        Console.WriteLine("Found the following files: ");
+        Console.WriteLine("Found the following files for " + mechModel + ": ");
         foreach (FoundFile file in files)
         {
             Console.WriteLine(file.fileName);
@@ -147,7 +147,7 @@ class Program
         using StreamWriter outputFile = new("MechTableOutput.txt", append: true);
 
         outputFile.WriteLine(OutputLine(mechModel));
-        outputFile.WriteLine(OutputLine(mechTonnage));
+        outputFile.WriteLine(OutputLine(mechTonnage + "t"));
         outputFile.WriteLine(OutputLine(role));
         outputFile.WriteLine(OutputLine(ballisticHp));
         outputFile.WriteLine(OutputLine(energyHp));
@@ -160,8 +160,8 @@ class Program
         outputFile.WriteLine(OutputLine(mechStructure));
         outputFile.WriteLine(OutputLine(mechArmor));
         outputFile.WriteLine(OutputLine("None"));
-        outputFile.WriteLine(OutputLine(baseTons));
-        outputFile.WriteLine(OutputLine(freeTons));
+        outputFile.WriteLine(OutputLine(baseTons + "t"));
+        outputFile.WriteLine(OutputLine(freeTons + "t"));
         outputFile.WriteLine(OutputLine(walk));
         outputFile.WriteLine(OutputLine(sprint));
         outputFile.WriteLine(OutputLine(jump));
