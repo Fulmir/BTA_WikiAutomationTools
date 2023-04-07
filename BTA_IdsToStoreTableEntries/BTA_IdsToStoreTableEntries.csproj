@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="MechInputFile.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="ListOfIds.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
