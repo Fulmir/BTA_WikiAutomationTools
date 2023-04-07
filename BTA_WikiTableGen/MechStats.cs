@@ -35,16 +35,16 @@ namespace BTA_WikiTableGen
         public double WalkSpeed { get; set; } = 0;
         public double RunSpeed { get; set; } = 0;
         public double JumpDistance { get; set; } = 0;
-        public string ChassisDefFile { get; set; } = string.Empty;
-        public string MechDefFile { get; set; } = string.Empty;
+        public JsonDocument ChassisDefFile { get; set; }
+        public JsonDocument MechDefFile { get; set; }
         public List<EquipmentData> FixedGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
 
-        public MechStats(string mechModel, string targetFolder)
+        public MechStats(string mechModel, string modsFolder)
         {
             MechModel = mechModel;
-            
-            List<BasicFileData> files = ModJsonHandler.SearchFiles(targetFolder, @"*_" + MechModel.Replace(' ', '_') + ".json");
+
+            List<BasicFileData> files = ModJsonHandler.SearchFiles(modsFolder, @"*_" + MechModel.Replace(' ', '_') + ".json");
 
             if (files.Count > 2 || files.Count < 2)
             {
@@ -57,18 +57,33 @@ namespace BTA_WikiTableGen
                 Console.WriteLine("");
             }
 
-            foreach(BasicFileData file in files)
+            foreach (BasicFileData file in files)
             {
                 if (file.FileName.StartsWith("mechdef"))
                 {
-                    MechDefFile = new StreamReader(file.Path).ReadToEnd();
+                    MechDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
                 } else if (file.FileName.StartsWith("chassisdef"))
                 {
-                    ChassisDefFile = new StreamReader(file.Path).ReadToEnd();
+                    ChassisDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
                 }
             }
 
-            MechGearHandler gearHandler = new MechGearHandler(targetFolder);
+            CalculateMechStats(modsFolder);
+        }
+
+        public MechStats(string modsFolder, string variantName, BasicFileData chassisDef, BasicFileData mechDef)
+        {
+            MechModel = variantName;
+
+            ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
+            MechDefFile = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
+
+            CalculateMechStats(modsFolder);
+        }
+
+        private void CalculateMechStats(string modsFolder)
+        {
+            MechGearHandler gearHandler = new MechGearHandler(modsFolder);
 
             GetFixedGearList(gearHandler);
 
@@ -86,7 +101,7 @@ namespace BTA_WikiTableGen
 
             CoreTonnage = MechTonnageCalculator.GetCoreWeight(this);
 
-            if(!GyroTypeId.Contains("Omni"))
+            if (!GyroTypeId.Contains("Omni"))
                 BareTonnage = MechTonnageCalculator.GetBareWeight(this);
         }
 
@@ -264,9 +279,7 @@ namespace BTA_WikiTableGen
 
         private void GetFixedGearList(MechGearHandler gearHandler)
         {
-            JsonDocument GearJsonDoc = JsonDocument.Parse(ChassisDefFile);
-
-            if (GearJsonDoc.RootElement.TryGetProperty("FixedEquipment", out JsonElement fixedEquipment))
+            if (ChassisDefFile.RootElement.TryGetProperty("FixedEquipment", out JsonElement fixedEquipment))
                 foreach (JsonElement gear in fixedEquipment.EnumerateArray())
                 {
                     if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
@@ -279,9 +292,7 @@ namespace BTA_WikiTableGen
 
         private void GetBaseGearList(MechGearHandler gearHandler)
         {
-            JsonDocument GearJsonDoc = JsonDocument.Parse(MechDefFile);
-
-            if (GearJsonDoc.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
+            if (MechDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
                 foreach (JsonElement gear in gearInventory.EnumerateArray())
                 {
                     if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
@@ -294,8 +305,7 @@ namespace BTA_WikiTableGen
 
         private void GetUnitTonnage()
         {
-            JsonDocument GearJsonDoc = JsonDocument.Parse(ChassisDefFile);
-            if (GearJsonDoc.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
+            if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
                 MechTonnage = tonnage.GetInt32();
             else
                 Console.WriteLine("FAILURE TO GET TONNAGE");
@@ -303,8 +313,7 @@ namespace BTA_WikiTableGen
 
         private void GetUnitStockRole()
         {
-            JsonDocument GearJsonDoc = JsonDocument.Parse(ChassisDefFile);
-            if (GearJsonDoc.RootElement.TryGetProperty("StockRole", out JsonElement role))
+            if (ChassisDefFile.RootElement.TryGetProperty("StockRole", out JsonElement role))
                 Role = role.ToString();
             else
                 Console.WriteLine("FAILURE TO GET STOCK ROLE");
@@ -378,9 +387,7 @@ namespace BTA_WikiTableGen
 
         private void CountWeaponHardpoints()
         {
-            JsonDocument chassisDef = JsonDocument.Parse(ChassisDefFile);
-
-            foreach(var location in chassisDef.RootElement.GetProperty("Locations").EnumerateArray())
+            foreach(var location in ChassisDefFile.RootElement.GetProperty("Locations").EnumerateArray())
             {
                 foreach(var hardpoint in location.GetProperty("Hardpoints").EnumerateArray())
                 {

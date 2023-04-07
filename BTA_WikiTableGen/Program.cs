@@ -23,12 +23,12 @@ class Program
         Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
         Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
         Console.Write(":");
-        string filePath = Console.ReadLine() ?? "";
-        if (string.IsNullOrEmpty(filePath))
-            filePath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
+        string modsFolder = Console.ReadLine() ?? "";
+        if (string.IsNullOrEmpty(modsFolder))
+            modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
         Console.WriteLine("");
 
-        MoveSpeedHandler.InstantiateMoveSpeedHandler(filePath);
+        MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
 
         List<MechStats> listOfMechs = new List<MechStats>();
 
@@ -36,30 +36,23 @@ class Program
         {
             foreach(string line in inputFileValues)
             {
-                listOfMechs.Add(new MechStats(line, filePath));
+                listOfMechs.Add(new MechStats(line, modsFolder));
             }
-        }
 
-        using (StreamWriter outputFile = new("MechTableOutput.txt", append: true))
-        {
-            foreach (MechStats mech in listOfMechs)
+            using (StreamWriter outputFile = new("MechTableOutput.txt", append: true))
             {
-                mech.OutputStatsToFile(outputFile);
+                foreach (MechStats mech in listOfMechs)
+                {
+                    mech.OutputStatsToFile(outputFile);
+                }
             }
         }
-        //else
-        //{
-        //    while (true)
-        //    {
-        //        CreateMechEntry(filePath);
+        else
+        {
+            MechFileSearch.GetAllMechsFromDefs(modsFolder);
 
-        //        Console.WriteLine("Done? (y/n)...");
-
-        //        string? done = Console.ReadLine();
-        //        if (!string.IsNullOrEmpty(done) && done.ToLower() == "y")
-        //            break;
-        //    }
-        //}
+            Console.WriteLine("Populated all mech defs!");
+        }
     }
 
     public static void CreateMechEntry(string mechModel, List<string> fileInputs = null)

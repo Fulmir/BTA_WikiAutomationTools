@@ -79,7 +79,7 @@ namespace BTA_WikiTableGen
                 engineTonnage = (double)engineCoreData?.Tonnage - gyroTonnage;
 
                 // Get engine mod weight and adjust engine weight
-                if (TryGetEngineWeightFactor(engineTypeData.Value, out double engineFactor))
+                if (engineTypeData != null && TryGetEngineWeightFactor(engineTypeData.Value, out double engineFactor))
                 {
                     engineTonnage *= engineFactor;
                     engineTonnage = DoHalfTonRounding(engineTonnage);
@@ -196,7 +196,7 @@ namespace BTA_WikiTableGen
                 engineTonnage = (double)engineCoreData?.Tonnage - gyroTonnage;
 
                 // Get engine mod weight and adjust engine weight
-                if (TryGetEngineWeightFactor(engineTypeData.Value, out double engineFactor))
+                if (engineTypeData != null && TryGetEngineWeightFactor(engineTypeData.Value, out double engineFactor))
                 {
                     engineTonnage *= engineFactor;
                     engineTonnage = DoHalfTonRounding(engineTonnage);
