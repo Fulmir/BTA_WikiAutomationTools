@@ -10,29 +10,27 @@ using System.Threading.Tasks;
 
 namespace BTA_WikiTableGen
 {
-    internal class MechGearHandler
+    internal static class MechGearHandler
     {
-        private string ModFolder;
+        private static string ModFolder;
         private static ConcurrentDictionary<string, EquipmentData> GearData = new ConcurrentDictionary<string, EquipmentData>();
 
-        public static Regex engineTypeRegex = new Regex(@"(emod_engine(?!_cooling|_\d+|.*size)([a-zA-Z3_]+))", RegexOptions.IgnoreCase);
-        public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase);
-        public static Regex heatsinkKitRegex = new Regex(@"(emod_kit\w*)", RegexOptions.IgnoreCase);
-        public static Regex heatsinkRegex = new Regex(@"(""CategoryID"": ""Heatsink"")", RegexOptions.IgnoreCase);
-        public static Regex structureRegex = new Regex(@"(\w*structureslots\w*)", RegexOptions.IgnoreCase);
-        public static Regex armorRegex = new Regex(@"(emod_armorslots\w*|Gear_armorslots\w*|Gear_Reflective_Coating)", RegexOptions.IgnoreCase);
-        public static Regex gyroRegex = new Regex(@"(""CategoryID"": ""Gyro"")", RegexOptions.IgnoreCase);
-        public static Regex cockpitRegex = new Regex(@"(""CategoryID"": ""Cockpit"")", RegexOptions.IgnoreCase);
-        public static Regex lifeSupportRegex = new Regex(@"(""CategoryID"": ""LifeSupport)", RegexOptions.IgnoreCase);
+        public static Regex engineTypeRegex = new Regex(@"(emod_engine(?!_cooling|_\d+|.*size)([a-zA-Z3_]+))", RegexOptions.IgnoreCase  | RegexOptions.Compiled);
+        public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex heatsinkKitRegex = new Regex(@"(emod_kit\w*)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex heatsinkRegex = new Regex(@"(""CategoryID"": ""Heatsink"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex structureRegex = new Regex(@"(\w*structureslots\w*)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex armorRegex = new Regex(@"(emod_armorslots\w*|Gear_armorslots\w*|Gear_Reflective_Coating)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex gyroRegex = new Regex(@"(""CategoryID"": ""Gyro"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex cockpitRegex = new Regex(@"(""CategoryID"": ""Cockpit"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex lifeSupportRegex = new Regex(@"(""CategoryID"": ""LifeSupport)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        public MechGearHandler(string modFolder)
+        public static void InstantiateModsFolder(string modsFolder)
         {
-            ModFolder = modFolder;
+            ModFolder = modsFolder;
         }
 
-        public static MechGearHandler _instance;
-
-        public bool TryGetEquipmentData(string gearId, out EquipmentData equipmentData)
+        public static bool TryGetEquipmentData(string gearId, out EquipmentData equipmentData)
         {
             if(GearData.TryGetValue(gearId, out equipmentData))
             {
@@ -71,7 +69,7 @@ namespace BTA_WikiTableGen
             return false;
         }
 
-        private List<GearCategory> DetermineGearCategory(string itemId, string fileText)
+        private static List<GearCategory> DetermineGearCategory(string itemId, string fileText)
         {
             List<GearCategory> categoryList = new List<GearCategory>();
 

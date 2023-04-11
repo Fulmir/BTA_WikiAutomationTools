@@ -35,6 +35,7 @@ namespace BT_JsonProcessingLibrary
         public List<GearCategory> GearType { get; set; }
         public double? StructureFactor { get; set; }
         public JsonDocument GearJsonDoc { get; set; }
+        public bool? IsQuirk { get; set; }
     }
 
     public struct MovementItem
@@ -46,6 +47,37 @@ namespace BT_JsonProcessingLibrary
         public Operation Operation { get; set; }
         public double Value { get; set; }
 
+    }
+
+    public struct AffinityDef
+    {
+        public string Id { get; set; }
+        public string UIName { get; set; }
+        public string Description { get; set; }
+    }
+
+    public struct AssemblyVariant
+    {
+        public string PrefabId { get; set; }
+        public bool Include { get; set; }
+        public bool Exclude { get; set; }
+    }
+
+    public struct QuirkDef
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public int InstanceCount { get; set; }
+        public List<BonusDef> QuirkBonuses { get; set; }
+    }
+
+    public struct BonusDef
+    {
+        public string BonusId { get; set; }
+        public string LongDescription { get; set; }
+        public string FullDescription { get; set; }
+        public List<string> BonusValues { get; set; }
+        public int StackingLimit { get; set; }
     }
 
     public enum Operation

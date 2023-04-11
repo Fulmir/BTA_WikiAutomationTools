@@ -28,7 +28,11 @@ class Program
             modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
         Console.WriteLine("");
 
+        QuirkHandler.CreateQuirkBonusesIndex(modsFolder);
+
         MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
+
+        AffinityHandler.CreateAffinitiesIndex(modsFolder);
 
         List<MechStats> listOfMechs = new List<MechStats>();
 
@@ -49,9 +53,13 @@ class Program
         }
         else
         {
+            MechGearHandler.InstantiateModsFolder(modsFolder);
+
             MechFileSearch.GetAllMechsFromDefs(modsFolder);
 
-            Console.WriteLine("Populated all mech defs!");
+            MechFileSearch.OutputMechsToWikiTables();
+
+            //Console.WriteLine("Populated all mech defs!");
         }
     }
 

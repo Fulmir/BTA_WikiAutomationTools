@@ -12,11 +12,11 @@ namespace BTA_WikiTableGen
 {
     internal static class MoveSpeedHandler
     {
-        static string walkSpeedSearch = "\"statName\": \"WalkSpeed\"";
-        static string runSpeedSearch = "\"statName\": \"CBTBE_RunMultiMod\"";
+        static Regex walkSpeedSearch = new Regex("\"statName\": \"WalkSpeed\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static Regex runSpeedSearch = new Regex("\"statName\": \"CBTBE_RunMultiMod\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        static string jumpDistanceSearch = "\"statName\": \"JumpDistanceMultiplier\"";
-        static string jumpJetSearch = "\"JumpCapacity\"";
+        static Regex jumpDistanceSearch = new Regex("\"statName\": \"JumpDistanceMultiplier\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static Regex jumpJetSearch = new Regex("\"JumpCapacity\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         static string[] fileFilterSearch = { @"Gear*.json", @"emod*.json" };
 
@@ -159,19 +159,19 @@ namespace BTA_WikiTableGen
             string fileContents = streamReader.ReadToEnd();
             JsonDocument GearJsonDoc = JsonDocument.Parse(fileContents);
 
-            if(Regex.IsMatch(fileContents, walkSpeedSearch))
+            if(walkSpeedSearch.IsMatch(fileContents))
             {
                 AddWalkSpeedEffect(GearJsonDoc);
             }
-            if(Regex.IsMatch(fileContents, runSpeedSearch))
+            if(runSpeedSearch.IsMatch(fileContents))
             {
                 AddRunSpeedEffect(GearJsonDoc);
             }
-            if(Regex.IsMatch(fileContents, jumpJetSearch))
+            if(jumpJetSearch.IsMatch(fileContents))
             {
                 AddJumpJetEffect(GearJsonDoc);
             }
-            if(Regex.IsMatch(fileContents, jumpDistanceSearch))
+            if(jumpDistanceSearch.IsMatch(fileContents))
             {
                 AddJumpMultiplierEffect(GearJsonDoc);
             }

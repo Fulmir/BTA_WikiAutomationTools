@@ -11,7 +11,7 @@ namespace BTA_WikiTableGen
 {
     internal static class MechTonnageCalculator
     {
-        static Regex EngineHeatsinksRegex = new Regex(@"(?<=""EngineHSFreeExt: )(\d)", RegexOptions.IgnoreCase);
+        static Regex EngineHeatsinksRegex = new Regex(@"(?<=""EngineHSFreeExt: )(\d)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static double GetCoreWeight(MechStats mechStats)
         {

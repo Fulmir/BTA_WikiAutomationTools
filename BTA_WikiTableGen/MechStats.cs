@@ -39,6 +39,9 @@ namespace BTA_WikiTableGen
         public JsonDocument MechDefFile { get; set; }
         public List<EquipmentData> FixedGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
+        public Dictionary<string, QuirkDef> MechQuirks { get; set; } = new Dictionary<string, QuirkDef>();
+        public AffinityDef? MechAffinity { get; set; }
+        public List<string> Tags { get; set; } = new List<string>();
 
         public MechStats(string mechModel, string modsFolder)
         {
@@ -68,26 +71,26 @@ namespace BTA_WikiTableGen
                 }
             }
 
-            CalculateMechStats(modsFolder);
+            CalculateMechStats();
         }
 
-        public MechStats(string modsFolder, string variantName, BasicFileData chassisDef, BasicFileData mechDef)
+        public MechStats(string variantName, BasicFileData chassisDef, BasicFileData mechDef)
         {
             MechModel = variantName;
 
             ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
             MechDefFile = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
 
-            CalculateMechStats(modsFolder);
+            CalculateMechStats();
         }
 
-        private void CalculateMechStats(string modsFolder)
+        private void CalculateMechStats()
         {
-            MechGearHandler gearHandler = new MechGearHandler(modsFolder);
+            PopulateTagsForMech();
 
-            GetFixedGearList(gearHandler);
+            GetFixedGearList();
 
-            GetBaseGearList(gearHandler);
+            GetBaseGearList();
 
             GetUnitTonnage();
 
@@ -98,6 +101,17 @@ namespace BTA_WikiTableGen
             CalculateAllMovements();
 
             CountWeaponHardpoints();
+
+            if (AffinityHandler.TryGetAssemblyVariant(this, out AssemblyVariant variant))
+            {
+                if (AffinityHandler.TryGetAffinityForMech(variant.PrefabId, this.GetPrefabIdentifier(), MechTonnage, out AffinityDef tempAffinityDef))
+                    MechAffinity = tempAffinityDef;
+            }
+            else
+            {
+                if (AffinityHandler.TryGetAffinityForMech(null, this.GetPrefabIdentifier(), MechTonnage, out AffinityDef tempAffinityDef))
+                    MechAffinity = tempAffinityDef;
+            }
 
             CoreTonnage = MechTonnageCalculator.GetCoreWeight(this);
 
@@ -128,6 +142,29 @@ namespace BTA_WikiTableGen
             writer.WriteLine( OutputTableLine( "-" ) );
         }
 
+        public void OutputStatsToString(StringWriter writer)
+        {
+            writer.WriteLine(OutputTableLine(MechModel));
+            writer.WriteLine(OutputTableLine(MechTonnage + "t"));
+            writer.WriteLine(OutputTableLine(Role));
+            foreach (string hardpointType in Hardpoints.Keys)
+            {
+                writer.WriteLine(OutputTableLine(Hardpoints[hardpointType].ToString()));
+            }
+            writer.WriteLine(OutputTableLine(EngineDecode(EngineTypeId)));
+            writer.WriteLine(OutputTableLine(EngineSize.ToString()));
+            writer.WriteLine(OutputTableLine(HeatsinkDecode(HeatsinkTypeId)));
+            writer.WriteLine(OutputTableLine(StructureDecode(StructureTypeId)));
+            writer.WriteLine(OutputTableLine(ArmorDecode(ArmorTypeId)));
+            writer.WriteLine(OutputTableLine("None"));
+            writer.WriteLine(OutputTableLine(CoreTonnage == null ? "N/A" : CoreTonnage + "t"));
+            writer.WriteLine(OutputTableLine(BareTonnage == null ? "N/A" : BareTonnage + "t"));
+            writer.WriteLine(OutputTableLine(WalkSpeed.ToString()));
+            writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
+            writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
+            writer.WriteLine(OutputTableLine("-"));
+        }
+
         private string OutputTableLine(string line)
         {
             return "|" + line;
@@ -151,6 +188,8 @@ namespace BTA_WikiTableGen
                     return "cXXL";
                 case "emod_engineslots_Primitive_center":
                     return "PFE";
+                case "emod_engineslots_fission":
+                    return "Fission";
                 case "emod_engineslots_sxl_center":
                     return "sXL";
                 case "emod_engineslots_dense_center":
@@ -277,27 +316,47 @@ namespace BTA_WikiTableGen
             return armorRegexOutput + " TYPE NOT FOUND";
         }
 
-        private void GetFixedGearList(MechGearHandler gearHandler)
+        private void GetFixedGearList()
         {
             if (ChassisDefFile.RootElement.TryGetProperty("FixedEquipment", out JsonElement fixedEquipment))
                 foreach (JsonElement gear in fixedEquipment.EnumerateArray())
                 {
                     if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
-                        if(gearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
+                        if(MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
+                        {
                             FixedGear.Add(equipmentData);
+                            if(QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
+                            {
+                                if (MechQuirks.ContainsKey(tempQuirk.Id))
+                                {
+                                    tempQuirk.InstanceCount++;
+                                }
+                                MechQuirks[tempQuirk.Id] = tempQuirk;
+                            }
+                        }
                 }
             else
                 Console.WriteLine("FAILURE TO GET FIXED GEAR");
         }
 
-        private void GetBaseGearList(MechGearHandler gearHandler)
+        private void GetBaseGearList()
         {
             if (MechDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
                 foreach (JsonElement gear in gearInventory.EnumerateArray())
                 {
                     if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
-                        if (gearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
+                        if (MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
+                        {
                             BaseGear.Add(equipmentData);
+                            if (QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
+                            {
+                                if (MechQuirks.ContainsKey(tempQuirk.Id))
+                                {
+                                    tempQuirk.InstanceCount++;
+                                }
+                                MechQuirks[tempQuirk.Id] = tempQuirk;
+                            }
+                        }
                 }
             else
                 Console.WriteLine("FAILURE TO GET BASE GEAR");
@@ -401,6 +460,41 @@ namespace BTA_WikiTableGen
                     else
                     {
                         Hardpoints[mountType.ToString().ToLower()]++;
+                    }
+                }
+            }
+        }
+
+        private string GetPrefabIdentifier()
+        {
+            if(this.ChassisDefFile.RootElement.TryGetProperty("PrefabIdentifier", out JsonElement prefab))
+                return prefab.ToString();
+            else
+            {
+                Console.WriteLine($"MECH {this.MechModel} HAS NO PREFAB! WOOPS!");
+                return "ERROR PREFAB";
+            }
+        }
+
+        private void PopulateTagsForMech()
+        {
+            if(ChassisDefFile.RootElement.TryGetProperty("ChassisTags", out JsonElement chassisTags))
+            {
+                if (chassisTags.TryGetProperty("items", out JsonElement tagsElement))
+                {
+                    foreach (var tag in tagsElement.EnumerateArray())
+                    {
+                        Tags.Add(tag.ToString());
+                    }
+                }
+            }
+            if (MechDefFile.RootElement.TryGetProperty("MechTags", out JsonElement mechTags))
+            {
+                if (chassisTags.TryGetProperty("items", out JsonElement tagsElement))
+                {
+                    foreach (var tag in tagsElement.EnumerateArray())
+                    {
+                        Tags.Add(tag.ToString());
                     }
                 }
             }
