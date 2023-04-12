@@ -43,6 +43,7 @@ namespace BTA_WikiTableGen
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
         public Dictionary<string, QuirkDef> MechQuirks { get; set; } = new Dictionary<string, QuirkDef>();
         public AffinityDef? MechAffinity { get; set; }
+        public AssemblyVariant? VariantAssemblyRules { get; set; }
         public List<string> Tags { get; set; } = new List<string>();
         public bool Blacklisted { get; set; }
         public string? PrefabId { get; set; }

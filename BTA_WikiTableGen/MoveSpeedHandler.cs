@@ -37,14 +37,14 @@ namespace BTA_WikiTableGen
                     gearFiles.AddRange(ModJsonHandler.SearchFiles(modsFolder, pattern));
                 }
 
-                //Parallel.ForEach(gearFiles, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, (gearFile) =>
-                //{
-                //    SearchFileForMovement(gearFile.Path);
-                //});
-                foreach(BasicFileData gearFile in gearFiles)
+                Parallel.ForEach(gearFiles, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, (gearFile) =>
                 {
                     SearchFileForMovement(gearFile.Path);
-                }
+                });
+                //foreach (BasicFileData gearFile in gearFiles)
+                //{
+                //    SearchFileForMovement(gearFile.Path);
+                //}
                 MovementSearchDone = true;
             }
         }

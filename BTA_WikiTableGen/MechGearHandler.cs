@@ -14,7 +14,7 @@ namespace BTA_WikiTableGen
     {
         private static string ModFolder;
         private static ConcurrentDictionary<string, EquipmentData> GearData = new ConcurrentDictionary<string, EquipmentData>();
-        private static Dictionary<string, List<string>> TagsToGearIds = new Dictionary<string, List<string>>();
+        private static ConcurrentDictionary<string, List<string>> TagsToGearIds = new ConcurrentDictionary<string, List<string>>();
 
         public static Regex engineTypeRegex = new Regex(@"(emod_engine(?!_cooling|_\d+|.*size)([a-zA-Z3_]+))", RegexOptions.IgnoreCase  | RegexOptions.Compiled);
         public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -26,6 +26,8 @@ namespace BTA_WikiTableGen
         public static Regex cockpitRegex = new Regex(@"(""CategoryID"": ""Cockpit"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex lifeSupportARegex = new Regex(@"(""CategoryID"": ""LifeSupportA)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex lifeSupportBRegex = new Regex(@"(""CategoryID"": ""LifeSupportB)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static Regex DirectoryExcludeRegex = new Regex(@"(\\CustomAmmoCategories\\)", RegexOptions.Compiled);
 
         public static void InstantiateModsFolder(string modsFolder)
         {
@@ -43,8 +45,12 @@ namespace BTA_WikiTableGen
                 List<BasicFileData> gearFileData = ModJsonHandler.SearchFiles(ModFolder, $"{gearId}.json");
                 if(gearFileData.Count > 1 )
                 {
-                    Console.WriteLine($"Too many files found for {gearId}, using first file.");
-                } else if (gearFileData.Count > 0 )
+                    Console.WriteLine($"Too many files found for {gearId}, trying to filter, otherwise using first file.");
+                    gearFileData = gearFileData.FindAll((file) => !DirectoryExcludeRegex.IsMatch(file.Path));
+                    if(gearFileData.Count > 1 )
+                        Console.WriteLine("KINDA FAILED TO FILTER! WOOPS!");
+                }
+                if (gearFileData.Count > 0)
                 {
                     BasicFileData gearFile = gearFileData[0];
                     StreamReader reader = new StreamReader(gearFile.Path);
@@ -61,13 +67,15 @@ namespace BTA_WikiTableGen
                         GearJsonDoc = gearJsonDoc
                     };
 
-                    if(MechTonnageCalculator.TryGetStructureWeightFactor(gearJsonDoc, out double tempStructureFactor))
+                    if (MechTonnageCalculator.TryGetStructureWeightFactor(gearJsonDoc, out double tempStructureFactor))
                         equipmentData.StructureFactor = tempStructureFactor;
 
                     GearData[equipmentData.Id] = equipmentData;
 
                     return true;
                 }
+                else
+                    Console.WriteLine($"NO GEAR FILE FOUND FOR {gearId} WOOPS!");
             }
             return false;
         }
