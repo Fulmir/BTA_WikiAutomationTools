@@ -80,6 +80,12 @@ namespace BT_JsonProcessingLibrary
         public int StackingLimit { get; set; }
     }
 
+    public struct MechNameCounter
+    {
+        public string MechName { get; set; }
+        public int UseCount { get; set; }
+    }
+
     public enum Operation
     {
         Add,
@@ -106,7 +112,8 @@ namespace BT_JsonProcessingLibrary
         Structure,
         Weapon,
         Cockpit,
-        LifeSupport,
+        LifeSupportA,
+        LifeSupportB,
         Heatsink,
         Gear
     }

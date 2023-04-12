@@ -52,18 +52,18 @@ namespace BTA_WikiTableGen
             }
         }
 
-        public static bool TryGetAffinityForMech(string? prefabId, string? prefabIdentifier, int mechTonnage, out AffinityDef mechAffinity)
+        public static bool TryGetAffinityForMech(string? prefabId, string? prefabIdentifier, out AffinityDef mechAffinity)
         {
             mechAffinity = new AffinityDef();
 
-            if(prefabId != null && AffinityLookupTable.ContainsKey($"{prefabId}_{mechTonnage}"))
+            if(prefabId != null && AffinityLookupTable.ContainsKey(prefabId))
             {
-                mechAffinity = AffinityLookupTable[$"{prefabId}_{mechTonnage}"];
+                mechAffinity = AffinityLookupTable[prefabId];
                 return true;
             }
-            else if (prefabIdentifier != null && AffinityLookupTable.ContainsKey($"{prefabIdentifier}_{mechTonnage}"))
+            else if (prefabIdentifier != null && AffinityLookupTable.ContainsKey(prefabIdentifier))
             {
-                mechAffinity = AffinityLookupTable[$"{prefabIdentifier}_{mechTonnage}"];
+                mechAffinity = AffinityLookupTable[prefabIdentifier];
                 return true;
             }
 
@@ -98,7 +98,7 @@ namespace BTA_WikiTableGen
             {
                 if (mech.MechAffinity.HasValue)
                     affinities[mech.MechAffinity.Value.Id] = mech.MechAffinity.Value;
-                else
+                else if (!mech.Blacklisted)
                     Console.WriteLine($"MECH {mech.MechModel} HAS NO AFFINITY!");
             }
 

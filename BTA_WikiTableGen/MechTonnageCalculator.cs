@@ -20,6 +20,7 @@ namespace BTA_WikiTableGen
             List<EquipmentData> allEquipment = new List<EquipmentData>();
             allEquipment.AddRange(mechStats.BaseGear);
             allEquipment.AddRange(mechStats.FixedGear);
+            allEquipment.AddRange(mechStats.DefaultGear);
 
             EquipmentData? engineTypeData = null;
             EquipmentData? engineCoreData = null;
@@ -114,7 +115,9 @@ namespace BTA_WikiTableGen
             {
                 if (fixedGear.GearType.Contains(GearCategory.Cockpit))
                     cockpitCount++;
-                if(fixedGear.GearType.Contains(GearCategory.LifeSupport))
+                if(fixedGear.GearType.Contains(GearCategory.LifeSupportA))
+                    lifeSupportCount++;
+                if (fixedGear.GearType.Contains(GearCategory.LifeSupportB))
                     lifeSupportCount++;
 
                 if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage != 0 || fixedGear.StructureFactor != null))
@@ -231,7 +234,9 @@ namespace BTA_WikiTableGen
             {
                 if (fixedGear.GearType.Contains(GearCategory.Cockpit))
                     cockpitCount++;
-                if (fixedGear.GearType.Contains(GearCategory.LifeSupport))
+                if (fixedGear.GearType.Contains(GearCategory.LifeSupportA))
+                    lifeSupportCount++;
+                if (fixedGear.GearType.Contains(GearCategory.LifeSupportB))
                     lifeSupportCount++;
 
                 if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage > 0 || fixedGear.StructureFactor != null))

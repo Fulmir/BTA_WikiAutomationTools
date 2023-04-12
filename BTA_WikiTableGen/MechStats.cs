@@ -12,6 +12,7 @@ namespace BTA_WikiTableGen
 {
     internal class MechStats
     {
+        public string MechName { get; set; }
         public string MechModel { get; set; }
         public int MechTonnage { get; set; } = 0;
         public string Role { get; set; } = string.Empty;
@@ -37,11 +38,15 @@ namespace BTA_WikiTableGen
         public double JumpDistance { get; set; } = 0;
         public JsonDocument ChassisDefFile { get; set; }
         public JsonDocument MechDefFile { get; set; }
+        public List<EquipmentData> DefaultGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> FixedGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
         public Dictionary<string, QuirkDef> MechQuirks { get; set; } = new Dictionary<string, QuirkDef>();
         public AffinityDef? MechAffinity { get; set; }
         public List<string> Tags { get; set; } = new List<string>();
+        public bool Blacklisted { get; set; }
+        public string? PrefabId { get; set; }
+        public string PrefabIdentifier { get; set; }
 
         public MechStats(string mechModel, string modsFolder)
         {
@@ -74,8 +79,9 @@ namespace BTA_WikiTableGen
             CalculateMechStats();
         }
 
-        public MechStats(string variantName, BasicFileData chassisDef, BasicFileData mechDef)
+        public MechStats(string chassisName, string variantName, BasicFileData chassisDef, BasicFileData mechDef)
         {
+            MechName = chassisName;
             MechModel = variantName;
 
             ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
@@ -92,6 +98,8 @@ namespace BTA_WikiTableGen
 
             GetBaseGearList();
 
+            GetDefaultGearList();
+
             GetUnitTonnage();
 
             GetUnitStockRole();
@@ -104,12 +112,13 @@ namespace BTA_WikiTableGen
 
             if (AffinityHandler.TryGetAssemblyVariant(this, out AssemblyVariant variant))
             {
-                if (AffinityHandler.TryGetAffinityForMech(variant.PrefabId, this.GetPrefabIdentifier(), MechTonnage, out AffinityDef tempAffinityDef))
-                    MechAffinity = tempAffinityDef;
+                PrefabId = $"{variant.PrefabId}_{MechTonnage}";
+                if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef))                    MechAffinity = tempAffinityDef;
             }
             else
             {
-                if (AffinityHandler.TryGetAffinityForMech(null, this.GetPrefabIdentifier(), MechTonnage, out AffinityDef tempAffinityDef))
+                PrefabIdentifier = $"{this.GetPrefabIdentifier()}_{MechTonnage}";
+                if (AffinityHandler.TryGetAffinityForMech(null, PrefabIdentifier, out AffinityDef tempAffinityDef))
                     MechAffinity = tempAffinityDef;
             }
 
@@ -316,6 +325,47 @@ namespace BTA_WikiTableGen
             return armorRegexOutput + " TYPE NOT FOUND";
         }
 
+        private void GetDefaultGearList()
+        {
+            foreach(string gearId in MechGearHandler.GetDefaultGearIdsForTags(this.Tags))
+            {
+                if (MechGearHandler.TryGetEquipmentData(gearId.ToString(), out EquipmentData equipmentData))
+                {
+                    if (CheckIsOverWrittenDefault(equipmentData))
+                        continue;
+                    DefaultGear.Add(equipmentData);
+                    if (QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
+                    {
+                        if (MechQuirks.ContainsKey(tempQuirk.Id))
+                        {
+                            tempQuirk.InstanceCount++;
+                        }
+                        MechQuirks[tempQuirk.Id] = tempQuirk;
+                    }
+                }
+            }
+        }
+
+        private bool CheckIsOverWrittenDefault(EquipmentData equipmentData)
+        {
+            List<EquipmentData> allEquipment = new List<EquipmentData>();
+            allEquipment.AddRange(FixedGear);
+            allEquipment.AddRange(BaseGear);
+
+            foreach(EquipmentData data in allEquipment)
+            {
+                foreach(GearCategory gearCat in equipmentData.GearType)
+                {
+                    if(gearCat == GearCategory.Armor || gearCat == GearCategory.LifeSupportA || gearCat == GearCategory.LifeSupportB)
+                    {
+                        if (data.GearType.Contains(gearCat))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private void GetFixedGearList()
         {
             if (ChassisDefFile.RootElement.TryGetProperty("FixedEquipment", out JsonElement fixedEquipment))
@@ -383,6 +433,7 @@ namespace BTA_WikiTableGen
             List<EquipmentData> AllGearList = new List<EquipmentData>();
             AllGearList.AddRange(FixedGear);
             AllGearList.AddRange(BaseGear);
+            AllGearList.AddRange(DefaultGear);
 
             foreach (EquipmentData item in AllGearList)
             {
@@ -421,6 +472,7 @@ namespace BTA_WikiTableGen
             List<string> gearIds = new List<string>();
             gearIds.AddRange(from gearEntry in FixedGear select gearEntry.Id);
             gearIds.AddRange(from gearEntry in BaseGear select gearEntry.Id);
+            gearIds.AddRange(from gearEntry in DefaultGear select gearEntry.Id);
 
             if (MoveSpeedHandler.TryGetMovementEffectsForGear(gearIds, out Dictionary<MovementType, List<MovementItem>> movements))
             {
@@ -498,6 +550,11 @@ namespace BTA_WikiTableGen
                     }
                 }
             }
+
+            if (Tags.Contains("BLACKLISTED") || Tags.Contains("NOSALVAGE"))
+                Blacklisted = true;
+            else
+                Blacklisted = false;
         }
     }
 }

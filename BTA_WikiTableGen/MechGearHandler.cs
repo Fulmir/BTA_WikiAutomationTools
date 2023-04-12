@@ -14,6 +14,7 @@ namespace BTA_WikiTableGen
     {
         private static string ModFolder;
         private static ConcurrentDictionary<string, EquipmentData> GearData = new ConcurrentDictionary<string, EquipmentData>();
+        private static Dictionary<string, List<string>> TagsToGearIds = new Dictionary<string, List<string>>();
 
         public static Regex engineTypeRegex = new Regex(@"(emod_engine(?!_cooling|_\d+|.*size)([a-zA-Z3_]+))", RegexOptions.IgnoreCase  | RegexOptions.Compiled);
         public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -23,11 +24,13 @@ namespace BTA_WikiTableGen
         public static Regex armorRegex = new Regex(@"(emod_armorslots\w*|Gear_armorslots\w*|Gear_Reflective_Coating)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex gyroRegex = new Regex(@"(""CategoryID"": ""Gyro"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex cockpitRegex = new Regex(@"(""CategoryID"": ""Cockpit"")", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        public static Regex lifeSupportRegex = new Regex(@"(""CategoryID"": ""LifeSupport)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex lifeSupportARegex = new Regex(@"(""CategoryID"": ""LifeSupportA)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex lifeSupportBRegex = new Regex(@"(""CategoryID"": ""LifeSupportB)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static void InstantiateModsFolder(string modsFolder)
         {
             ModFolder = modsFolder;
+            GetMechEngineerDefaults(modsFolder);
         }
 
         public static bool TryGetEquipmentData(string gearId, out EquipmentData equipmentData)
@@ -87,8 +90,10 @@ namespace BTA_WikiTableGen
                 categoryList.Add(GearCategory.Structure);
             if (cockpitRegex.IsMatch(fileText))
                 categoryList.Add(GearCategory.Cockpit);
-            if (lifeSupportRegex.IsMatch(fileText))
-                categoryList.Add(GearCategory.LifeSupport);
+            if (lifeSupportARegex.IsMatch(fileText))
+                categoryList.Add(GearCategory.LifeSupportA);
+            if (lifeSupportBRegex.IsMatch(fileText))
+                categoryList.Add(GearCategory.LifeSupportB);
             if (armorRegex.IsMatch(itemId))
                 categoryList.Add(GearCategory.Armor);
             if (gyroRegex.IsMatch(fileText))
@@ -101,6 +106,34 @@ namespace BTA_WikiTableGen
                 categoryList.Add(GearCategory.None);
 
             return categoryList;
+        }
+
+        public static List<string> GetDefaultGearIdsForTags(List<string> tags)
+        {
+            List<string> output = new List<string>();
+            foreach (string tag in tags)
+            {
+                if(TagsToGearIds.ContainsKey(tag))
+                    output.AddRange(TagsToGearIds[tag]);
+            }
+            return output;
+        }
+
+        private static void GetMechEngineerDefaults(string modsFolder)
+        {
+            StreamReader defaultsReader = new StreamReader(modsFolder + "BT Advanced Core\\settings\\defaults\\Defaults_MechEngineer.json");
+            JsonDocument mechEngDefaultsJson = JsonDocument.Parse(defaultsReader.ReadToEnd());
+
+            foreach (JsonElement setting in mechEngDefaultsJson.RootElement.GetProperty("Settings").EnumerateArray())
+            {
+                if (setting.TryGetProperty("Tag", out JsonElement tagName))
+                {
+                    if (!TagsToGearIds.ContainsKey(tagName.ToString()))
+                        TagsToGearIds[tagName.ToString()] = new List<string>();
+
+                    TagsToGearIds[tagName.ToString()].Add(setting.GetProperty("DefID").ToString());
+                }
+            }
         }
     }
 }
