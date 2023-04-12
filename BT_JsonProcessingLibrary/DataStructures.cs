@@ -104,7 +104,7 @@ namespace BT_JsonProcessingLibrary
     {
         None,
         Gyro,
-        Engine,
+        EngineShield,
         EngineCore,
         HeatsinkKit,
         EngineHeatsinks,
@@ -115,6 +115,6 @@ namespace BT_JsonProcessingLibrary
         LifeSupportA,
         LifeSupportB,
         Heatsink,
-        Gear
+        Quirk
     }
 }

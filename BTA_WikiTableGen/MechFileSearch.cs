@@ -15,7 +15,6 @@ namespace BTA_WikiTableGen
         static Regex ClanMechDirectories = new Regex(@"BT Advanced Clan Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex QuadMechDirectories = new Regex(@"BT Advanced Quad Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex SanctuaryMechDirectories = new Regex(@"(BT Advanced Sanctuary Worlds Mechs|Heavy Metal Sanctuary Worlds Units)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex HeroMechDirectories = new Regex(@"BT Advanced Unique Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex CommunityContentDirectories = new Regex(@"Community Content", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         static Dictionary<string, Dictionary<string, MechStats>> InnerSphereMechs = new Dictionary<string, Dictionary<string, MechStats>>();
@@ -29,6 +28,7 @@ namespace BTA_WikiTableGen
 
         static Dictionary<string, List<MechNameCounter>> PrefabToNameTracker = new Dictionary<string, List<MechNameCounter>>();
 
+        // TODO: See how this works parallelized...
         public static void GetAllMechsFromDefs(string modsFolder)
         {
             List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef*.json");
@@ -185,6 +185,7 @@ namespace BTA_WikiTableGen
         {
             Dictionary<string, List<string>> primaryNamesToPrefabs = new Dictionary<string, List<string>>();
 
+            // TODO: If there's only one variant associated with a Prefab we should probalby just use its name...
             foreach (string prefabId in targetDictionary.Keys.ToList())
             {
                 TryGetNameForPrefabId(prefabId, out string primaryMechName);
@@ -298,9 +299,23 @@ namespace BTA_WikiTableGen
 
             return LightMechOutput.ToString() + MediumMechOutput.ToString() + HeavyMechOutput.ToString() + AssaultMechOutput.ToString();
         }
+
         private static string OutputDictionaryToString(string pluggableTitleString, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary)
         {
-            List<string> sortedMechNames = targetDictionary.Keys.ToList();
+            Dictionary<string, List<string>> primaryNamesToPrefabs = new Dictionary<string, List<string>>();
+
+            foreach (string prefabId in targetDictionary.Keys.ToList())
+            {
+                TryGetNameForPrefabId(prefabId, out string primaryMechName);
+
+                if (primaryNamesToPrefabs.ContainsKey(primaryMechName))
+                    Console.WriteLine($"Already have value for name {primaryMechName} and prefab {prefabId}. Other prefab is {primaryNamesToPrefabs[primaryMechName].Last()}. Adding prefabId to list.");
+                else
+                    primaryNamesToPrefabs[primaryMechName] = new List<string>();
+
+                primaryNamesToPrefabs[primaryMechName].Add(prefabId);
+            }
+            List<string> sortedMechNames = primaryNamesToPrefabs.Keys.ToList();
             sortedMechNames.Sort();
 
             StringBuilder mechOutput = new StringBuilder();
@@ -309,24 +324,83 @@ namespace BTA_WikiTableGen
 
             foreach (string mechName in sortedMechNames)
             {
-                List<string> sortedVariantModels = targetDictionary[mechName].Keys.ToList();
-                sortedVariantModels.Sort(new MechModelNameComparer());
-
-                StartMechTitleSection(mechWriter, mechName, targetDictionary[mechName].Count);
-
-                List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(targetDictionary[mechName].Values.ToList());
-                foreach (QuirkDef quirk in tempQuirkList)
-                    QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
-
-                List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(targetDictionary[mechName].Values.ToList());
-                foreach (AffinityDef affinity in tempAffinityList)
-                    AffinityHandler.OutputAffinityToString(affinity, mechWriter);
-
-                foreach (string mechVariant in sortedVariantModels)
+                foreach (string prefabIdFromName in primaryNamesToPrefabs[mechName])
                 {
-                    targetDictionary[mechName][mechVariant].OutputStatsToString(mechWriter);
+                    List<string> sortedVariantModels = targetDictionary[prefabIdFromName].Keys.ToList();
+                    sortedVariantModels.Sort(new MechModelNameComparer());
+
+                    int excludedVariantsCount = 0;
+                    List<string> excludedVariants = new List<string>();
+                    foreach (MechStats variant in targetDictionary[prefabIdFromName].Values)
+                    {
+                        if (variant.VariantAssemblyRules != null &&
+                            (variant.VariantAssemblyRules.Value.Exclude || !variant.VariantAssemblyRules.Value.Include))
+                        {
+                            excludedVariantsCount++;
+                            excludedVariants.Add(variant.MechModel);
+                        }
+                    }
+
+                    int tonnage = targetDictionary[prefabIdFromName].First().Value.MechTonnage;
+
+                    List<MechStats> tempMechs = new List<MechStats>();
+                    foreach (string variant in sortedVariantModels)
+                    {
+                        if (!excludedVariants.Contains(variant))
+                            tempMechs.Add(targetDictionary[prefabIdFromName][variant]);
+                    }
+
+                    foreach (string variant in excludedVariants)
+                    {
+                        MechStats excludedVariant = allMechs[variant];
+                        StartMechTitleSection(mechWriter, excludedVariant.MechName, 1);
+
+                        foreach (QuirkDef quirk in excludedVariant.MechQuirks.Values)
+                            QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
+
+                        if (excludedVariant.MechAffinity.HasValue)
+                            AffinityHandler.OutputAffinityToString(excludedVariant.MechAffinity.Value, mechWriter);
+
+                        excludedVariant.OutputStatsToString(mechWriter);
+                    }
+                    if (sortedVariantModels.Count - excludedVariantsCount >= 1)
+                    {
+                        StartMechTitleSection(mechWriter, mechName, sortedVariantModels.Count - excludedVariantsCount);
+
+                        List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(tempMechs);
+                        foreach (QuirkDef quirk in tempQuirkList)
+                            QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
+
+                        List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(tempMechs);
+                        foreach (AffinityDef affinity in tempAffinityList)
+                            AffinityHandler.OutputAffinityToString(affinity, mechWriter);
+
+                        foreach (MechStats mechVariant in tempMechs)
+                            mechVariant.OutputStatsToString(mechWriter);
+                    }
                 }
             }
+
+            //foreach (string mechName in sortedMechNames)
+            //{
+            //    List<string> sortedVariantModels = targetDictionary[mechName].Keys.ToList();
+            //    sortedVariantModels.Sort(new MechModelNameComparer());
+
+            //    StartMechTitleSection(mechWriter, mechName, targetDictionary[mechName].Count);
+
+            //    List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(targetDictionary[mechName].Values.ToList());
+            //    foreach (QuirkDef quirk in tempQuirkList)
+            //        QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
+
+            //    List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(targetDictionary[mechName].Values.ToList());
+            //    foreach (AffinityDef affinity in tempAffinityList)
+            //        AffinityHandler.OutputAffinityToString(affinity, mechWriter);
+
+            //    foreach (string mechVariant in sortedVariantModels)
+            //    {
+            //        targetDictionary[mechName][mechVariant].OutputStatsToString(mechWriter);
+            //    }
+            //}
             CloseTableSection(mechWriter);
             mechWriter.Close();
 

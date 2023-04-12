@@ -162,17 +162,17 @@ namespace BTA_WikiTableGen
                     engineTypeData = data;
                     coreGearIds.Add(data.Id);
                 }
-                else if (data.Id.Equals(mechStats.EngineCoreId))
+                if (data.Id.Equals(mechStats.EngineCoreId))
                 {
                     engineCoreData = data;
                     coreGearIds.Add(data.Id);
                 }
-                else if (data.Id.Equals(mechStats.GyroTypeId))
+                if (data.Id.Equals(mechStats.GyroTypeId))
                 {
                     gyroData = data;
                     coreGearIds.Add(data.Id);
                 }
-                else if (data.Id.Equals(mechStats.StructureTypeId))
+                if (data.Id.Equals(mechStats.StructureTypeId))
                 {
                     structureData = data;
                     coreGearIds.Add(data.Id);

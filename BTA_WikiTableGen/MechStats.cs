@@ -101,11 +101,11 @@ namespace BTA_WikiTableGen
 
             GetDefaultGearList();
 
+            GetCoreGear();
+
             GetUnitTonnage();
 
             GetUnitStockRole();
-
-            GetCoreGear();
 
             CalculateAllMovements();
 
@@ -180,14 +180,18 @@ namespace BTA_WikiTableGen
             return "|" + line;
         }
 
-        private string EngineDecode(string engineRegexOutput)
+        private string EngineDecode(string engineShieldGearId)
         {
-            switch (engineRegexOutput)
+            switch (engineShieldGearId)
             {
+                case "":
+                    return "STD";
                 case "emod_engineslots_std_center":
                     return "STD";
                 case "emod_engineslots_light_center":
                     return "LFE";
+                case "emod_engineslots_light_center_unique":
+                    return "Unique LFE";
                 case "emod_engineslots_xl_center":
                     return "XL";
                 case "emod_engineslots_cxl_center":
@@ -220,13 +224,15 @@ namespace BTA_WikiTableGen
                     return "3G-XXL";
             }
 
-            return engineRegexOutput + " TYPE NOT FOUND";
+            return engineShieldGearId + " TYPE NOT FOUND";
         }
 
-        private string HeatsinkDecode(string heatsinksRegexOutput)
+        private string HeatsinkDecode(string heatsinkKidGearId)
         {
-            switch (heatsinksRegexOutput)
+            switch (heatsinkKidGearId)
             {
+                case "":
+                    return "SHS";
                 case "emod_kit_shs":
                     return "SHS";
                 case "emod_kit_dhs":
@@ -243,13 +249,15 @@ namespace BTA_WikiTableGen
                     return "3GHS";
             }
 
-            return heatsinksRegexOutput + " TYPE NOT FOUND";
+            return heatsinkKidGearId + " TYPE NOT FOUND";
         }
 
-        private string StructureDecode(string structureRegexOutput)
+        private string StructureDecode(string structureGearId)
         {
-            switch (structureRegexOutput)
+            switch (structureGearId)
             {
+                case "":
+                    return "Standard";
                 case "emod_structureslots_standard":
                     return "Standard";
                 case "emod_structureslots_endosteel":
@@ -264,21 +272,33 @@ namespace BTA_WikiTableGen
                     return "Cobbled Endo";
                 case "emod_structureslots_endo_standard_hybrid":
                     return "Hybrid Endo";
+                case "emod_structureslots_hybrid_slots_0.25":
+                    return "Hybrid Endo";
                 case "emod_structureslots_endosteel_3G":
                     return "3G Endo";
                 case "emod_structureslots_sanctuaryendocarbide":
                     return "Endo Carbide";
                 case "emod_structureslots_sanctuaryendosteel":
                     return "Sanctuary Endo";
+                case "Gear_structureslots_Reinforced":
+                    return "Reinforced";
             }
 
-            return structureRegexOutput + " TYPE NOT FOUND";
+            if (structureGearId.Contains("PrimitiveRugged"))
+                return "Rugged";
+
+            if (structureGearId.Contains("Reinforcement"))
+                return "Reinforced";
+
+            return structureGearId + " TYPE NOT FOUND";
         }
 
-        private string ArmorDecode(string armorRegexOutput)
+        private string ArmorDecode(string armorGearId)
         {
-            switch (armorRegexOutput)
+            switch (armorGearId)
             {
+                case "":
+                    return "Standard";
                 case "emod_armorslots_standard":
                     return "Standard";
                 case "emod_armorslots_clstandard":
@@ -323,7 +343,7 @@ namespace BTA_WikiTableGen
                     return "Industrial";
             }
 
-            return armorRegexOutput + " TYPE NOT FOUND";
+            return armorGearId + " TYPE NOT FOUND";
         }
 
         private void GetDefaultGearList()
@@ -442,7 +462,7 @@ namespace BTA_WikiTableGen
                 {
                     switch (gearType)
                     {
-                        case GearCategory.Engine:
+                        case GearCategory.EngineShield:
                             EngineTypeId = item.Id;
                             break;
                         case GearCategory.EngineCore:
@@ -537,17 +557,19 @@ namespace BTA_WikiTableGen
                 {
                     foreach (var tag in tagsElement.EnumerateArray())
                     {
-                        Tags.Add(tag.ToString());
+                        if(!Tags.Contains(tag.ToString()))
+                            Tags.Add(tag.ToString());
                     }
                 }
             }
             if (MechDefFile.RootElement.TryGetProperty("MechTags", out JsonElement mechTags))
             {
-                if (chassisTags.TryGetProperty("items", out JsonElement tagsElement))
+                if (mechTags.TryGetProperty("items", out JsonElement tagsElement))
                 {
                     foreach (var tag in tagsElement.EnumerateArray())
                     {
-                        Tags.Add(tag.ToString());
+                        if (!Tags.Contains(tag.ToString()))
+                            Tags.Add(tag.ToString());
                     }
                 }
             }
