@@ -30,17 +30,18 @@ namespace BTA_WikiTableGen
 
         public static bool TryGetEquipmentData(string gearId, out EquipmentData equipmentData)
         {
-            if(GearData.TryGetValue(gearId, out equipmentData))
+            if (GearData.TryGetValue(gearId, out equipmentData))
             {
                 return true;
-            } else
+            }
+            else
             {
                 List<BasicFileData> gearFileData = ModJsonHandler.SearchFiles(ModFolder, $"{gearId}.json");
-                if(gearFileData.Count > 1 )
+                if (gearFileData.Count > 1)
                 {
                     Console.WriteLine($"Too many files found for {gearId}, trying to filter, otherwise using first file.");
                     gearFileData = gearFileData.FindAll((file) => !DirectoryExcludeRegex.IsMatch(file.Path));
-                    if(gearFileData.Count > 1 )
+                    if (gearFileData.Count > 1)
                         Console.WriteLine("KINDA FAILED TO FILTER! WOOPS!");
                 }
                 if (gearFileData.Count > 0)
@@ -82,11 +83,11 @@ namespace BTA_WikiTableGen
         {
             List<GearCategory> categoryList = new List<GearCategory>();
 
-            if(categories != null && categories.Value.ValueKind == JsonValueKind.Array)
+            if (categories != null && categories.Value.ValueKind == JsonValueKind.Array)
             {
                 foreach (JsonElement category in categories.Value.EnumerateArray())
                 {
-                    if(category.TryGetProperty("CategoryID", out JsonElement categoryId))
+                    if (category.TryGetProperty("CategoryID", out JsonElement categoryId))
                     {
                         switch (categoryId.ToString())
                         {
@@ -116,7 +117,7 @@ namespace BTA_WikiTableGen
                                 break;
                             case "EngineHeatBlock":
                                 categoryList.Add(GearCategory.EngineHeatsinks);
-                                break; 
+                                break;
                             case "Cooling":
                                 categoryList.Add(GearCategory.HeatsinkKit);
                                 break;
@@ -137,7 +138,7 @@ namespace BTA_WikiTableGen
                 categoryList.Add(GearCategory.Structure);
             if (armorRegex.IsMatch(itemId) && !categoryList.Contains(GearCategory.Armor))
                 categoryList.Add(GearCategory.Armor);
-            if(categoryList.Count == 0)
+            if (categoryList.Count == 0)
                 categoryList.Add(GearCategory.None);
 
             return categoryList;
@@ -148,7 +149,7 @@ namespace BTA_WikiTableGen
             List<string> output = new List<string>();
             foreach (string tag in tags)
             {
-                if(TagsToGearIds.ContainsKey(tag))
+                if (TagsToGearIds.ContainsKey(tag))
                     output.AddRange(TagsToGearIds[tag]);
             }
             return output;

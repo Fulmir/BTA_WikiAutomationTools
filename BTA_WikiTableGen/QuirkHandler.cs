@@ -208,7 +208,6 @@ namespace BTA_WikiTableGen
             JsonElement bonuses;
             if (gearJson.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement bonusDescs))
             {
-
                 if (bonusDescs.TryGetProperty("Bonuses", out bonuses))
                 {
                     foreach (JsonElement bonusElement in bonuses.EnumerateArray())
@@ -228,13 +227,13 @@ namespace BTA_WikiTableGen
             }
             else
             {
-                if(output.Id == "Gear_Cockpit_Tacticon_B2000_Battle_Computer")
+                if (output.Id == "Gear_Cockpit_Tacticon_B2000_Battle_Computer")
                 {
                     BonusDef tempBonusDef = BaseBonusLookupTable["Tacticon"];
                     tempBonusDef.BonusValues = new List<string> { "+1" };
                     output.QuirkBonuses.Add(tempBonusDef);
                 }
-                else if(output.Id == "Gear_Sensor_Prototype_EWE")
+                else if (output.Id == "Gear_Sensor_Prototype_EWE")
                 {
                     BonusDef tempBonusDef = BaseBonusLookupTable["MissileDefense"];
                     tempBonusDef.BonusValues = new List<string> { "+3" };

@@ -71,7 +71,8 @@ namespace BTA_WikiTableGen
                 if (file.FileName.StartsWith("mechdef"))
                 {
                     MechDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
-                } else if (file.FileName.StartsWith("chassisdef"))
+                }
+                else if (file.FileName.StartsWith("chassisdef"))
                 {
                     ChassisDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
                 }
@@ -114,7 +115,7 @@ namespace BTA_WikiTableGen
             if (AffinityHandler.TryGetAssemblyVariant(this, out AssemblyVariant variant))
             {
                 PrefabId = $"{variant.PrefabId}_{MechTonnage}";
-                if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef))                    MechAffinity = tempAffinityDef;
+                if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef)) MechAffinity = tempAffinityDef;
             }
             else
             {
@@ -131,25 +132,25 @@ namespace BTA_WikiTableGen
 
         public void OutputStatsToFile(StreamWriter writer)
         {
-            writer.WriteLine( OutputTableLine( MechModel ));
-            writer.WriteLine( OutputTableLine( MechTonnage + "t" ));
-            writer.WriteLine( OutputTableLine( Role ));
+            writer.WriteLine(OutputTableLine(MechModel));
+            writer.WriteLine(OutputTableLine(MechTonnage + "t"));
+            writer.WriteLine(OutputTableLine(Role));
             foreach (string hardpointType in Hardpoints.Keys)
             {
-                writer.WriteLine( OutputTableLine( Hardpoints[hardpointType].ToString()));
+                writer.WriteLine(OutputTableLine(Hardpoints[hardpointType].ToString()));
             }
-            writer.WriteLine( OutputTableLine( EngineDecode(EngineTypeId) ));
-            writer.WriteLine( OutputTableLine( EngineSize.ToString() ));
-            writer.WriteLine( OutputTableLine( HeatsinkDecode(HeatsinkTypeId) ));
-            writer.WriteLine( OutputTableLine( StructureDecode(StructureTypeId) ));
-            writer.WriteLine( OutputTableLine( ArmorDecode(ArmorTypeId) ));
-            writer.WriteLine( OutputTableLine( "None" ) );
-            writer.WriteLine( OutputTableLine( CoreTonnage == null ? "N/A" : CoreTonnage + "t" ) );
-            writer.WriteLine( OutputTableLine( BareTonnage == null ? "N/A" : BareTonnage + "t" ) );
-            writer.WriteLine( OutputTableLine( WalkSpeed.ToString() ) );
-            writer.WriteLine( OutputTableLine( RunSpeed.ToString() ) );
-            writer.WriteLine( OutputTableLine( JumpDistance.ToString() ) );
-            writer.WriteLine( OutputTableLine( "-" ) );
+            writer.WriteLine(OutputTableLine(EngineDecode(EngineTypeId)));
+            writer.WriteLine(OutputTableLine(EngineSize.ToString()));
+            writer.WriteLine(OutputTableLine(HeatsinkDecode(HeatsinkTypeId)));
+            writer.WriteLine(OutputTableLine(StructureDecode(StructureTypeId)));
+            writer.WriteLine(OutputTableLine(ArmorDecode(ArmorTypeId)));
+            writer.WriteLine(OutputTableLine("None"));
+            writer.WriteLine(OutputTableLine(CoreTonnage == null ? "N/A" : CoreTonnage + "t"));
+            writer.WriteLine(OutputTableLine(BareTonnage == null ? "N/A" : BareTonnage + "t"));
+            writer.WriteLine(OutputTableLine(WalkSpeed.ToString()));
+            writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
+            writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
+            writer.WriteLine(OutputTableLine("-"));
         }
 
         public void OutputStatsToString(StringWriter writer)
@@ -348,7 +349,7 @@ namespace BTA_WikiTableGen
 
         private void GetDefaultGearList()
         {
-            foreach(string gearId in MechGearHandler.GetDefaultGearIdsForTags(this.Tags))
+            foreach (string gearId in MechGearHandler.GetDefaultGearIdsForTags(this.Tags))
             {
                 if (MechGearHandler.TryGetEquipmentData(gearId.ToString(), out EquipmentData equipmentData))
                 {
@@ -373,11 +374,11 @@ namespace BTA_WikiTableGen
             allEquipment.AddRange(FixedGear);
             allEquipment.AddRange(BaseGear);
 
-            foreach(EquipmentData data in allEquipment)
+            foreach (EquipmentData data in allEquipment)
             {
-                foreach(GearCategory gearCat in equipmentData.GearType)
+                foreach (GearCategory gearCat in equipmentData.GearType)
                 {
-                    if(gearCat == GearCategory.Armor || gearCat == GearCategory.LifeSupportA || gearCat == GearCategory.LifeSupportB)
+                    if (gearCat == GearCategory.Armor || gearCat == GearCategory.LifeSupportA || gearCat == GearCategory.LifeSupportB)
                     {
                         if (data.GearType.Contains(gearCat))
                             return true;
@@ -392,11 +393,11 @@ namespace BTA_WikiTableGen
             if (ChassisDefFile.RootElement.TryGetProperty("FixedEquipment", out JsonElement fixedEquipment))
                 foreach (JsonElement gear in fixedEquipment.EnumerateArray())
                 {
-                    if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
-                        if(MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
+                    if (gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
+                        if (MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
                         {
                             FixedGear.Add(equipmentData);
-                            if(QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
+                            if (QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
                             {
                                 if (MechQuirks.ContainsKey(tempQuirk.Id))
                                 {
@@ -415,7 +416,7 @@ namespace BTA_WikiTableGen
             if (MechDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
                 foreach (JsonElement gear in gearInventory.EnumerateArray())
                 {
-                    if(gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
+                    if (gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
                         if (MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
                         {
                             BaseGear.Add(equipmentData);
@@ -458,7 +459,7 @@ namespace BTA_WikiTableGen
 
             foreach (EquipmentData item in AllGearList)
             {
-                foreach(GearCategory gearType in item.GearType)
+                foreach (GearCategory gearType in item.GearType)
                 {
                     switch (gearType)
                     {
@@ -504,7 +505,8 @@ namespace BTA_WikiTableGen
                 WalkSpeed = ConvertMetersToHexes(adjustedWalkSpeed);
                 RunSpeed = ConvertMetersToHexes(adjustedSprintSpeed);
                 JumpDistance = jumpDistance;
-            } else
+            }
+            else
             {
                 WalkSpeed = ConvertMetersToHexes(baseMoveInMeters);
                 RunSpeed = ConvertMetersToHexes(baseMoveInMeters * 1.5);
@@ -519,14 +521,14 @@ namespace BTA_WikiTableGen
 
         private void CountWeaponHardpoints()
         {
-            foreach(var location in ChassisDefFile.RootElement.GetProperty("Locations").EnumerateArray())
+            foreach (var location in ChassisDefFile.RootElement.GetProperty("Locations").EnumerateArray())
             {
-                foreach(var hardpoint in location.GetProperty("Hardpoints").EnumerateArray())
+                foreach (var hardpoint in location.GetProperty("Hardpoints").EnumerateArray())
                 {
                     hardpoint.TryGetProperty("WeaponMount", out JsonElement mountType);
                     hardpoint.TryGetProperty("Omni", out JsonElement omniFlag);
 
-                    if(omniFlag.GetBoolean())
+                    if (omniFlag.GetBoolean())
                     {
                         Hardpoints["omni"]++;
                     }
@@ -540,7 +542,7 @@ namespace BTA_WikiTableGen
 
         private string GetPrefabIdentifier()
         {
-            if(this.ChassisDefFile.RootElement.TryGetProperty("PrefabIdentifier", out JsonElement prefab))
+            if (this.ChassisDefFile.RootElement.TryGetProperty("PrefabIdentifier", out JsonElement prefab))
                 return prefab.ToString();
             else
             {
@@ -551,13 +553,13 @@ namespace BTA_WikiTableGen
 
         private void PopulateTagsForMech()
         {
-            if(ChassisDefFile.RootElement.TryGetProperty("ChassisTags", out JsonElement chassisTags))
+            if (ChassisDefFile.RootElement.TryGetProperty("ChassisTags", out JsonElement chassisTags))
             {
                 if (chassisTags.TryGetProperty("items", out JsonElement tagsElement))
                 {
                     foreach (var tag in tagsElement.EnumerateArray())
                     {
-                        if(!Tags.Contains(tag.ToString()))
+                        if (!Tags.Contains(tag.ToString()))
                             Tags.Add(tag.ToString());
                     }
                 }

@@ -15,7 +15,7 @@ namespace BTA_WikiTableGen
 
         public static double GetCoreWeight(MechStats mechStats)
         {
-            double baseChassisWeight = Math.Round((double)mechStats.MechTonnage/10, 1);
+            double baseChassisWeight = Math.Round((double)mechStats.MechTonnage / 10, 1);
 
             List<EquipmentData> allEquipment = new List<EquipmentData>();
             allEquipment.AddRange(mechStats.BaseGear);
@@ -86,11 +86,11 @@ namespace BTA_WikiTableGen
                     engineTonnage = DoHalfTonRounding(engineTonnage);
                 }
 
-                if(engineCoreData.Value.GearJsonDoc.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement engineBonuses))
+                if (engineCoreData.Value.GearJsonDoc.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement engineBonuses))
                 {
-                    if(engineBonuses.TryGetProperty("Bonuses", out JsonElement bonusArray))
+                    if (engineBonuses.TryGetProperty("Bonuses", out JsonElement bonusArray))
                     {
-                        if(EngineHeatsinksRegex.IsMatch(bonusArray.ToString()))
+                        if (EngineHeatsinksRegex.IsMatch(bonusArray.ToString()))
                             freeHeatsinkCount = Convert.ToInt32(EngineHeatsinksRegex.Match(bonusArray.ToString()).Captures[0].Value);
                     }
                 }
@@ -115,7 +115,7 @@ namespace BTA_WikiTableGen
             {
                 if (fixedGear.GearType.Contains(GearCategory.Cockpit))
                     cockpitCount++;
-                if(fixedGear.GearType.Contains(GearCategory.LifeSupportA))
+                if (fixedGear.GearType.Contains(GearCategory.LifeSupportA))
                     lifeSupportCount++;
                 if (fixedGear.GearType.Contains(GearCategory.LifeSupportB))
                     lifeSupportCount++;
@@ -265,11 +265,11 @@ namespace BTA_WikiTableGen
         {
             engineFactor = 1;
 
-            if(engineTypeData.GearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement customVals))
+            if (engineTypeData.GearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement customVals))
             {
-                if(customVals.TryGetProperty("Weights", out JsonElement weights))
+                if (customVals.TryGetProperty("Weights", out JsonElement weights))
                 {
-                    if(weights.TryGetProperty("EngineFactor", out JsonElement engineFactorJson))
+                    if (weights.TryGetProperty("EngineFactor", out JsonElement engineFactorJson))
                     {
                         engineFactor = engineFactorJson.GetDouble();
                         return true;

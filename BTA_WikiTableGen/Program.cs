@@ -10,13 +10,13 @@ class Program
         List<string> inputFileValues = new List<string>();
         bool useFile = false;
 
-        if(inputFile.Peek() != -1)
+        if (inputFile.Peek() != -1)
         {
-            useFile= true;
+            useFile = true;
 
-            while(!inputFile.EndOfStream)
+            while (!inputFile.EndOfStream)
             {
-                inputFileValues.Add(inputFile.ReadLine()??"ERROR");
+                inputFileValues.Add(inputFile.ReadLine() ?? "ERROR");
             }
         }
 
@@ -36,9 +36,9 @@ class Program
 
         List<MechStats> listOfMechs = new List<MechStats>();
 
-        if(useFile)
+        if (useFile)
         {
-            foreach(string line in inputFileValues)
+            foreach (string line in inputFileValues)
             {
                 listOfMechs.Add(new MechStats(line, modsFolder));
             }

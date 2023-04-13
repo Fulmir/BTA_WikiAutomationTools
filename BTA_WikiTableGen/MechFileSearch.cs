@@ -33,7 +33,7 @@ namespace BTA_WikiTableGen
         {
             List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef*.json");
 
-            foreach(BasicFileData chassisDef in chassisDefs)
+            foreach (BasicFileData chassisDef in chassisDefs)
             {
                 if (!BlacklistDirectories.IsMatch(chassisDef.Path))
                 {
@@ -89,7 +89,7 @@ namespace BTA_WikiTableGen
 
             target[prefabKey][variantName] = allMechs[variantName];
         }
-        
+
         private static void AddToPrefabToNameTracker(string chassisName, string variantName)
         {
             string prefabKey = allMechs[variantName].PrefabId ?? allMechs[variantName].PrefabIdentifier;
@@ -97,7 +97,7 @@ namespace BTA_WikiTableGen
                 PrefabToNameTracker[prefabKey] = new List<MechNameCounter>();
 
             int refCounter = PrefabToNameTracker[prefabKey].FindIndex((counter) => counter.MechName == chassisName);
-            if(refCounter > -1 && PrefabToNameTracker[prefabKey][refCounter].MechName == chassisName)
+            if (refCounter > -1 && PrefabToNameTracker[prefabKey][refCounter].MechName == chassisName)
             {
                 MechNameCounter tempCount = new MechNameCounter()
                 {
@@ -124,7 +124,7 @@ namespace BTA_WikiTableGen
 
             int ties = 1;
 
-            foreach(MechNameCounter counter in PrefabToNameTracker[prefabId])
+            foreach (MechNameCounter counter in PrefabToNameTracker[prefabId])
             {
                 if (winningName.UseCount < counter.UseCount)
                 {
@@ -134,7 +134,7 @@ namespace BTA_WikiTableGen
                 else if (winningName.UseCount == counter.UseCount)
                 {
                     ties++;
-                    if(winningName.MechName.Length > counter.MechName.Length)
+                    if (winningName.MechName.Length > counter.MechName.Length)
                         winningName.MechName = counter.MechName;
                 }
             }
@@ -218,7 +218,7 @@ namespace BTA_WikiTableGen
 
             foreach (string mechName in sortedMechNames)
             {
-                foreach(string prefabIdFromName in primaryNamesToPrefabs[mechName])
+                foreach (string prefabIdFromName in primaryNamesToPrefabs[mechName])
                 {
                     List<string> sortedVariantModels = targetDictionary[prefabIdFromName].Keys.ToList();
                     sortedVariantModels.Sort(new MechModelNameComparer());
@@ -227,7 +227,7 @@ namespace BTA_WikiTableGen
                     List<string> excludedVariants = new List<string>();
                     foreach (MechStats variant in targetDictionary[prefabIdFromName].Values)
                     {
-                        if(variant.VariantAssemblyRules != null && 
+                        if (variant.VariantAssemblyRules != null &&
                             (variant.VariantAssemblyRules.Value.Exclude || !variant.VariantAssemblyRules.Value.Include))
                         {
                             excludedVariantsCount++;
@@ -254,7 +254,7 @@ namespace BTA_WikiTableGen
                             tempMechs.Add(targetDictionary[prefabIdFromName][variant]);
                     }
 
-                    foreach(string variant in excludedVariants)
+                    foreach (string variant in excludedVariants)
                     {
                         MechStats excludedVariant = allMechs[variant];
                         StartMechTitleSection(variantWriter, excludedVariant.MechName, 1);
@@ -262,12 +262,12 @@ namespace BTA_WikiTableGen
                         foreach (QuirkDef quirk in excludedVariant.MechQuirks.Values)
                             QuirkHandler.OutputQuirkToString(quirk, true, variantWriter);
 
-                        if(excludedVariant.MechAffinity.HasValue)
+                        if (excludedVariant.MechAffinity.HasValue)
                             AffinityHandler.OutputAffinityToString(excludedVariant.MechAffinity.Value, variantWriter);
 
                         excludedVariant.OutputStatsToString(variantWriter);
                     }
-                    if(sortedVariantModels.Count - excludedVariantsCount >= 1)
+                    if (sortedVariantModels.Count - excludedVariantsCount >= 1)
                     {
                         StartMechTitleSection(variantWriter, mechName, sortedVariantModels.Count - excludedVariantsCount);
 
@@ -459,7 +459,7 @@ namespace BTA_WikiTableGen
         private static void StartMechTitleSection(StringWriter writer, string mechName, int variantCount)
         {
             string cleanMechName = mechName.Replace(' ', '_').Replace("'", "");
-            string imageName = mechName.Replace("Royal", "",StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim().Replace(' ', '_').Replace("'", "");
+            string imageName = mechName.Replace("Royal", "", StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim().Replace(' ', '_').Replace("'", "");
 
             string displayMechName = mechName;
             if (mechName.Contains("Primitive", StringComparison.OrdinalIgnoreCase))

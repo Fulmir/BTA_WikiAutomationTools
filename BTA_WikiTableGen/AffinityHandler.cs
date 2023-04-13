@@ -26,7 +26,7 @@ namespace BTA_WikiTableGen
             string AffinitiesPath = modsFolder + AffinitiesFolder;
             List<BasicFileData> AffinityFiles = ModJsonHandler.SearchFiles(AffinitiesPath, ChassisAffinitiesPattern);
 
-            foreach(BasicFileData affinity in AffinityFiles)
+            foreach (BasicFileData affinity in AffinityFiles)
             {
                 JsonDocument affinityJson = JsonDocument.Parse(new StreamReader(affinity.Path).ReadToEnd());
                 JsonElement affinityData = affinityJson.RootElement.GetProperty("affinityData");
@@ -56,7 +56,7 @@ namespace BTA_WikiTableGen
         {
             mechAffinity = new AffinityDef();
 
-            if(prefabId != null && AffinityLookupTable.ContainsKey(prefabId))
+            if (prefabId != null && AffinityLookupTable.ContainsKey(prefabId))
             {
                 mechAffinity = AffinityLookupTable[prefabId];
                 return true;
@@ -72,9 +72,9 @@ namespace BTA_WikiTableGen
 
         public static bool TryGetAssemblyVariant(MechStats stats, out AssemblyVariant outVariant)
         {
-            if(stats.ChassisDefFile.RootElement.TryGetProperty("Custom", out JsonElement custom))
+            if (stats.ChassisDefFile.RootElement.TryGetProperty("Custom", out JsonElement custom))
             {
-                if(custom.TryGetProperty("AssemblyVariant", out JsonElement variant))
+                if (custom.TryGetProperty("AssemblyVariant", out JsonElement variant))
                 {
                     outVariant = new AssemblyVariant()
                     {
@@ -94,7 +94,7 @@ namespace BTA_WikiTableGen
         {
             Dictionary<string, AffinityDef> affinities = new Dictionary<string, AffinityDef>();
 
-            foreach(MechStats mech in mechList)
+            foreach (MechStats mech in mechList)
             {
                 if (mech.MechAffinity.HasValue)
                     affinities[mech.MechAffinity.Value.Id] = mech.MechAffinity.Value;
