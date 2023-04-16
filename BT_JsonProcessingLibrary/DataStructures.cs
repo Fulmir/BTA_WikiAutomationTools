@@ -67,6 +67,7 @@ namespace BT_JsonProcessingLibrary
     {
         public string Id { get; set; }
         public string Name { get; set; }
+        public string UiName { get; set; }
         public int InstanceCount { get; set; }
         public List<BonusDef> QuirkBonuses { get; set; }
     }
@@ -110,6 +111,7 @@ namespace BT_JsonProcessingLibrary
         EngineHeatsinks,
         Armor,
         Structure,
+        MeleeWeapon,
         Weapon,
         Cockpit,
         LifeSupportA,

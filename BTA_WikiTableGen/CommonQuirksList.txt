@@ -1,0 +1,9 @@
+Gear_Gyro_Quad_Omni
+Gear_Gyro_Omnimech
+Gear_Gyro_Compact_Omni
+Gear_Gyro_XL_Omni
+Gear_Gyro_Heavy_Duty_Omni
+Gear_LifeSupportA_Clan_Quirk
+Gear_Quirk_Hero_BattleMech
+Gear_Quirk_Industrial_BattleMech
+Gear_armorslots_Primitive

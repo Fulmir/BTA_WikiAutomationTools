@@ -28,7 +28,7 @@ class Program
             modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
         Console.WriteLine("");
 
-        QuirkHandler.CreateQuirkBonusesIndex(modsFolder);
+        QuirkHandler.LoadQuirkHandlerData(modsFolder);
 
         MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
 

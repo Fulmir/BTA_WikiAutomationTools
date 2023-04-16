@@ -88,11 +88,8 @@ namespace BTA_WikiTableGen
 
                 if (engineCoreData.Value.GearJsonDoc.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement engineBonuses))
                 {
-                    if (engineBonuses.TryGetProperty("Bonuses", out JsonElement bonusArray))
-                    {
-                        if (EngineHeatsinksRegex.IsMatch(bonusArray.ToString()))
-                            freeHeatsinkCount = Convert.ToInt32(EngineHeatsinksRegex.Match(bonusArray.ToString()).Captures[0].Value);
-                    }
+                    if (EngineHeatsinksRegex.IsMatch(engineBonuses.ToString()))
+                        freeHeatsinkCount = Convert.ToInt32(EngineHeatsinksRegex.Match(engineBonuses.ToString()).Captures[0].Value);
                 }
             }
 
@@ -207,11 +204,8 @@ namespace BTA_WikiTableGen
 
                 if (engineCoreData.Value.GearJsonDoc.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement engineBonuses))
                 {
-                    if (engineBonuses.TryGetProperty("Bonuses", out JsonElement bonusArray))
-                    {
-                        if (EngineHeatsinksRegex.IsMatch(bonusArray.ToString()))
-                            freeHeatsinkCount = Convert.ToInt32(EngineHeatsinksRegex.Match(bonusArray.ToString()).Captures[0].Value);
-                    }
+                    if (EngineHeatsinksRegex.IsMatch(engineBonuses.ToString()))
+                        freeHeatsinkCount = Convert.ToInt32(EngineHeatsinksRegex.Match(engineBonuses.ToString()).Captures[0].Value);
                 }
             }
 

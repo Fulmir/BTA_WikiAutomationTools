@@ -127,6 +127,9 @@ namespace BTA_WikiTableGen
                             case "EngineCore":
                                 categoryList.Add(GearCategory.EngineCore);
                                 break;
+                            case "w/s/m/melee":
+                                categoryList.Add(GearCategory.MeleeWeapon);
+                                break;
                         }
                     }
                 }
@@ -162,12 +165,19 @@ namespace BTA_WikiTableGen
 
             foreach (JsonElement setting in mechEngDefaultsJson.RootElement.GetProperty("Settings").EnumerateArray())
             {
-                if (setting.TryGetProperty("Tag", out JsonElement tagName))
+                if (setting.TryGetProperty("UnitTypes", out JsonElement tagGearDefList))
                 {
-                    if (!TagsToGearIds.ContainsKey(tagName.ToString()))
-                        TagsToGearIds[tagName.ToString()] = new List<string>();
+                    foreach(JsonElement unitType in tagGearDefList.EnumerateArray())
+                    {
+                        JsonElement tagName = unitType.GetProperty("UnitType");
 
-                    TagsToGearIds[tagName.ToString()].Add(setting.GetProperty("DefID").ToString());
+                        if (!TagsToGearIds.ContainsKey(tagName.ToString()))
+                            TagsToGearIds[tagName.ToString()] = new List<string>();
+                        foreach(JsonElement tagDefault in unitType.GetProperty("Defaults").EnumerateArray())
+                        {
+                            TagsToGearIds[tagName.ToString()].Add(tagDefault.GetProperty("DefID").ToString());
+                        }
+                    }
                 }
             }
         }

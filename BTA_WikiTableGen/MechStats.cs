@@ -21,8 +21,11 @@ namespace BTA_WikiTableGen
             { "ballistic", 0},
             { "energy", 0 },
             { "missile", 0 },
+            { "artillery", 0 },
             { "antipersonnel", 0 },
-            { "omni", 0 }
+            { "omni", 0 },
+            { "bombbay", 0 },
+            { "meleeweapon", 0 }
         };
         public string EngineTypeId { get; set; } = string.Empty;
         public string EngineCoreId { get; set; } = string.Empty;
@@ -41,6 +44,7 @@ namespace BTA_WikiTableGen
         public List<EquipmentData> DefaultGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> FixedGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
+        public List<EquipmentData> MeleeWeapons { get; set; } = new List<EquipmentData>();
         public Dictionary<string, QuirkDef> MechQuirks { get; set; } = new Dictionary<string, QuirkDef>();
         public AffinityDef? MechAffinity { get; set; }
         public AssemblyVariant? VariantAssemblyRules { get; set; }
@@ -116,6 +120,7 @@ namespace BTA_WikiTableGen
             {
                 PrefabId = $"{variant.PrefabId}_{MechTonnage}";
                 if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef)) MechAffinity = tempAffinityDef;
+                VariantAssemblyRules = variant;
             }
             else
             {
@@ -132,28 +137,10 @@ namespace BTA_WikiTableGen
 
         public void OutputStatsToFile(StreamWriter writer)
         {
-            writer.WriteLine(OutputTableLine(MechModel));
-            writer.WriteLine(OutputTableLine(MechTonnage + "t"));
-            writer.WriteLine(OutputTableLine(Role));
-            foreach (string hardpointType in Hardpoints.Keys)
-            {
-                writer.WriteLine(OutputTableLine(Hardpoints[hardpointType].ToString()));
-            }
-            writer.WriteLine(OutputTableLine(EngineDecode(EngineTypeId)));
-            writer.WriteLine(OutputTableLine(EngineSize.ToString()));
-            writer.WriteLine(OutputTableLine(HeatsinkDecode(HeatsinkTypeId)));
-            writer.WriteLine(OutputTableLine(StructureDecode(StructureTypeId)));
-            writer.WriteLine(OutputTableLine(ArmorDecode(ArmorTypeId)));
-            writer.WriteLine(OutputTableLine("None"));
-            writer.WriteLine(OutputTableLine(CoreTonnage == null ? "N/A" : CoreTonnage + "t"));
-            writer.WriteLine(OutputTableLine(BareTonnage == null ? "N/A" : BareTonnage + "t"));
-            writer.WriteLine(OutputTableLine(WalkSpeed.ToString()));
-            writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
-            writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
-            writer.WriteLine(OutputTableLine("-"));
+            OutputStatsToString(writer);
         }
 
-        public void OutputStatsToString(StringWriter writer)
+        public void OutputStatsToString(TextWriter writer)
         {
             writer.WriteLine(OutputTableLine(MechModel));
             writer.WriteLine(OutputTableLine(MechTonnage + "t"));
@@ -167,13 +154,37 @@ namespace BTA_WikiTableGen
             writer.WriteLine(OutputTableLine(HeatsinkDecode(HeatsinkTypeId)));
             writer.WriteLine(OutputTableLine(StructureDecode(StructureTypeId)));
             writer.WriteLine(OutputTableLine(ArmorDecode(ArmorTypeId)));
-            writer.WriteLine(OutputTableLine("None"));
+            writer.WriteLine(OutputTableLine(OutputMeleeWeapons()));
             writer.WriteLine(OutputTableLine(CoreTonnage == null ? "N/A" : CoreTonnage + "t"));
             writer.WriteLine(OutputTableLine(BareTonnage == null ? "N/A" : BareTonnage + "t"));
             writer.WriteLine(OutputTableLine(WalkSpeed.ToString()));
             writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
             writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
             writer.WriteLine(OutputTableLine("-"));
+        }
+
+        private string OutputMeleeWeapons()
+        {
+            string output = "";
+            bool first = true;
+
+            if(MeleeWeapons.Count == 0)
+            {
+                output = "None";
+                return output;
+            }
+
+            foreach(EquipmentData weapon in MeleeWeapons)
+            {
+                if (first)
+                    first = false;
+                else
+                    output += "\r\n";
+
+                output += weapon.UIName;
+            }
+
+            return output;
         }
 
         private string OutputTableLine(string line)
@@ -408,7 +419,7 @@ namespace BTA_WikiTableGen
                         }
                 }
             else
-                Console.WriteLine("FAILURE TO GET FIXED GEAR");
+                Console.WriteLine($"FAILURE TO GET FIXED GEAR {MechModel}");
         }
 
         private void GetBaseGearList()
@@ -420,18 +431,10 @@ namespace BTA_WikiTableGen
                         if (MechGearHandler.TryGetEquipmentData(itemId.ToString(), out EquipmentData equipmentData))
                         {
                             BaseGear.Add(equipmentData);
-                            if (QuirkHandler.CheckGearIsQuirk(equipmentData, out QuirkDef tempQuirk))
-                            {
-                                if (MechQuirks.ContainsKey(tempQuirk.Id))
-                                {
-                                    tempQuirk.InstanceCount++;
-                                }
-                                MechQuirks[tempQuirk.Id] = tempQuirk;
-                            }
                         }
                 }
             else
-                Console.WriteLine("FAILURE TO GET BASE GEAR");
+                Console.WriteLine($"FAILURE TO GET BASE GEAR {MechModel}");
         }
 
         private void GetUnitTonnage()
@@ -439,7 +442,7 @@ namespace BTA_WikiTableGen
             if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
                 MechTonnage = tonnage.GetInt32();
             else
-                Console.WriteLine("FAILURE TO GET TONNAGE");
+                Console.WriteLine($"FAILURE TO GET TONNAGE {MechModel}");
         }
 
         private void GetUnitStockRole()
@@ -447,7 +450,7 @@ namespace BTA_WikiTableGen
             if (ChassisDefFile.RootElement.TryGetProperty("StockRole", out JsonElement role))
                 Role = role.ToString();
             else
-                Console.WriteLine("FAILURE TO GET STOCK ROLE");
+                Console.WriteLine($"FAILURE TO GET STOCK ROLE: {MechModel}");
         }
 
         private void GetCoreGear()
@@ -481,6 +484,9 @@ namespace BTA_WikiTableGen
                             break;
                         case GearCategory.Gyro:
                             GyroTypeId = item.Id;
+                            break;
+                        case GearCategory.MeleeWeapon:
+                            MeleeWeapons.Add(item);
                             break;
                     }
                 }
@@ -525,7 +531,12 @@ namespace BTA_WikiTableGen
             {
                 foreach (var hardpoint in location.GetProperty("Hardpoints").EnumerateArray())
                 {
-                    hardpoint.TryGetProperty("WeaponMount", out JsonElement mountType);
+                    // TODO: Remove this jank
+                    JsonElement? mountType = null;
+                    if(hardpoint.TryGetProperty("WeaponMountID", out JsonElement correctMountType))
+                        mountType = correctMountType;
+                    else if (hardpoint.TryGetProperty("WeaponMount", out JsonElement incorrectMountType))
+                        mountType = incorrectMountType;
                     hardpoint.TryGetProperty("Omni", out JsonElement omniFlag);
 
                     if (omniFlag.GetBoolean())
@@ -579,6 +590,8 @@ namespace BTA_WikiTableGen
             if (Tags.Contains("BLACKLISTED") || Tags.Contains("NOSALVAGE"))
                 Blacklisted = true;
             else
+                Blacklisted = false;
+            if (MechFileSearch.WhitelistMechVariants.Contains(MechModel))
                 Blacklisted = false;
         }
     }

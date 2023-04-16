@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UtilityClassLibrary;
 
 namespace BTA_WikiTableGen
 {
@@ -16,6 +17,11 @@ namespace BTA_WikiTableGen
         static Regex QuadMechDirectories = new Regex(@"BT Advanced Quad Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex SanctuaryMechDirectories = new Regex(@"(BT Advanced Sanctuary Worlds Mechs|Heavy Metal Sanctuary Worlds Units)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex CommunityContentDirectories = new Regex(@"Community Content", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static Regex NumbersInGroupKey = new Regex(@"(?'key'[A-Z]+)([- ]?)", RegexOptions.Compiled);
+
+        static List<string> CustomMechVariants = new List<string>();
+        internal static List<string> WhitelistMechVariants = new List<string>();
+        static List<string> SeparateMechEntries = new List<string>();
 
         static Dictionary<string, Dictionary<string, MechStats>> InnerSphereMechs = new Dictionary<string, Dictionary<string, MechStats>>();
         static Dictionary<string, Dictionary<string, MechStats>> ClanMechs = new Dictionary<string, Dictionary<string, MechStats>>();
@@ -23,14 +29,19 @@ namespace BTA_WikiTableGen
         static Dictionary<string, Dictionary<string, MechStats>> QuadMechs = new Dictionary<string, Dictionary<string, MechStats>>();
         static Dictionary<string, Dictionary<string, MechStats>> HeroMechs = new Dictionary<string, Dictionary<string, MechStats>>();
         static Dictionary<string, Dictionary<string, MechStats>> CommunityContentMechs = new Dictionary<string, Dictionary<string, MechStats>>();
+        static Dictionary<string, Dictionary<string, MechStats>> CustomMechs = new Dictionary<string, Dictionary<string, MechStats>>();
 
         static Dictionary<string, MechStats> allMechs = new Dictionary<string, MechStats>();
 
-        static Dictionary<string, List<MechNameCounter>> PrefabToNameTracker = new Dictionary<string, List<MechNameCounter>>();
+        static Dictionary<string, List<MechNameCounter>> GroupKeyToNameTracker = new Dictionary<string, List<MechNameCounter>>();
 
         // TODO: See how this works parallelized...
         public static void GetAllMechsFromDefs(string modsFolder)
         {
+            CustomMechVariants = TextFileListProcessor.GetStringListFromFile(".\\CustomMechsList.txt");
+            WhitelistMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechVariantsWhitelist.txt");
+            SeparateMechEntries = TextFileListProcessor.GetStringListFromFile(".\\SeparateMechEntries.txt");
+
             List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef*.json");
 
             foreach (BasicFileData chassisDef in chassisDefs)
@@ -43,16 +54,19 @@ namespace BTA_WikiTableGen
 
                     var tempChassisDoc = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
 
-                    string variantName = tempChassisDoc.RootElement.GetProperty("VariantName").ToString();
-                    string chassisName = tempChassisDoc.RootElement.GetProperty("Description").GetProperty("Name").ToString();
+                    string variantName = tempChassisDoc.RootElement.GetProperty("VariantName").ToString().Trim();
+                    string chassisName = tempChassisDoc.RootElement.GetProperty("Description").GetProperty("Name").ToString().Trim();
 
                     allMechs[variantName] = new MechStats(chassisName, variantName, chassisDef, mechDef);
                     if (allMechs[variantName].Blacklisted)
                         continue;
 
-                    AddToPrefabToNameTracker(chassisName, variantName);
+                    AddToGroupKeyToNameTracker(chassisName, variantName);
 
-                    if (CommunityContentDirectories.IsMatch(chassisDef.Path))
+                    if (CustomMechVariants.Contains(variantName))
+                        AddToNestedDictionary(variantName, ref CustomMechs);
+
+                    else if (CommunityContentDirectories.IsMatch(chassisDef.Path))
                         AddToNestedDictionary(variantName, ref CommunityContentMechs);
 
                     else if (IsHeroMech(variantName))
@@ -83,38 +97,84 @@ namespace BTA_WikiTableGen
 
         private static void AddToNestedDictionary(string variantName, ref Dictionary<string, Dictionary<string, MechStats>> target)
         {
-            string prefabKey = allMechs[variantName].PrefabId ?? allMechs[variantName].PrefabIdentifier;
-            if (!target.ContainsKey(prefabKey))
-                target[prefabKey] = new Dictionary<string, MechStats>();
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechTonnage;
+            if (!target.ContainsKey(mechGroupKey))
+                target[mechGroupKey] = new Dictionary<string, MechStats>();
 
-            target[prefabKey][variantName] = allMechs[variantName];
+            target[mechGroupKey][variantName] = allMechs[variantName];
         }
 
-        private static void AddToPrefabToNameTracker(string chassisName, string variantName)
+        private static string CleanNameForKey(string chassisName)
         {
-            string prefabKey = allMechs[variantName].PrefabId ?? allMechs[variantName].PrefabIdentifier;
-            if (!PrefabToNameTracker.ContainsKey(prefabKey))
-                PrefabToNameTracker[prefabKey] = new List<MechNameCounter>();
+            return chassisName.Trim().Replace("Royal", "", StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim();
+        }
 
-            int refCounter = PrefabToNameTracker[prefabKey].FindIndex((counter) => counter.MechName == chassisName);
-            if (refCounter > -1 && PrefabToNameTracker[prefabKey][refCounter].MechName == chassisName)
+        private static void AddToGroupKeyToNameTracker(string chassisName, string variantName)
+        {
+            chassisName = CleanNameForKey(chassisName);
+
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechTonnage;
+            if (!GroupKeyToNameTracker.ContainsKey(mechGroupKey))
+                GroupKeyToNameTracker[mechGroupKey] = new List<MechNameCounter>();
+
+            int refCounter = GroupKeyToNameTracker[mechGroupKey].FindIndex((counter) => counter.MechName == chassisName);
+            if (refCounter > -1 && GroupKeyToNameTracker[mechGroupKey][refCounter].MechName == chassisName)
             {
-                MechNameCounter tempCount = new MechNameCounter()
+                GroupKeyToNameTracker[mechGroupKey][refCounter] = new MechNameCounter()
                 {
                     MechName = chassisName,
-                    UseCount = PrefabToNameTracker[prefabKey][refCounter].UseCount + 1
+                    UseCount = GroupKeyToNameTracker[mechGroupKey][refCounter].UseCount + 1
                 };
-                PrefabToNameTracker[prefabKey][refCounter] = tempCount;
                 return;
             }
-            PrefabToNameTracker[prefabKey].Add(new MechNameCounter()
+            GroupKeyToNameTracker[mechGroupKey].Add(new MechNameCounter()
             {
                 MechName = chassisName,
                 UseCount = 1
             });
         }
+        private static string VariantNameToGroupKey(string variantName)
+        {
+            Match nameMatch = NumbersInGroupKey.Match(variantName.Trim());
+            if (nameMatch.Success)
+            {
+                return nameMatch.Groups["key"].Value;
+            }
+            else
+            {
+                return variantName.Trim().Split(new char[] { '-', ' ' })[0];
+            }
+        }
 
-        private static bool TryGetNameForPrefabId(string prefabId, out string NameOutput)
+        private static string TryGetNameForGroupKey(string mechGroupKey, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary)
+        {
+            Dictionary<string, MechNameCounter> mechNameCounters = new Dictionary<string, MechNameCounter>();
+            int highestUseCount = 0;
+            string highestUseName = "ERROR";
+
+            foreach (MechStats mech in targetDictionary[mechGroupKey].Values)
+            {
+                string cleanedName = CleanNameForKey(mech.MechName);
+                if (mechNameCounters.TryGetValue(cleanedName, out MechNameCounter nameCount))
+                {
+                    nameCount.UseCount++;
+                    mechNameCounters[cleanedName] = nameCount;
+                }
+                else
+                    mechNameCounters[cleanedName] = new MechNameCounter()
+                    {
+                        MechName = cleanedName,
+                        UseCount = 1
+                    };
+                if (mechNameCounters[cleanedName].UseCount > highestUseCount)
+                {
+                    highestUseCount = mechNameCounters[cleanedName].UseCount;
+                    highestUseName = cleanedName;
+                }
+            }
+            return highestUseName;
+        }
+        private static string TryGetNameForGroupKey(string mechGroupKey)
         {
             MechNameCounter winningName = new MechNameCounter()
             {
@@ -122,158 +182,208 @@ namespace BTA_WikiTableGen
                 UseCount = -1
             };
 
-            int ties = 1;
-
-            foreach (MechNameCounter counter in PrefabToNameTracker[prefabId])
+            foreach (MechNameCounter counter in GroupKeyToNameTracker[mechGroupKey])
             {
                 if (winningName.UseCount < counter.UseCount)
-                {
                     winningName = counter;
-                    ties = 1;
-                }
                 else if (winningName.UseCount == counter.UseCount)
-                {
-                    ties++;
                     if (winningName.MechName.Length > counter.MechName.Length)
                         winningName.MechName = counter.MechName;
-                }
             }
 
-            if (ties == 1)
-            {
-                NameOutput = winningName.MechName;
-                return true;
-            }
-            NameOutput = winningName.MechName;
-            return false;
+            return winningName.MechName;
         }
 
         public static void OutputMechsToWikiTables()
         {
             StreamWriter mechTablePageWriter = new StreamWriter("MechPageTables.txt", false);
 
+            mechTablePageWriter.WriteLine(QuirkHandler.WriteOutCommonQuirkEffects());
+
             mechTablePageWriter.WriteLine("==Inner Sphere Mechs==");
-            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Inner Sphere {0} Mechs", ref InnerSphereMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Inner Sphere {0} Mechs", ref InnerSphereMechs, true, false));
             mechTablePageWriter.Close();
 
             mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
             mechTablePageWriter.WriteLine("==Clan Mechs==");
-            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Clan {0} Mechs", ref ClanMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Clan {0} Mechs", ref ClanMechs, true, false));
             mechTablePageWriter.Close();
 
             mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
             mechTablePageWriter.WriteLine("==Sanctuary Worlds Mechs==");
-            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Sanctuary Worlds {0} Mechs", ref SanctuaryMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Sanctuary Worlds {0} Mechs", ref SanctuaryMechs, true, false));
             mechTablePageWriter.Close();
 
             mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
             mechTablePageWriter.WriteLine("==Hero Mechs==");
-            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("{0} Hero Mechs", ref HeroMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("{0} Hero Mechs", ref HeroMechs, true, true));
             mechTablePageWriter.Close();
 
             mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
             mechTablePageWriter.WriteLine("==Other Mechs==");
-            mechTablePageWriter.Write(OutputDictionaryToString("Quad Mechs", ref QuadMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Quad Mechs", ref QuadMechs, false, false));
             mechTablePageWriter.Close();
 
             mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
-            mechTablePageWriter.Write(OutputDictionaryToString("Community Content Mechs", ref CommunityContentMechs));
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Custom Mechs", ref CustomMechs, false, false));
+            mechTablePageWriter.Close();
+
+            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Community Content Mechs", ref CommunityContentMechs, false, true));
             mechTablePageWriter.Close();
         }
 
-        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary)
+        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
         {
-            Dictionary<string, List<string>> primaryNamesToPrefabs = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> mechNamesToMechGroupKeys = new Dictionary<string, List<string>>();
 
-            // TODO: If there's only one variant associated with a Prefab we should probalby just use its name...
-            foreach (string prefabId in targetDictionary.Keys.ToList())
+            foreach (string mechGroupKey in targetDictionary.Keys.ToList())
             {
-                TryGetNameForPrefabId(prefabId, out string primaryMechName);
-
-                if (primaryNamesToPrefabs.ContainsKey(primaryMechName))
-                    Console.WriteLine($"Already have value for name {primaryMechName} and prefab {prefabId}. Other prefab is {primaryNamesToPrefabs[primaryMechName].Last()}. Adding prefabId to list.");
+                string primaryMechName;
+                if (useGlobalNamesList)
+                    primaryMechName = TryGetNameForGroupKey(mechGroupKey);
                 else
-                    primaryNamesToPrefabs[primaryMechName] = new List<string>();
+                    primaryMechName = TryGetNameForGroupKey(mechGroupKey, ref targetDictionary);
 
-                primaryNamesToPrefabs[primaryMechName].Add(prefabId);
+                if (mechNamesToMechGroupKeys.ContainsKey(primaryMechName))
+                    Console.WriteLine($"Already have value for name {primaryMechName} and mechGroupKey {mechGroupKey}. Other mechGroupKey is {mechNamesToMechGroupKeys[primaryMechName].Last()}. Adding mechGroupKey to list.");
+                else
+                    mechNamesToMechGroupKeys[primaryMechName] = new List<string>();
+
+                mechNamesToMechGroupKeys[primaryMechName].Add(mechGroupKey);
             }
-            List<string> sortedMechNames = primaryNamesToPrefabs.Keys.ToList();
+
+            List<string> sortedMechNames = mechNamesToMechGroupKeys.Keys.ToList();
             sortedMechNames.Sort();
 
-            StringBuilder LightMechOutput = new StringBuilder();
-            StringWriter LightMechWriter = new StringWriter(LightMechOutput);
-            StartNewTableSection(string.Format(pluggableTitleString, "Light"), LightMechWriter);
+            StringWriter LightMechWriter = null;
+            StringWriter MediumMechWriter = null;
+            StringWriter HeavyMechWriter = null;
+            StringWriter AssaultMechWriter = null;
+            StringWriter AllMechsWriter = null;
 
-            StringBuilder MediumMechOutput = new StringBuilder();
-            StringWriter MediumMechWriter = new StringWriter(MediumMechOutput);
-            StartNewTableSection(string.Format(pluggableTitleString, "Medium"), MediumMechWriter);
+            StringBuilder LightMechOutput = null;
+            StringBuilder MediumMechOutput = null;
+            StringBuilder HeavyMechOutput = null;
+            StringBuilder AssaultMechOutput = null;
+            StringBuilder AllMechsOutput = null;
 
-            StringBuilder HeavyMechOutput = new StringBuilder();
-            StringWriter HeavyMechWriter = new StringWriter(HeavyMechOutput);
-            StartNewTableSection(string.Format(pluggableTitleString, "Heavy"), HeavyMechWriter);
 
-            StringBuilder AssaultMechOutput = new StringBuilder();
-            StringWriter AssaultMechWriter = new StringWriter(AssaultMechOutput);
-            StartNewTableSection(string.Format(pluggableTitleString, "Assault"), AssaultMechWriter);
+            if (breakUpListByTonnage)
+            {
+                LightMechOutput = new StringBuilder();
+                LightMechWriter = new StringWriter(LightMechOutput);
+                StartNewTableSection(string.Format(pluggableTitleString, "Light"), LightMechWriter);
+
+                MediumMechOutput = new StringBuilder();
+                MediumMechWriter = new StringWriter(MediumMechOutput);
+                StartNewTableSection(string.Format(pluggableTitleString, "Medium"), MediumMechWriter);
+
+                HeavyMechOutput = new StringBuilder();
+                HeavyMechWriter = new StringWriter(HeavyMechOutput);
+                StartNewTableSection(string.Format(pluggableTitleString, "Heavy"), HeavyMechWriter);
+
+                AssaultMechOutput = new StringBuilder();
+                AssaultMechWriter = new StringWriter(AssaultMechOutput);
+                StartNewTableSection(string.Format(pluggableTitleString, "Assault"), AssaultMechWriter);
+            }
+            else
+            {
+                AllMechsOutput = new StringBuilder();
+                AllMechsWriter = new StringWriter(AllMechsOutput);
+                StartNewTableSection(string.Format(pluggableTitleString), AllMechsWriter);
+            }
 
             foreach (string mechName in sortedMechNames)
             {
-                foreach (string prefabIdFromName in primaryNamesToPrefabs[mechName])
+                foreach (string mechGroupKey in mechNamesToMechGroupKeys[mechName])
                 {
-                    List<string> sortedVariantModels = targetDictionary[prefabIdFromName].Keys.ToList();
+                    List<string> sortedVariantModels = targetDictionary[mechGroupKey].Keys.ToList();
                     sortedVariantModels.Sort(new MechModelNameComparer());
 
                     int excludedVariantsCount = 0;
                     List<string> excludedVariants = new List<string>();
-                    foreach (MechStats variant in targetDictionary[prefabIdFromName].Values)
+                    List<string> otherVariants = new List<string>();
+                    string variantMechName = "ERROR";
+                    foreach (MechStats variant in targetDictionary[mechGroupKey].Values)
                     {
-                        if (variant.VariantAssemblyRules != null &&
+                        if ((variant.VariantAssemblyRules != null &&
                             (variant.VariantAssemblyRules.Value.Exclude || !variant.VariantAssemblyRules.Value.Include))
+                            || SeparateMechEntries.Contains(variant.MechModel))
                         {
                             excludedVariantsCount++;
                             excludedVariants.Add(variant.MechModel);
                         }
+                        else if (variant.MechName.Contains("Primitive"))
+                        {
+                            excludedVariantsCount++;
+                            otherVariants.Add(variant.MechModel);
+                            variantMechName = variant.MechName;
+                        }
                     }
 
-                    int tonnage = targetDictionary[prefabIdFromName].First().Value.MechTonnage;
+                    int tonnage = targetDictionary[mechGroupKey].First().Value.MechTonnage;
 
                     StringWriter variantWriter;
-                    if (tonnage >= 80)
-                        variantWriter = AssaultMechWriter;
-                    else if (tonnage >= 60)
-                        variantWriter = HeavyMechWriter;
-                    else if (tonnage >= 40)
-                        variantWriter = MediumMechWriter;
+                    if (breakUpListByTonnage)
+                    {
+                        if (tonnage >= 80)
+                            variantWriter = AssaultMechWriter;
+                        else if (tonnage >= 60)
+                            variantWriter = HeavyMechWriter;
+                        else if (tonnage >= 40)
+                            variantWriter = MediumMechWriter;
+                        else
+                            variantWriter = LightMechWriter;
+                    }
                     else
-                        variantWriter = LightMechWriter;
+                        variantWriter = AllMechsWriter;
 
                     List<MechStats> tempMechs = new List<MechStats>();
+                    List<MechStats> otherTempMechs = new List<MechStats>();
                     foreach (string variant in sortedVariantModels)
                     {
-                        if (!excludedVariants.Contains(variant))
-                            tempMechs.Add(targetDictionary[prefabIdFromName][variant]);
+                        if (!excludedVariants.Contains(variant) && !otherVariants.Contains(variant))
+                            tempMechs.Add(targetDictionary[mechGroupKey][variant]);
+                        if (otherVariants.Contains(variant))
+                            otherTempMechs.Add(targetDictionary[mechGroupKey][variant]);
                     }
 
                     foreach (string variant in excludedVariants)
                     {
                         MechStats excludedVariant = allMechs[variant];
-                        StartMechTitleSection(variantWriter, excludedVariant.MechName, 1);
+                        StartMechTitleSection(variantWriter, excludedVariant.MechName, excludedVariant.MechModel, 1);
 
                         foreach (QuirkDef quirk in excludedVariant.MechQuirks.Values)
-                            QuirkHandler.OutputQuirkToString(quirk, true, variantWriter);
+                            QuirkHandler.OutputQuirkToString(quirk, variantWriter);
 
                         if (excludedVariant.MechAffinity.HasValue)
                             AffinityHandler.OutputAffinityToString(excludedVariant.MechAffinity.Value, variantWriter);
 
                         excludedVariant.OutputStatsToString(variantWriter);
                     }
+                    if (otherVariants.Count() > 0)
+                    {
+                        StartMechTitleSection(variantWriter, variantMechName, otherTempMechs.First().MechModel, otherVariants.Count());
+
+                        List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(otherTempMechs);
+                        foreach (QuirkDef quirk in tempQuirkList)
+                            QuirkHandler.OutputQuirkToString(quirk, variantWriter);
+
+                        List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(otherTempMechs);
+                        foreach (AffinityDef affinity in tempAffinityList)
+                            AffinityHandler.OutputAffinityToString(affinity, variantWriter);
+
+                        foreach (MechStats mechVariant in otherTempMechs)
+                            mechVariant.OutputStatsToString(variantWriter);
+                    }
                     if (sortedVariantModels.Count - excludedVariantsCount >= 1)
                     {
-                        StartMechTitleSection(variantWriter, mechName, sortedVariantModels.Count - excludedVariantsCount);
+                        StartMechTitleSection(variantWriter, mechName, tempMechs.First().MechModel, sortedVariantModels.Count - excludedVariantsCount);
 
                         List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(tempMechs);
                         foreach (QuirkDef quirk in tempQuirkList)
-                            QuirkHandler.OutputQuirkToString(quirk, true, variantWriter);
+                            QuirkHandler.OutputQuirkToString(quirk, variantWriter);
 
                         List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(tempMechs);
                         foreach (AffinityDef affinity in tempAffinityList)
@@ -285,132 +395,36 @@ namespace BTA_WikiTableGen
                 }
             }
 
-            CloseTableSection(LightMechWriter);
-            LightMechWriter.Close();
-
-            CloseTableSection(MediumMechWriter);
-            MediumMechWriter.Close();
-
-            CloseTableSection(HeavyMechWriter);
-            HeavyMechWriter.Close();
-
-            CloseTableSection(AssaultMechWriter);
-            AssaultMechWriter.Close();
-
-            return LightMechOutput.ToString() + MediumMechOutput.ToString() + HeavyMechOutput.ToString() + AssaultMechOutput.ToString();
-        }
-
-        private static string OutputDictionaryToString(string pluggableTitleString, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary)
-        {
-            Dictionary<string, List<string>> primaryNamesToPrefabs = new Dictionary<string, List<string>>();
-
-            foreach (string prefabId in targetDictionary.Keys.ToList())
+            if (breakUpListByTonnage)
             {
-                TryGetNameForPrefabId(prefabId, out string primaryMechName);
+                CloseTableSection(LightMechWriter);
+                LightMechWriter.Close();
 
-                if (primaryNamesToPrefabs.ContainsKey(primaryMechName))
-                    Console.WriteLine($"Already have value for name {primaryMechName} and prefab {prefabId}. Other prefab is {primaryNamesToPrefabs[primaryMechName].Last()}. Adding prefabId to list.");
-                else
-                    primaryNamesToPrefabs[primaryMechName] = new List<string>();
+                CloseTableSection(MediumMechWriter);
+                MediumMechWriter.Close();
 
-                primaryNamesToPrefabs[primaryMechName].Add(prefabId);
+                CloseTableSection(HeavyMechWriter);
+                HeavyMechWriter.Close();
+
+                CloseTableSection(AssaultMechWriter);
+                AssaultMechWriter.Close();
+                return LightMechOutput.ToString() + MediumMechOutput.ToString() + HeavyMechOutput.ToString() + AssaultMechOutput.ToString();
             }
-            List<string> sortedMechNames = primaryNamesToPrefabs.Keys.ToList();
-            sortedMechNames.Sort();
-
-            StringBuilder mechOutput = new StringBuilder();
-            StringWriter mechWriter = new StringWriter(mechOutput);
-            StartNewTableSection(pluggableTitleString, mechWriter);
-
-            foreach (string mechName in sortedMechNames)
+            else
             {
-                foreach (string prefabIdFromName in primaryNamesToPrefabs[mechName])
-                {
-                    List<string> sortedVariantModels = targetDictionary[prefabIdFromName].Keys.ToList();
-                    sortedVariantModels.Sort(new MechModelNameComparer());
-
-                    int excludedVariantsCount = 0;
-                    List<string> excludedVariants = new List<string>();
-                    foreach (MechStats variant in targetDictionary[prefabIdFromName].Values)
-                    {
-                        if (variant.VariantAssemblyRules != null &&
-                            (variant.VariantAssemblyRules.Value.Exclude || !variant.VariantAssemblyRules.Value.Include))
-                        {
-                            excludedVariantsCount++;
-                            excludedVariants.Add(variant.MechModel);
-                        }
-                    }
-
-                    int tonnage = targetDictionary[prefabIdFromName].First().Value.MechTonnage;
-
-                    List<MechStats> tempMechs = new List<MechStats>();
-                    foreach (string variant in sortedVariantModels)
-                    {
-                        if (!excludedVariants.Contains(variant))
-                            tempMechs.Add(targetDictionary[prefabIdFromName][variant]);
-                    }
-
-                    foreach (string variant in excludedVariants)
-                    {
-                        MechStats excludedVariant = allMechs[variant];
-                        StartMechTitleSection(mechWriter, excludedVariant.MechName, 1);
-
-                        foreach (QuirkDef quirk in excludedVariant.MechQuirks.Values)
-                            QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
-
-                        if (excludedVariant.MechAffinity.HasValue)
-                            AffinityHandler.OutputAffinityToString(excludedVariant.MechAffinity.Value, mechWriter);
-
-                        excludedVariant.OutputStatsToString(mechWriter);
-                    }
-                    if (sortedVariantModels.Count - excludedVariantsCount >= 1)
-                    {
-                        StartMechTitleSection(mechWriter, mechName, sortedVariantModels.Count - excludedVariantsCount);
-
-                        List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(tempMechs);
-                        foreach (QuirkDef quirk in tempQuirkList)
-                            QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
-
-                        List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(tempMechs);
-                        foreach (AffinityDef affinity in tempAffinityList)
-                            AffinityHandler.OutputAffinityToString(affinity, mechWriter);
-
-                        foreach (MechStats mechVariant in tempMechs)
-                            mechVariant.OutputStatsToString(mechWriter);
-                    }
-                }
+                CloseTableSection(AllMechsWriter);
+                AllMechsWriter.Close();
+                return AllMechsOutput.ToString();
             }
 
-            //foreach (string mechName in sortedMechNames)
-            //{
-            //    List<string> sortedVariantModels = targetDictionary[mechName].Keys.ToList();
-            //    sortedVariantModels.Sort(new MechModelNameComparer());
 
-            //    StartMechTitleSection(mechWriter, mechName, targetDictionary[mechName].Count);
-
-            //    List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(targetDictionary[mechName].Values.ToList());
-            //    foreach (QuirkDef quirk in tempQuirkList)
-            //        QuirkHandler.OutputQuirkToString(quirk, true, mechWriter);
-
-            //    List<AffinityDef> tempAffinityList = AffinityHandler.CompileAffinitiesForVariants(targetDictionary[mechName].Values.ToList());
-            //    foreach (AffinityDef affinity in tempAffinityList)
-            //        AffinityHandler.OutputAffinityToString(affinity, mechWriter);
-
-            //    foreach (string mechVariant in sortedVariantModels)
-            //    {
-            //        targetDictionary[mechName][mechVariant].OutputStatsToString(mechWriter);
-            //    }
-            //}
-            CloseTableSection(mechWriter);
-            mechWriter.Close();
-
-            return mechOutput.ToString();
         }
 
         private static void StartNewTableSection(string section, StringWriter tableWriter)
         {
-            tableWriter.WriteLine("<div class=\"mw-collapsible\">");
             tableWriter.WriteLine($"==={section}===");
+            tableWriter.WriteLine("<div class=\"mw-collapsible\">");
+            tableWriter.WriteLine();
             WriteTableStart(tableWriter);
         }
 
@@ -427,7 +441,7 @@ namespace BTA_WikiTableGen
         {
             tableWriter.WriteLine("{| class=\"wikitable sortable\" style=\"text-align: center;\"");
             tableWriter.WriteLine("! colspan=\"4\" |Mech");
-            tableWriter.WriteLine("! colspan=\"5\" |Hardpoints");
+            tableWriter.WriteLine("! colspan=\"8\" |Hardpoints");
             tableWriter.WriteLine("! colspan=\"3\" |Engine");
             tableWriter.WriteLine("! colspan=\"3\" |Components");
             tableWriter.WriteLine("! colspan=\"2\" |Free Tonnage");
@@ -437,11 +451,14 @@ namespace BTA_WikiTableGen
             tableWriter.WriteLine("!<small>Model</small>");
             tableWriter.WriteLine("!<small>Mass</small>");
             tableWriter.WriteLine("!<small>Role</small>");
-            tableWriter.WriteLine("!<small>B</small>");
-            tableWriter.WriteLine("!<small>E</small>");
-            tableWriter.WriteLine("!<small>M</small>");
-            tableWriter.WriteLine("!<small>S</small>");
+            tableWriter.WriteLine("!<small>Ba</small>");
+            tableWriter.WriteLine("!<small>En</small>");
+            tableWriter.WriteLine("!<small>Mi</small>");
+            tableWriter.WriteLine("!<small>Ar</small>");
+            tableWriter.WriteLine("!<small>Su</small>");
             tableWriter.WriteLine("!<small>O</small>");
+            tableWriter.WriteLine("!<small>Bo</small>");
+            tableWriter.WriteLine("!<small>Me</small>");
             tableWriter.WriteLine("!<small>Type</small>");
             tableWriter.WriteLine("!<small>Core</small>");
             tableWriter.WriteLine("!<small>Heat Sinks</small>");
@@ -456,9 +473,9 @@ namespace BTA_WikiTableGen
             tableWriter.WriteLine("|-");
         }
 
-        private static void StartMechTitleSection(StringWriter writer, string mechName, int variantCount)
+        private static void StartMechTitleSection(StringWriter writer, string mechName, string firstVariantName, int variantCount)
         {
-            string cleanMechName = mechName.Replace(' ', '_').Replace("'", "");
+            string cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');
             string imageName = mechName.Replace("Royal", "", StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim().Replace(' ', '_').Replace("'", "");
 
             string displayMechName = mechName;

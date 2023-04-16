@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_SpamFactionBuilder", "B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_IdsToStoreTableEntries", "BTA_IdsToStoreTableEntries\BTA_IdsToStoreTableEntries.csproj", "{06078E84-612A-4660-963F-5C2F77863EBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BT_JsonProcessingLibrary", "BT_JsonProcessingLibrary\BT_JsonProcessingLibrary.csproj", "{4383690E-FCA2-4AC8-9CF2-96A829A984CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT_JsonProcessingLibrary", "BT_JsonProcessingLibrary\BT_JsonProcessingLibrary.csproj", "{4383690E-FCA2-4AC8-9CF2-96A829A984CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilityClassLibrary", "UtilityClassLibrary\UtilityClassLibrary.csproj", "{D0001060-103A-4B51-929F-620889DC52A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{4383690E-FCA2-4AC8-9CF2-96A829A984CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4383690E-FCA2-4AC8-9CF2-96A829A984CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4383690E-FCA2-4AC8-9CF2-96A829A984CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0001060-103A-4B51-929F-620889DC52A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0001060-103A-4B51-929F-620889DC52A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0001060-103A-4B51-929F-620889DC52A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0001060-103A-4B51-929F-620889DC52A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
