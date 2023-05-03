@@ -1,5 +1,6 @@
 ﻿using BT_JsonProcessingLibrary;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,59 +8,63 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UtilityClassLibrary;
+using UtilityClassLibrary.WikiLinkOverrides;
 
 namespace BTA_WikiTableGen
 {
-    internal static class MechFileSearch
+    public static class MechFileSearch
     {
-        static Regex BlacklistDirectories = new Regex(@"(BT Advanced Battle Armor|CustomUnits)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex ClanMechDirectories = new Regex(@"BT Advanced Clan Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex QuadMechDirectories = new Regex(@"BT Advanced Quad Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex SanctuaryMechDirectories = new Regex(@"(BT Advanced Sanctuary Worlds Mechs|Heavy Metal Sanctuary Worlds Units)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex CommunityContentDirectories = new Regex(@"Community Content", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static Regex NumbersInGroupKey = new Regex(@"(?'key'[A-Z]+)([- ]?)", RegexOptions.Compiled);
+        private static Regex BlacklistDirectories = new Regex(@"(BT Advanced Battle Armor|CustomUnits)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static Regex ClanMechDirectories = new Regex(@"BT Advanced Clan Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static Regex QuadMechDirectories = new Regex(@"BT Advanced Quad Mechs", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static Regex SanctuaryMechDirectories = new Regex(@"(BT Advanced Sanctuary Worlds Mechs|Heavy Metal Sanctuary Worlds Units)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static Regex CommunityContentDirectories = new Regex(@"Community Content", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static Regex NumbersInGroupKey = new Regex(@"(?'key'[A-Z]+)([- ]?)", RegexOptions.Compiled);
 
-        static List<string> CustomMechVariants = new List<string>();
+        internal static List<string> CustomMechVariants = new List<string>();
         internal static List<string> WhitelistMechVariants = new List<string>();
-        static List<string> SeparateMechEntries = new List<string>();
+        internal static List<string> SeparateMechEntries = new List<string>();
 
-        static Dictionary<string, Dictionary<string, MechStats>> InnerSphereMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> ClanMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> SanctuaryMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> QuadMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> HeroMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> CommunityContentMechs = new Dictionary<string, Dictionary<string, MechStats>>();
-        static Dictionary<string, Dictionary<string, MechStats>> CustomMechs = new Dictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> InnerSphereMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> ClanMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> SanctuaryMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> QuadMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> HeroMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CommunityContentMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CustomMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
 
-        static Dictionary<string, MechStats> allMechs = new Dictionary<string, MechStats>();
+        private static ConcurrentDictionary<string, MechStats> allMechs = new ConcurrentDictionary<string, MechStats>();
 
-        static Dictionary<string, List<MechNameCounter>> GroupKeyToNameTracker = new Dictionary<string, List<MechNameCounter>>();
+        private static ConcurrentDictionary<string, List<MechNameCounter>> GroupKeyToNameTracker = new ConcurrentDictionary<string, List<MechNameCounter>>();
 
-        // TODO: See how this works parallelized...
         public static void GetAllMechsFromDefs(string modsFolder)
         {
-            CustomMechVariants = TextFileListProcessor.GetStringListFromFile(".\\CustomMechsList.txt");
-            WhitelistMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechVariantsWhitelist.txt");
-            SeparateMechEntries = TextFileListProcessor.GetStringListFromFile(".\\SeparateMechEntries.txt");
+            CustomMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\CustomMechsList.txt");
+            WhitelistMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\MechVariantsWhitelist.txt");
+            SeparateMechEntries = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\SeparateMechEntries.txt");
+            MechLinkOverrides.PopulateMechOverrides();
 
             List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef*.json");
 
-            foreach (BasicFileData chassisDef in chassisDefs)
+            ParallelOptions parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = 8;
+
+            Parallel.ForEach(chassisDefs, parallelOptions, chassisDef =>
             {
                 if (!BlacklistDirectories.IsMatch(chassisDef.Path))
                 {
-                    BasicFileData mechDef = GetMechDef(chassisDef);
+                    BasicFileData mechDef = ModJsonHandler.GetMechDef(chassisDef);
                     if (!File.Exists(mechDef.Path))
-                        continue;
+                        return;
 
                     var tempChassisDoc = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
 
                     string variantName = tempChassisDoc.RootElement.GetProperty("VariantName").ToString().Trim();
-                    string chassisName = tempChassisDoc.RootElement.GetProperty("Description").GetProperty("Name").ToString().Trim();
+                    string chassisName = ModJsonHandler.GetNameFromJsonDoc(tempChassisDoc);
 
                     allMechs[variantName] = new MechStats(chassisName, variantName, chassisDef, mechDef);
                     if (allMechs[variantName].Blacklisted)
-                        continue;
+                        return;
 
                     AddToGroupKeyToNameTracker(chassisName, variantName);
 
@@ -84,18 +89,14 @@ namespace BTA_WikiTableGen
                     else
                         AddToNestedDictionary(variantName, ref InnerSphereMechs);
                 }
-            }
+            });
+
+            //foreach (BasicFileData chassisDef in chassisDefs)
+            //{
+            //}
         }
 
-        private static BasicFileData GetMechDef(BasicFileData chassisDef)
-        {
-            string baseSubDirectory = chassisDef.Path.Remove(chassisDef.Path.Length - chassisDef.FileName.Length - 7 - 1);
-            string mechFileName = chassisDef.FileName.Replace("chassisdef_", "mechdef_");
-
-            return new BasicFileData() { Path = baseSubDirectory + "mech\\" + mechFileName, FileName = mechFileName };
-        }
-
-        private static void AddToNestedDictionary(string variantName, ref Dictionary<string, Dictionary<string, MechStats>> target)
+        private static void AddToNestedDictionary(string variantName, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> target)
         {
             string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechTonnage;
             if (!target.ContainsKey(mechGroupKey))
@@ -146,7 +147,7 @@ namespace BTA_WikiTableGen
             }
         }
 
-        private static string TryGetNameForGroupKey(string mechGroupKey, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary)
+        private static string TryGetNameForGroupKey(string mechGroupKey, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> targetDictionary)
         {
             Dictionary<string, MechNameCounter> mechNameCounters = new Dictionary<string, MechNameCounter>();
             int highestUseCount = 0;
@@ -233,7 +234,7 @@ namespace BTA_WikiTableGen
             mechTablePageWriter.Close();
         }
 
-        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref Dictionary<string, Dictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
+        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
         {
             Dictionary<string, List<string>> mechNamesToMechGroupKeys = new Dictionary<string, List<string>>();
 
@@ -315,6 +316,12 @@ namespace BTA_WikiTableGen
                             excludedVariants.Add(variant.MechModel);
                         }
                         else if (variant.MechName.Contains("Primitive"))
+                        {
+                            excludedVariantsCount++;
+                            otherVariants.Add(variant.MechModel);
+                            variantMechName = variant.MechName;
+                        }
+                        else if (MechLinkOverrides.HasOverrideForVariant(variant.MechModel))
                         {
                             excludedVariantsCount++;
                             otherVariants.Add(variant.MechModel);
@@ -425,6 +432,7 @@ namespace BTA_WikiTableGen
             tableWriter.WriteLine($"==={section}===");
             tableWriter.WriteLine("<div class=\"mw-collapsible\">");
             tableWriter.WriteLine();
+            tableWriter.WriteLine();
             WriteTableStart(tableWriter);
         }
 
@@ -475,7 +483,11 @@ namespace BTA_WikiTableGen
 
         private static void StartMechTitleSection(StringWriter writer, string mechName, string firstVariantName, int variantCount)
         {
-            string cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');
+            string cleanMechName = "";
+            if (MechLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
+                cleanMechName = linkOverride;
+            else
+                cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');
             string imageName = mechName.Replace("Royal", "", StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim().Replace(' ', '_').Replace("'", "");
 
             string displayMechName = mechName;
@@ -485,7 +497,7 @@ namespace BTA_WikiTableGen
             writer.WriteLine($"|rowspan=\"{variantCount}\"|");
             writer.WriteLine($"[[File:{imageName}.png|125px|border|center]]");
             writer.WriteLine();
-            writer.WriteLine($"'''[[{cleanMechName}|{displayMechName.ToUpper()}]]'''");
+            writer.WriteLine($"'''[[{cleanMechName}#{firstVariantName}|{displayMechName.ToUpper()}]]'''");
             writer.WriteLine();
         }
 

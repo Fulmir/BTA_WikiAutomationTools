@@ -6,4 +6,53 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityClassLibrary\UtilityClassLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="AmmoBoxOverrides\AmmoCategoryLinkOverrides.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="AmmoBoxOverrides\AmmoTypeLinkOverrides.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DataListFiles\AdditionalHeadlineQuirksList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DataListFiles\CommonQuirksList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="GearLinkOverrides\EquipmentPageOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechClassificationFiles\CustomMechsList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechClassificationFiles\MechVariantsWhitelist.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechClassificationFiles\SeparateMechEntries.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechLinkOverrides\VariantOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WeaponLinkOverrides\BaWeaponOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WeaponLinkOverrides\CommunityContentWeaponOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WeaponLinkOverrides\CommunityContentWeaponOverridesRegexList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WeaponLinkOverrides\WeaponOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="WeaponLinkOverrides\WeaponOverridesRegexList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

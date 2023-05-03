@@ -1,0 +1,51 @@
+AC/2,AC/2
+AC/5,AC/5
+AC/10,AC/10
+AC/20,AC/20
+DBAC/5,DBAC/5
+DBAC/10,DBAC/10
+DBAC/15,DBAC/15
+DBAC/20,DBAC/20
+Gatling,Gatling Gun
+HVAC,HVAC
+PAC/2,PAC/2
+PAC/4,PAC/4
+PAC/8,PAC/8
+RAC,RAC
+Scattergun/5,Scattergun/5
+Scattergun/10,Scattergun/10
+Scattergun/15,Scattergun/15
+Scattergun/20,Scattergun/20
+UAC,UAC
+LBX,LB-X
+Gauss Cannon,Gauss Cannon
+Gauss,Gauss
+Magshot,Gauss
+Rail Gun,Railgun
+Grenade,Mech Grenade Launcher
+Taser,Mech Taser
+Ammo MG,Machine Gun
+Mortar,Mortar
+Bombard,Bombard
+Light Mass Driver,Light Mass Driver
+Medium Mass Driver,Medium Mass Driver
+Heavy Mass Driver,Heavy Mass Driver
+LongTom,Longtom Artillery
+Ammo Sniper,Sniper Artillery
+Ammo Thumper,Thumper Artillery
+Chemical Laser,Chemical Laser
+Plasma,Plasma
+APM,APM
+3GM,3rd Gen Missile
+ArrowIV,Arrow IV
+Cruise Missile,Cruise Missile
+ATM,ATM
+DRM,DRM
+LRM,LRM
+Ammo MRM,MRM
+Ammo Sirocco,Sirocco
+SRM,SRM
+T-Bolt,Thunderbolt
+VRM,VRM
+AMS,AMS
+Narc,Narc

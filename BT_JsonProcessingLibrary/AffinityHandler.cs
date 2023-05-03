@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace BTA_WikiTableGen
 {
-    internal static class AffinityHandler
+    public static class AffinityHandler
     {
         static string AffinitiesFolder = "MechAffinity\\AffinityDefs\\";
         static string ChassisAffinitiesPattern = "AffinityDef_chassis*.json";

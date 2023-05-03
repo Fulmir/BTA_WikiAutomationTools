@@ -1,0 +1,28 @@
+BA Heavy Sniper AC,BA Heavy Sniper AC
+BA Tube Artillery,BA Tube Artillery
+Medium Laser,Medium Laser
+BA Support PPC,PPCs
+BA Heavy SRM4,BA Heavy SRM4
+BA Avenger (C),BA Avenger (C)
+BA Bearhunter SH AC (C),BA Bearhunter SH AC (C)
+BA Firedrake,BA Firedrake
+BA Flamer,BA Flamers
+Gauss,BA Gauss Rifles
+BA LB-X AC,BA LB-X AC
+BA Light TAG,BA Light TAG
+BA LRM4 (C),BA LRM4 (C)
+BA MG,BA Machine Guns
+BA SMG,BA SMG
+BA Micro Grenade,BA Micro Grenade
+BA Micro Pulse Laser (C),BA Micro Pulse Laser (C)
+BA Mine Dispenser,BA Mine Dispenser
+BA MRM4,BA MRM4
+BA Plasma Rifle,BA Plasma Rifle
+BA Pop-Up Mine,BA Pop-Up Mine
+Recoilless Rifle,BA Recoilless Rifles
+BA RL1,BA Rocket Launcher
+BA S Laser,BA S Laser
+BA ER S Laser (C),BA ER S Laser (C)
+BA SRM,BA SRMs
+BA Inferno SRM,BA SRMs
+BA Adv SRM,BA Avanced SRMs

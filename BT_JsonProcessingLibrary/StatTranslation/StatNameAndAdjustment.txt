@@ -1,0 +1,16 @@
+UIName,Name,
+AmmoCategory,Ammo,
+weaponCategoryID,Hardpoint,
+Category,Hardpoint,
+Tonnage,Tonnage/Size_Tonnage,1
+InventorySize,Tonnage/Size_Slots,1
+Damage,Damage_Normal,1
+HeatDamage,Damage_Heat,1
+Instability,Damage_Stab,1
+ShotsWhenFired,Per salvo_Shots,1
+ProjectilesPerShot,Per salvo_Projectiles,1
+HeatGenerated,Per salvo_Heat,1
+RefireModifier,Per salvo_Recoil,1
+AccuracyModifier,Modifiers_Accuracy,-1
+EvasivePipsIgnored,Modifiers_Evasion Ignored,1
+CriticalChanceMultiplier,Modifiers_Bonus Crit Chance,1

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BTA_WikiTableGen
 {
-    internal static class MechTonnageCalculator
+    public static class MechTonnageCalculator
     {
         static Regex EngineHeatsinksRegex = new Regex(@"(?<=""EngineHSFreeExt: )(\d)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

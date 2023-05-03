@@ -1,0 +1,25 @@
+(AC/[\d]+)($| [^\-\+]),Autocannons
+^([^RSUE]|I|H|L|G).*auss($| Rifle),Single Shot
+^(S|M|L) Laser,Lasers
+^ER (S|M|L) Laser,Extended Range Lasers
+^(S|M|L) Chem Laser,Chemical Lasers
+^(S|M|L) Elec-Laser,Electro-Lasers (S)
+^(Heavy|Super) (S|M|L) Laser,Heavy Lasers
+^(S|M|L) Lance,Lances (S)
+^(S|M|L) Modal Laser,Modal Lasers (S)
+^(S|M|L|Micro) Pulse,Standard_Pulse_Lasers
+^ER (S|M|L) Pulse,Extended Range Pulse Lasers
+^Dissolving (S|M|L) Pulse,Dissolving Pulse Lasers
+^Haywire (S|M|L) Laser,Haywire Lasers
+^Pierce (S|M|L) Pulse,Piercing Pulse Lasers
+^Rotary ER (S|M|L) Laser,Rotary Lasers
+^Static ER (S|M|L) Laser,Static Lasers
+^Streak (S|M|L) Laser,Streak Lasers
+^LRM,Standard LRM
+^MML,MMLs
+^MRM,MRMs
+^vMRM,Variable MRMs
+^RL,Rockets
+(^|^Improved )SRM,Standard SRM
+^AMS,AMS
+(^|^L)MG.*,Multi_Shot

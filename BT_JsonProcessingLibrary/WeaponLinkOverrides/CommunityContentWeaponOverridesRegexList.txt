@@ -1,0 +1,2 @@
+^MRM,Medium Range Missile (C)
+^Rotary\s+(S|M|L) Pulse,Rotary Pulse Laser

@@ -1,0 +1,70 @@
+AC2,AC/2,AC/2
+AC5,AC/5,AC/5
+AC10,AC/10,AC/10
+AC20,AC/20,AC/20
+DBAC5,DBAC/5,DBAC/5
+DBAC10,DBAC/10,DBAC/10
+DBAC15,DBAC/15,DBAC/15
+DBAC20,DBAC/20,DBAC/20
+GATLING,Gatling Gun,Gatling
+HVAC2,HVAC,HVAC/2
+HVAC5,HVAC,HVAC/5
+HVAC10,HVAC,HVAC/10
+HVAC20,HVAC,HVAC/20
+PAC2,PAC/2,PAC/2
+PAC4,PAC/4,PAC/4
+PAC8,PAC/8,PAC/8
+RAC2,RAC,RAC/2
+RAC5,RAC,RAC/5
+RAC10,RAC,RAC/10
+RAC20,RAC,RAC/20
+SG5,Scattergun/5,Scattergun/5
+SG10,Scattergun/10,Scattergun/10
+SG15,Scattergun/15,Scattergun/15
+SG20,Scattergun/20,Scattergun/20
+UAC2,UAC,UAC/2
+UAC5,UAC,UAC/5
+UAC10,UAC,UAC/10
+UAC20,UAC,UAC/20
+LBX2,LB-X,LBX/2
+LBX5,LB-X,LBX/5
+LBX10,LB-X,LBX/10
+LBX20,LB-X,LBX/20
+GaussCannon20,Gauss Cannon,Gauss Cannon
+GAUSS,Gauss,Gauss
+MAGSHOT,Gauss,Magshot
+Railgun,Railgun,Railgun
+GRENADE,Mech Grenade Launcher,Grenade
+Taser,Mech Taser,Taser
+MG,Machine Gun,MG
+MORTAR,Mortar,Mortar
+BOMBARD,Bombard,Bombard
+LDRIVER,Light Mass Driver,Light Mass Driver
+MDRIVER,Medium Mass Driver,Medium Mass Driver
+HDRIVER,Heavy Mass Driver,Heavy Mass Driver
+LongTom,Longtom Artillery,LongTom
+Sniper,Sniper Artillery,Sniper
+Thumper,Thumper Artillery,Thumper
+ChemLaser,Chemical Laser,ChemLaser
+Plasma,Plasma,Plasma
+APM,APM,APM
+3rdGenMissile,3rd Gen Missile, 3G Missile
+ArrowIV,Arrow IV,Arrow IV
+CruiseMissile50,Cruise Missile,Cruise Missile
+ATM,ATM,ATM
+DRM,DRM,DRM
+LRM,LRM,LRM
+ARTEMISIVLRM,LRM,Artemis-IV LRM
+MRM,MRM,MRM
+APOLLOMRM,Apollo MRM,Apollo MRM
+SIROCCO,Sirocco,Sirocco
+SRM,SRM,SRM
+PierceSRM,Piercing SRM,Piercing SRM
+ARTEMISIVSRM,SRM,Artemis-IV SRM
+TBOLT5,Thunderbolt,Thunderbolt
+TBOLT10,Thunderbolt,Thunderbolt
+TBOLT15,Thunderbolt,Thunderbolt
+TBOLT20,Thunderbolt,Thunderbolt
+VRM,VRM,VRM
+AMS,AMS,AMS
+NARC,Narc,NARC

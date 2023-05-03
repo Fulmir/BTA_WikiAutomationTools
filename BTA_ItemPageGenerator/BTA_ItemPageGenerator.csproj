@@ -9,13 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BT_JsonProcessingLibrary\BT_JsonProcessingLibrary.csproj" />
-    <ProjectReference Include="..\UtilityClassLibrary\UtilityClassLibrary.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="MechInputFile.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

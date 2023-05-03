@@ -9,13 +9,9 @@ namespace BTA_SpamFactionBuilder
 {
     internal class FactionDataProcessor
     {
-        string factionsFolder = "BT Advanced Factions\\";
         string spamFolder = "SoldiersPiratesAssassinsMercs\\";
-        string worldDefsFolder = "InnerSphereMap\\StarSystems\\";
         string modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
 
-        private readonly Dictionary<string, JsonDocument> factionDefs;
-        private readonly Dictionary<string, JsonDocument> planetDefs;
         private readonly JsonDocument spamConfig;
 
         public FactionDataProcessor()
@@ -31,40 +27,7 @@ namespace BTA_SpamFactionBuilder
 
 
             spamConfig = JsonDocument.Parse(File.ReadAllText(modsFolder + spamFolder + "mod.json"), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
-
-            List<string> factionDefFiles = SearchFiles(modsFolder + factionsFolder, @"faction_*.json");
-
-            factionDefs = new Dictionary<string, JsonDocument>();
-
-            foreach (string factionDefFile in factionDefFiles)
-            {
-                var temp = JsonDocument.Parse(File.ReadAllText(factionDefFile), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
-                if (temp.RootElement.TryGetProperty("factionID", out var factionId))
-                {
-                    factionDefs[factionId.ToString()] = temp;
-                }
-            }
-
             var MercPlanets = spamConfig.RootElement.GetProperty("Settings").GetProperty("PlanetFactionConfigs").EnumerateObject();
-            planetDefs = new Dictionary<string, JsonDocument>();
-
-            foreach (JsonProperty element in MercPlanets)
-            {
-                planetDefs.Add(element.Name, JsonDocument.Parse(File.ReadAllText($"{modsFolder + worldDefsFolder + element.Name}.json"), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip }));
-            }
-        }
-        public List<string> SearchFiles(string startingPath, string filePattern)
-        {
-            string? dirName = Path.GetDirectoryName(startingPath);
-            string? fileName = Path.GetFileName(startingPath);
-
-            var files = from file in Directory.EnumerateFiles(
-                            string.IsNullOrWhiteSpace(dirName) ? "." : dirName,
-                            filePattern,
-                            SearchOption.AllDirectories)
-                        select file;
-
-            return files.ToList();
         }
 
         public void OutputIdsToNamesFile()
@@ -98,36 +61,6 @@ namespace BTA_SpamFactionBuilder
                 if (firstLine)
                     firstLine = false;
             }
-        }
-
-        private bool CheckForSpecialTranslation(string factionId, out string factionName)
-        {
-            switch (factionId)
-            {
-                case "AuriganPirates":
-                    factionName = "Pirates";
-                    return true;
-                case "AuriganRestoration":
-                    factionName = "Aurigan Restoration (Arano)";
-                    return true;
-                case "Davion":
-                    factionName = "Federated Suns (Davion)";
-                    return true;
-                case "Kurita":
-                    factionName = "Draconis Combine (Kurita)";
-                    return true;
-                case "Liao":
-                    factionName = "Capellan Confederation (Liao)";
-                    return true;
-                case "Steiner":
-                    factionName = "Lyran Commonwealth (Steiner)";
-                    return true;
-                case "Marik":
-                    factionName = "Free Worlds League (Marik)";
-                    return true;
-            }
-            factionName = "";
-            return false;
         }
 
         private bool BlacklistedNames(string name)
@@ -299,18 +232,6 @@ namespace BTA_SpamFactionBuilder
             }
 
             return mercPlanetMap;
-        }
-
-        private string GetUseableFactionName(JsonDocument factionDef, string factionId)
-        {
-            string name;
-            if (!CheckForSpecialTranslation(factionId, out name))
-            {
-                name = factionDef.RootElement.GetProperty("Name").ToString();
-                if (name.StartsWith("the "))
-                    name = name.Substring(4);
-            }
-            return name;
         }
 
         Dictionary<string, string> subCommandRatings = new Dictionary<string, string>(){

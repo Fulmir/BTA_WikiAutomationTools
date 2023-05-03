@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BTA_WikiTableGen
 {
-    internal class MechStats
+    public class MechStats
     {
         public string MechName { get; set; }
         public string MechModel { get; set; }
@@ -360,7 +360,7 @@ namespace BTA_WikiTableGen
 
         private void GetDefaultGearList()
         {
-            foreach (string gearId in MechGearHandler.GetDefaultGearIdsForTags(this.Tags))
+            foreach (string gearId in MechGearHandler.GetDefaultGearIdsForMechTags(this.Tags))
             {
                 if (MechGearHandler.TryGetEquipmentData(gearId.ToString(), out EquipmentData equipmentData))
                 {

@@ -1,5 +1,6 @@
 ﻿using BT_JsonProcessingLibrary;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace BTA_WikiTableGen
 {
-    internal static class QuirkHandler
+    public static class QuirkHandler
     {
         static Regex[] QuirkGearPatterns = {
             new Regex(".*_Quirk.*", RegexOptions.IgnoreCase|RegexOptions.Compiled),
@@ -31,55 +32,19 @@ namespace BTA_WikiTableGen
 
         static Regex BonusNumberExtractor = new Regex("([+\\-\\d]+)([%]?)", RegexOptions.Compiled);
 
-        static List<string> LimitedBonusStrings = new List<string>() { "ArmAccuracy", "MinWeightJJ", "MaxWeightJJ", "MaxCountJJ" };
-
         static List<string> BonusOutputBlacklist = new List<string>() { "GyroStab", "IsGyro", "FCS", };
 
-        private static Dictionary<string, QuirkDef> QuirkLookupTable = new Dictionary<string, QuirkDef>();
-        private static Dictionary<string, BonusDef> BaseBonusLookupTable = new Dictionary<string, BonusDef>();
+        private static ConcurrentDictionary<string, QuirkDef> QuirkLookupTable = new ConcurrentDictionary<string, QuirkDef>();
 
         public static void LoadQuirkHandlerData(string modsFolder)
         {
-            CommonQuirks = TextFileListProcessor.GetStringListFromFile(".\\CommonQuirksList.txt");
+            CommonQuirks = TextFileListProcessor.GetStringListFromFile(".\\DataListFiles\\CommonQuirksList.txt");
             CommonQuirks.Sort();
-            HeadlineQuirks = TextFileListProcessor.GetStringListFromFile(".\\AdditionalHeadlineQuirksList.txt");
+            HeadlineQuirks = TextFileListProcessor.GetStringListFromFile(".\\DataListFiles\\AdditionalHeadlineQuirksList.txt");
             HeadlineQuirks.AddRange(CommonQuirks);
             HeadlineQuirks.Sort();
 
-            CreateQuirkBonusesIndex(modsFolder);
-        }
-
-        private static void CreateQuirkBonusesIndex(string modsFolder)
-        {
-            string mechEngBonusDefFile = Path.Combine(modsFolder, "BT Advanced Core\\settings\\bonusDescriptions\\BonusDescriptions_MechEngineer.json");
-
-            JsonDocument mechEngBonusDescriptions = JsonDocument.Parse(new StreamReader(mechEngBonusDefFile).ReadToEnd());
-
-            double LongLengthTotal = 0;
-            double LongLengthCount = 0;
-            double FullLengthTotal = 0;
-            double FullLengthCount = 0;
-
-            foreach (JsonElement bonusDesc in mechEngBonusDescriptions.RootElement.GetProperty("Settings").EnumerateArray())
-            {
-                var tempBonus = new BonusDef()
-                {
-                    BonusId = bonusDesc.GetProperty("Bonus").ToString(),
-                    LongDescription = bonusDesc.GetProperty("Long").ToString(),
-                    StackingLimit = CheckIfQuirkBonusLimit(bonusDesc.GetProperty("Bonus").ToString()) ? 1 : -1
-                };
-                if (bonusDesc.TryGetProperty("Full", out JsonElement fullText))
-                {
-                    tempBonus.FullDescription = fullText.ToString();
-                    FullLengthTotal += tempBonus.FullDescription.Length;
-                    FullLengthCount++;
-                }
-
-                LongLengthTotal += tempBonus.LongDescription.Length;
-                LongLengthCount++;
-
-                BaseBonusLookupTable.Add(bonusDesc.GetProperty("Bonus").ToString(), tempBonus);
-            }
+            BonusTextHandler.CreateEquipmentBonusesIndex(modsFolder);
         }
 
         public static string WriteOutCommonQuirkEffects()
@@ -124,7 +89,7 @@ namespace BTA_WikiTableGen
                 {
                     QuirkDef tempQuirkResult = GetQuirkFromGearJson(equipmentData.GearJsonDoc);
                     mechQuirk = tempQuirkResult;
-                    QuirkLookupTable.Add(tempQuirkResult.Id, tempQuirkResult);
+                    QuirkLookupTable.TryAdd(tempQuirkResult.Id, tempQuirkResult);
                     return true;
                 }
             }
@@ -133,7 +98,7 @@ namespace BTA_WikiTableGen
             {
                 QuirkDef tempQuirkResult = GetQuirkFromGearJson(equipmentData.GearJsonDoc);
                 mechQuirk = tempQuirkResult;
-                QuirkLookupTable.Add(tempQuirkResult.Id, tempQuirkResult);
+                QuirkLookupTable.TryAdd(tempQuirkResult.Id, tempQuirkResult);
                 return true;
             }
 
@@ -188,47 +153,7 @@ namespace BTA_WikiTableGen
             {
                 if (BonusOutputBlacklist.Contains(bonus.BonusId))
                     continue;
-                List<string> tempBonusValues = bonus.BonusValues;
-                if (bonus.StackingLimit != 1 && bonus.BonusValues.Count > 0 && quirkDef.InstanceCount > 1)
-                {
-                    tempBonusValues = bonus.BonusValues.Select((val) =>
-                    {
-                        if (BonusNumberExtractor.IsMatch(val))
-                        {
-                            GroupCollection possiblyPercentage = BonusNumberExtractor.Match(val).Groups;
-                            // Check that the stacking limit is -1 (unlimited) or that the Instance count is less than the stacking limit. If so then multiply the bonus.
-                            double modVal = Convert.ToDouble(possiblyPercentage[1].Value) * ((quirkDef.InstanceCount <= bonus.StackingLimit || bonus.StackingLimit == -1) ? quirkDef.InstanceCount : bonus.StackingLimit);
-                            if (possiblyPercentage.Count > 2)
-                            {
-                                return (possiblyPercentage[1].Value.Contains('+') ? "+" : "") + modVal + possiblyPercentage[2].Value;
-                            }
-                            return (possiblyPercentage[1].Value.Contains('+') ? "+" : "") + modVal + "";
-                        }
-                        return val;
-                    }).ToList();
-                }
-
-                bool fullDescUsable = false;
-                if (bonus.FullDescription != null)
-                {
-                    if (forceFullDesc)
-                        fullDescUsable = true;
-
-                    else if (tempBonusValues.Count() > 0 && tempBonusValues[0] != "" && !bonus.LongDescription.Contains("{0}"))
-                        fullDescUsable = true;
-                    else if (bonus.FullDescription.Length > 40)
-                    {
-                        fullDescUsable = false;
-                        if (!DebugBlacklist.Contains(bonus.BonusId))
-                        {
-                            Console.WriteLine($"DISCARDED FULL DESCRIPTION: {bonus.BonusId}");
-                            Console.WriteLine($"Full: {string.Format(bonus.FullDescription, tempBonusValues.ToArray())}");
-                            Console.WriteLine($"Long: {string.Format(bonus.LongDescription, tempBonusValues.ToArray())}");
-                            Console.WriteLine("");
-                            DebugBlacklist.Add(bonus.BonusId);
-                        }
-                    }
-                }
+                
                 if (!newLineBetweenBonuses)
                 {
                     if (first) first = false;
@@ -240,7 +165,7 @@ namespace BTA_WikiTableGen
                     }
                 }
 
-                string tempBonusWrite = string.Format(fullDescUsable ? bonus.FullDescription ?? bonus.LongDescription : bonus.LongDescription, tempBonusValues.ToArray()).Trim();
+                string tempBonusWrite = BonusTextHandler.PrintBonusToString(bonus, false, quirkDef.InstanceCount);
                 stringWriter.Write(tempBonusWrite);
 
                 if (new List<char> { ',', '.', '!', '?' }.Contains(tempBonusWrite.Last()))
@@ -261,9 +186,9 @@ namespace BTA_WikiTableGen
         {
             QuirkDef output = new QuirkDef()
             {
-                Id = gearJson.RootElement.GetProperty("Description").GetProperty("Id").ToString(),
-                Name = gearJson.RootElement.GetProperty("Description").GetProperty("Name").ToString(),
-                UiName = gearJson.RootElement.GetProperty("Description").GetProperty("UIName").ToString(),
+                Id = ModJsonHandler.GetIdFromJsonDoc(gearJson),
+                Name = ModJsonHandler.GetNameFromJsonDoc(gearJson),
+                UiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJson),
                 QuirkBonuses = new List<BonusDef>(),
                 InstanceCount = 1
             };
@@ -275,12 +200,9 @@ namespace BTA_WikiTableGen
                 {
                     string[] bonus = bonusElement.ToString().Split(':');
 
-                    BonusDef tempBonusDef = BaseBonusLookupTable[bonus[0]];
+                    BonusDef tempBonusDef = BonusTextHandler.GetBaseBonusDef(bonus[0]);
 
-                    if (bonus.Length > 1)
-                        tempBonusDef.BonusValues = bonus[1].Split(",").Select((val) => val.Trim()).ToList();
-                    else
-                        tempBonusDef.BonusValues = new List<string> { "" };
+                    tempBonusDef.PopulateBonusValues(bonus);
 
                     output.QuirkBonuses.Add(tempBonusDef);
                 }
@@ -289,33 +211,28 @@ namespace BTA_WikiTableGen
             {
                 if (output.Id == "Gear_Cockpit_Tacticon_B2000_Battle_Computer")
                 {
-                    BonusDef tempBonusDef = BaseBonusLookupTable["Tacticon"];
+                    BonusDef tempBonusDef = BonusTextHandler.GetBaseBonusDef("Tacticon");
                     tempBonusDef.BonusValues = new List<string> { "+1" };
                     output.QuirkBonuses.Add(tempBonusDef);
                 }
                 else if (output.Id == "Gear_Sensor_Prototype_EWE")
                 {
-                    BonusDef tempBonusDef = BaseBonusLookupTable["MissileDefense"];
+                    BonusDef tempBonusDef = BonusTextHandler.GetBaseBonusDef("MissileDefense");
                     tempBonusDef.BonusValues = new List<string> { "+3" };
                     output.QuirkBonuses.Add(tempBonusDef);
-                    tempBonusDef = BaseBonusLookupTable["Visibility"];
+                    tempBonusDef = BonusTextHandler.GetBaseBonusDef("Visibility");
                     tempBonusDef.BonusValues = new List<string> { "-15%" };
                     output.QuirkBonuses.Add(tempBonusDef);
-                    tempBonusDef = BaseBonusLookupTable["Signature"];
+                    tempBonusDef = BonusTextHandler.GetBaseBonusDef("Signature");
                     tempBonusDef.BonusValues = new List<string> { "-15%" };
                     output.QuirkBonuses.Add(tempBonusDef);
-                    tempBonusDef = BaseBonusLookupTable["ProbeBubble"];
+                    tempBonusDef = BonusTextHandler.GetBaseBonusDef("ProbeBubble");
                     tempBonusDef.BonusValues = new List<string> { "250" };
                     output.QuirkBonuses.Add(tempBonusDef);
                 }
             }
 
             return output;
-        }
-
-        private static bool CheckIfQuirkBonusLimit(string bonusId)
-        {
-            return LimitedBonusStrings.Contains(bonusId);
         }
     }
 }

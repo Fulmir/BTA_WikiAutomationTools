@@ -1,0 +1,26 @@
+3G Missile,3rd_Generation_Missile_Launcher
+Binary Heavy Laser,Binary Heavy Laser
+Binary PPC,Binary PPC
+Flammenwerfer,Flammenwerfer
+GC/20,Gauss Cannon/20
+Grazer,Grazers
+Insanity PPC,Insanity PPC
+Lava Gun,Lava Gun
+LAC,Light_Autocannons_2
+Magnetic Harpoon,Magnetic Harpoon
+Plasma PPC,Plasma PPC
+Rail Gun,Rail Gun
+RLRM,Rapid LRM
+RMRM,Rapid MRM
+Rotary L. Rifle,Rotary Light Rifle
+ER Rotary PPC (C),Rotary PPC
+R-UAC,Rotary Ultra Autocannon
+Shock Cannon,Shock Cannon
+Silver Bullet Hyper-Assault Gauss 10,Silver Bullet Hyper-Assault Gauss 10
+Snub-Nose Gauss Rifle,Snub-Nose Gauss Rifle
+Snubgun PPC,Snubgun PPC
+Stormbreaker Mk-9,Stormbreaker Mk-9
+Super MML,Super MML
+SuPPC,Support PPC Array
+Ultra LBX,Ultra LB-X
+Ultra Snub-Nose Gauss Rifle,Ultra Snub-Nose Gauss Rifle

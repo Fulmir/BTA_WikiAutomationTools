@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BTA_WikiTableGen
 {
-    internal static class MoveSpeedHandler
+    public static class MoveSpeedHandler
     {
         static Regex walkSpeedSearch = new Regex("\"statName\": \"WalkSpeed\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static Regex runSpeedSearch = new Regex("\"statName\": \"CBTBE_RunMultiMod\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -180,8 +180,8 @@ namespace BTA_WikiTableGen
         private static void AddWalkSpeedEffect(JsonDocument gearJsonContents)
         {
             var statusEffects = gearJsonContents.RootElement.GetProperty("statusEffects").EnumerateArray();
-            string gearUiName = gearJsonContents.RootElement.GetProperty("Description").GetProperty("UIName").ToString();
-            string gearId = gearJsonContents.RootElement.GetProperty("Description").GetProperty("Id").ToString();
+            string gearUiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonContents);
+            string gearId = ModJsonHandler.GetIdFromJsonDoc(gearJsonContents);
             foreach ( var statusEffect in statusEffects)
             {
                 if(TryGetSpecificMovementEffect(statusEffect, MovementType.Walk, gearUiName, gearId, out var movementEffect))
@@ -194,8 +194,8 @@ namespace BTA_WikiTableGen
         private static void AddRunSpeedEffect(JsonDocument gearJsonContents)
         {
             var statusEffects = gearJsonContents.RootElement.GetProperty("statusEffects").EnumerateArray();
-            string gearUiName = gearJsonContents.RootElement.GetProperty("Description").GetProperty("UIName").ToString();
-            string gearId = gearJsonContents.RootElement.GetProperty("Description").GetProperty("Id").ToString();
+            string gearUiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonContents);
+            string gearId = ModJsonHandler.GetIdFromJsonDoc(gearJsonContents);
             foreach (var statusEffect in statusEffects)
             {
                 if (TryGetSpecificMovementEffect(statusEffect, MovementType.Sprint, gearUiName, gearId, out var movementEffect))
@@ -208,8 +208,8 @@ namespace BTA_WikiTableGen
         private static void AddJumpJetEffect(JsonDocument gearJsonContents)
         {
             var statusEffects = gearJsonContents.RootElement.GetProperty("statusEffects").EnumerateArray();
-            string gearUiName = gearJsonContents.RootElement.GetProperty("Description").GetProperty("UIName").ToString();
-            string gearId = gearJsonContents.RootElement.GetProperty("Description").GetProperty("Id").ToString();
+            string gearUiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonContents);
+            string gearId = ModJsonHandler.GetIdFromJsonDoc(gearJsonContents);
             foreach (var statusEffect in statusEffects)
             {
                 if (statusEffect.TryGetProperty("JumpCapacity", out JsonElement value))
@@ -231,8 +231,8 @@ namespace BTA_WikiTableGen
         private static void AddJumpMultiplierEffect(JsonDocument gearJsonContents)
         {
             var statusEffects = gearJsonContents.RootElement.GetProperty("statusEffects").EnumerateArray();
-            string gearUiName = gearJsonContents.RootElement.GetProperty("Description").GetProperty("UIName").ToString();
-            string gearId = gearJsonContents.RootElement.GetProperty("Description").GetProperty("Id").ToString();
+            string gearUiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonContents);
+            string gearId = ModJsonHandler.GetIdFromJsonDoc(gearJsonContents);
             foreach (var statusEffect in statusEffects)
             {
                 if (TryGetSpecificMovementEffect(statusEffect, MovementType.Jump, gearUiName, gearId, out var movementEffect))

@@ -1,0 +1,71 @@
+Light Cannon,Cannons
+Medium Cannon,Cannons
+Heavy Cannon,Cannons
+DBAC,Double-Barrel Autocannon (S)
+Gatling Gun (S),Gatling Gun (S)
+HVAC,Hypervelocity Autocannons
+LBX AC,LB-X
+LAC/2,Light Autocannons
+LAC/5,Light Autocannons
+LAC/10,Light_Autocannons_2
+LAC/20,Light_Autocannons_2
+PAC,ProtoMech Autocannons
+Light Rifle,Rifles
+Medium Rifle,Rifles
+Heavy Rifle,Rifles
+Rotary AC,Rotary Autocannons
+Scattergun,Scatterguns (S)
+UAC,Ultra Autocannons
+Magshot Rifle,Single Shot
+Rotary Gauss Rifle,Rotary Gauss Rifle
+Hyper-Assault Gauss,Cluster Shot
+Silver Bullet Gauss,Cluster Shot
+Thumper Artillery,Mounted_Guns
+Sniper Artillery,Mounted_Guns
+Longtom Artillery,Mounted_Guns
+Thumper Cannon,Artillery_Cannons
+Sniper Cannon,Artillery_Cannons
+Long Tom Cannon,Artillery_Cannons
+Mortar,Mortars
+Bombard,Bombard Cannons (S)
+Mass Driver,Mass Drivers (S)
+Scattershot Railgun,Railgun Artillery
+HMG,Heavy Machine Guns
+Mech Taser,Mech Taser
+DXR,Directed X-Ray Cannon (S)
+Improved L Laser,Lasers
+Binary Laser,Binary Laser
+Improved Binary Laser,Improved Binary Laser
+Bombast Laser,Bombast Laser
+VSPL,Variable Speed Pulse Lasers
+X-Pulse,X-Pulse Lasers
+Twin-Linked S Laser (S),Twin-Linked Lasers (S)
+Gamma Cannon (S),Gamma Cannon (S)
+NPC (S),Neutrino Projector Cannon (S)
+Plasma Rifle,Plasma Weapons
+Plasma Cannon (C),Plasma Weapons
+PPC,PPCs
+ATM,Advanced Tactical Missiles
+APM4 (S),Alternative Payload Missiles (S)
+Arrow IV,Arrow IV
+Cruise Missile,Cruise Missile
+Sirocco (S),Sirocco (S)
+ Bomb,Bomb Bays
+DRM,Directed Radiation Missiles (S)
+Streak LRM,Streak LRM
+Imp. MML,Improved MMLs
+Narc,Narc Missile Beacon
+Inferno RL,Inferno Rocket Launcher
+Reloading RL,Reloading Rocket Launchers
+Streak SRM,Streak SRM
+Precision SRM,Precision SRM
+Piercing SRM,Piercing SRM
+Thunderbolt,Thunderbolt
+VRM,Variable Range Missiles (S)
+Laser AMS,Laser AMS
+A Pod,Anti-Personnel Pod
+Flamer,Flamers
+Slug MG,Single_Shot_2
+Incendiary MG,Multi_Shot
+TAG,TAG
+C3 Master,TAG
