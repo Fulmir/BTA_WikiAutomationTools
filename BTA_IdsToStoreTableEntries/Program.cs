@@ -18,5 +18,7 @@ class Program
         StoreFileProcessor.LoadStoreFileData(filePath);
 
         StoreFileProcessor.OutputFactoryStoresToString();
+
+        StoreFileProcessor.OutputFactionStoresToString();
     }
 }

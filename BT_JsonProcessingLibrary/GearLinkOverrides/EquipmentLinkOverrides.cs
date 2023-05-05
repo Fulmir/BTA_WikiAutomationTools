@@ -14,7 +14,7 @@ namespace UtilityClassLibrary.WikiLinkOverrides
 
         public static void PopulateEquipmentOverrides()
         {
-            EquipmentPageOverridesList = TextFileListProcessor.GetStringListFromFile(".\\WikiLinkOverrides\\GearLinkOverrides\\EquipmentPageOverridesList.txt").ToDictionary(
+            EquipmentPageOverridesList = TextFileListProcessor.GetStringListFromFile(".\\GearLinkOverrides\\EquipmentPageOverridesList.txt").ToDictionary(
                 (csvString) => csvString.Split(',')[0]
                 , (csvString) => csvString.Split(',')[1]);
         }
@@ -28,6 +28,9 @@ namespace UtilityClassLibrary.WikiLinkOverrides
 
             if (categoryIds.Contains("Armor"))
                 return GetStoreEntryDataWithNameSubTarget(equipmentJson, "Armor");
+
+            if (categoryIds.Contains("ModularArmor"))
+                return GetStoreEntryDataWithNameSubTarget(equipmentJson, "Modular_Armor");
 
             else if (categoryIds.Contains("Cockpit"))
                 return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "Cockpit");
@@ -79,6 +82,30 @@ namespace UtilityClassLibrary.WikiLinkOverrides
 
             else if (categoryIds.Contains("WeaponAttachment"))
                 return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "Weapon_Attachments");
+
+            else if (categoryIds.Contains("AESArm") || categoryIds.Contains("AESLeg"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "Actuator_Enhancement_System");
+
+            else if (categoryIds.Contains("CASE") || categoryIds.Contains("CASE2"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "CASE");
+
+            else if (categoryIds.Contains("MASC"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "M.A.S.C.");
+
+            else if (categoryIds.Contains("CombatShield"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "Shields");
+
+            else if (categoryIds.Contains("HarJel"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "HarJel_Self-Repair_System");
+
+            else if (categoryIds.Contains("C3Slave") || categoryIds.Contains("C3i") || categoryIds.Contains("C3Master"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "C3");
+
+            else if (categoryIds.Contains("TSM") || categoryIds.Contains("ProtoTSM") || categoryIds.Contains("TSMOmni"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "T.S.M.");
+
+            else if (categoryIds.Contains("Airdrop"))
+                return GetStoreEntryDataWithUiNameSubTarget(equipmentJson, "Airdrop_Beacons");
 
             else
                 return GetGenericEquipmentStoreData(equipmentJson);

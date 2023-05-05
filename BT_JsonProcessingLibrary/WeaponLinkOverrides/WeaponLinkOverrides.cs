@@ -17,7 +17,7 @@ namespace UtilityClassLibrary.WikiLinkOverrides
 
         private static Dictionary<string, string> BaWeaponOverridesList = new Dictionary<string, string>();
 
-        private static string FolderAddress = "WikiLinkOverrides\\WeaponLinkOverrides\\";
+        private static string FolderAddress = "WeaponLinkOverrides\\";
         public static void PopulateWeaponOverrides()
         {
             PopulateNormalWeaponOverrides();

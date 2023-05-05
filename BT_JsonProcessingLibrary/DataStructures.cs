@@ -28,7 +28,7 @@ namespace BT_JsonProcessingLibrary
         public string Model { get; set; }
     }
 
-    public struct EquipmentData
+    public struct EquipmentData : IComparable<EquipmentData>
     {
         public string Id { get; set; }
         public string UIName { get; set; }
@@ -36,7 +36,15 @@ namespace BT_JsonProcessingLibrary
         public List<GearCategory> GearType { get; set; }
         public double? StructureFactor { get; set; }
         public JsonDocument GearJsonDoc { get; set; }
-        public bool? IsQuirk { get; set; }
+
+        public int CompareTo(EquipmentData other)
+        {
+            int nameCompare = CompareStringsWithNumbersByNumericalOrder.CompareStrings(UIName, other.UIName);
+            if (nameCompare != 0)
+                return nameCompare;
+            else
+                return CompareStringsWithNumbersByNumericalOrder.CompareStrings(Id, other.Id);
+        }
     }
 
     public struct MovementItem
@@ -114,7 +122,9 @@ namespace BT_JsonProcessingLibrary
 
         int IComparable<StoreEntry>.CompareTo(StoreEntry other)
         {
-            int compareVal = CompareStringsWithNumbersByNumericalOrder.CompareStrings(this.UiName, other.UiName);
+            int compareVal = 0;
+            if(this.UiName != null || other.UiName != null)
+                compareVal = CompareStringsWithNumbersByNumericalOrder.CompareStrings(this.UiName, other.UiName);
             if (compareVal != 0)
                 return compareVal;
             else
@@ -560,6 +570,14 @@ namespace BT_JsonProcessingLibrary
     {
         public static int CompareStrings(string caller, string target)
         {
+            if(caller == null || target == null)
+            {
+                if (caller == null)
+                    return -1;
+                else 
+                    return 1;
+            }
+
             for(int charPos = 0; charPos < (caller.Length <= target.Length ? caller.Length : target.Length); charPos++)
             {
                 if (Char.IsDigit(caller[charPos]))
@@ -570,15 +588,15 @@ namespace BT_JsonProcessingLibrary
                         int targetOffset = 0;
                         string callerIntStr = "" + caller[charPos];
                         string targetIntStr = "" + target[charPos];
-                        while ((charPos + callerOffset + 1 < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
-                            || (charPos + targetOffset + 1 < target.Length && Char.IsDigit(target[charPos + targetOffset + 1])))
+                        while (((charPos + callerOffset + 1) < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
+                            || ((charPos + targetOffset + 1) < target.Length && Char.IsDigit(target[charPos + targetOffset + 1])))
                         {
-                            if(Char.IsDigit(caller[charPos + callerOffset + 1]))
+                            if((charPos + callerOffset + 1) < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
                             {
                                 callerOffset++;
                                 callerIntStr += caller[charPos + callerOffset];
                             }
-                            if(Char.IsDigit(target[charPos + targetOffset + 1]))
+                            if((charPos + targetOffset + 1) < target.Length && Char.IsDigit(target[charPos + targetOffset + 1]))
                             {
                                 targetOffset++;
                                 targetIntStr += target[charPos + targetOffset];

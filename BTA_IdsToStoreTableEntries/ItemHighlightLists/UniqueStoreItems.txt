@@ -1,0 +1,15 @@
+Gear_Sensors_StealthField
+Gear_NullSignatureSystem
+Weapon_MRM_vMRM10_0-STOCK
+Weapon_MRM_vMRM30_0-STOCK
+Weapon_MRM_vMRM20_0-STOCK
+Weapon_MRM_vMRM40_0-STOCK
+emod_armorslots_ultraferrofibrous
+Gear_Cockpit_AmbientTargeter
+Weapon_Gauss_ImprovedHeavy_0-STOCK
+Gear_Cockpit_TorsoDNI
+Weapon_iMML_3
+Weapon_iMML_5
+Weapon_iMML_7
+Weapon_iMML_9
+Gear_Cockpit_ArmBrace

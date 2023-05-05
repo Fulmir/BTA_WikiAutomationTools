@@ -20,7 +20,8 @@ namespace BT_JsonProcessingLibrary
 
             foreach (var file in files)
             {
-                values.Add(new BasicFileData { Path = Path.GetFullPath(file), FileName = Path.GetFileName(file) });
+                if(!file.Contains(".modtek"))
+                    values.Add(new BasicFileData { Path = Path.GetFullPath(file), FileName = Path.GetFileName(file) });
             }
 
             return values;
@@ -92,12 +93,27 @@ namespace BT_JsonProcessingLibrary
             return new BasicFileData() { Path = baseSubDirectory + "mech\\" + mechFileName, FileName = mechFileName };
         }
 
-        public static BasicFileData GetChassisDef(BasicFileData mechDef)
+        public static BasicFileData GetChassisDef(JsonDocument mechDefJson, BasicFileData mechDef)
         {
-            string baseSubDirectory = mechDef.Path.Remove(mechDef.Path.Length - mechDef.FileName.Length - 4 - 1);
             string mechFileName = mechDef.FileName.Replace("mechdef_", "chassisdef_");
+            if (mechDefJson.RootElement.TryGetProperty("ChassisID", out JsonElement chassisId))
+            {
+                mechFileName = chassisId.ToString().Trim() + ".json";
+            }
+
+            string baseSubDirectory = mechDef.Path.Remove(mechDef.Path.Length - mechDef.FileName.Length - 4 - 1);
 
             return new BasicFileData() { Path = baseSubDirectory + "chassis\\" + mechFileName, FileName = mechFileName };
+        }
+
+        public static string GetChassisDefId(JsonDocument mechDefJson, BasicFileData mechDef)
+        {
+            if (mechDefJson.RootElement.TryGetProperty("ChassisID", out JsonElement chassisId))
+            {
+                return chassisId.ToString().Trim();
+            }
+
+            return mechDef.FileName.Replace("mechdef_", "chassisdef_").Replace(".json", "");
         }
 
         public static BasicFileData GetVehicleChassisDef(BasicFileData vehicleDef)

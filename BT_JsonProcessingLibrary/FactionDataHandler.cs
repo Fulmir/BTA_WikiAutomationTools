@@ -23,6 +23,7 @@ namespace BT_JsonProcessingLibrary
             { "ClanGhostBear", "[[Clan Ghost Bear]]"},
             { "ClanJadeFalcon", "[[Clan Jade Falcon]]"},
             { "ClanNovaCat", "[[Clan Nova Cat]]"},
+            { "ClanSnowRaven", "[[Clan Snow Raven]]"},
             { "ClanWolf", "[[Clan Wolf]]"},
             { "ComStar", "[[ComStar]]"},
             { "DaneSacellum", "[[Dane Sacellum]]"},
@@ -98,9 +99,17 @@ namespace BT_JsonProcessingLibrary
             return factionName;
         }
 
+        public static string GetFactionIdFromShortName(string factionShortName)
+        {
+            return factionDefsByShortName[factionShortName].RootElement.GetProperty("factionID").ToString(); ;
+        }
+
         public static string GetLinkFromFactionId(string factionId)
         {
-            return factionIdToWikiLink[factionId];
+            if (factionIdToWikiLink.ContainsKey(factionId))
+                return factionIdToWikiLink[factionId];
+            else
+                return GetUseableFactionNameFromId(factionId);
         }
 
         private static bool CheckForSpecialTranslation(string factionId, out string factionName)

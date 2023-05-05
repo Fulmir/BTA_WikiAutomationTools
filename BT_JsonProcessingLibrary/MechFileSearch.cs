@@ -33,6 +33,8 @@ namespace BTA_WikiTableGen
         private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CommunityContentMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
         private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CustomMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
 
+        private static Dictionary<string, BasicFileData> chassisDefIndex = new Dictionary<string, BasicFileData>();
+
         private static ConcurrentDictionary<string, MechStats> allMechs = new ConcurrentDictionary<string, MechStats>();
 
         private static ConcurrentDictionary<string, List<MechNameCounter>> GroupKeyToNameTracker = new ConcurrentDictionary<string, List<MechNameCounter>>();
@@ -44,16 +46,28 @@ namespace BTA_WikiTableGen
             SeparateMechEntries = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\SeparateMechEntries.txt");
             MechLinkOverrides.PopulateMechOverrides();
 
-            List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef*.json");
-
             ParallelOptions parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = 8;
 
-            Parallel.ForEach(chassisDefs, parallelOptions, chassisDef =>
+            List<BasicFileData> chassisDefs = ModJsonHandler.SearchFiles(modsFolder, "chassisdef_*.json");
+
+            foreach(BasicFileData chassisDefFile in chassisDefs)
             {
-                if (!BlacklistDirectories.IsMatch(chassisDef.Path))
+                string chassisId = chassisDefFile.FileName.Replace(".json", "");
+                if (!chassisDefIndex.ContainsKey(chassisId))
+                    chassisDefIndex.Add(chassisId, chassisDefFile);
+                else
+                    Console.WriteLine($"Duplicate ChassisDef found for {chassisId}");
+            }
+
+            List<BasicFileData> mechDefs = ModJsonHandler.SearchFiles(modsFolder, "mechdef*.json");
+
+            Parallel.ForEach(mechDefs, parallelOptions, mechDef =>
+            {
+                if (!BlacklistDirectories.IsMatch(mechDef.Path))
                 {
-                    BasicFileData mechDef = ModJsonHandler.GetMechDef(chassisDef);
+                    JsonDocument mechJson = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
+                    BasicFileData chassisDef = chassisDefIndex[ModJsonHandler.GetChassisDefId(mechJson, mechDef)];
                     if (!File.Exists(mechDef.Path))
                         return;
 

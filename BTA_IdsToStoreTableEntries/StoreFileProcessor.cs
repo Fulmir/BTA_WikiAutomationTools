@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -15,10 +16,6 @@ namespace BTA_IdsToStoreTableEntries
 {
     internal static class StoreFileProcessor
     {
-        private static string FactoryStoreDirectory = "DynamicShops\\factories\\";
-        private static string CommunityContentDirectory = "Community Content\\";
-
-        //private static List<string> Headings = new List<string>();
         private static ConcurrentDictionary<string, Dictionary<StoreHeadingsGroup, List<StoreEntry>>> StoreDictionary = new ConcurrentDictionary<string, Dictionary<StoreHeadingsGroup, List<StoreEntry>>>();
         
         private static Dictionary<string, List<StoreTagAssociation>> allStoreListsByTag = new Dictionary<string, List<StoreTagAssociation>>();
@@ -27,19 +24,20 @@ namespace BTA_IdsToStoreTableEntries
 
         private static Dictionary<string, List<StoreTagAssociation>> factionStoreLists = new Dictionary<string, List<StoreTagAssociation>>();
 
+        private static List<string> uniqueHighlightItemIdsList = new List<string>();
+
         public static void LoadStoreFileData(string modsFolder)
         {
-            //Headings = TextFileListProcessor.GetStringListFromFile(".\\StoreTableHeadings.txt");
-
             PlanetDataHandler.PopulatePlanetFileData(modsFolder);
 
             FactionDataHandler.PopulateFactionDefData(modsFolder);
 
             GetAllItemLists(modsFolder);
-            //GetFactoryItemLists(modsFolder);
 
             LoadFactoryTagData(modsFolder);
             GetFactionStores(modsFolder);
+
+            PopulateUniqueItemList();
         }
 
         public static void OutputFactoryStoresToString()
@@ -62,19 +60,21 @@ namespace BTA_IdsToStoreTableEntries
 
                 StoreTagAssociation storeTagData = factoryStoreListsByTag[planetTag].First();
 
+                Dictionary<StoreHeadingsGroup, List<StoreEntry>> factoryStoreList = ConsolidateStoreLists(factoryStoreListsByTag[planetTag].Select(itemList => { return itemList.itemsListId; }).ToList());
+
                 if (factoryStoreListsByTag[planetTag].Count() > 1)
                     Console.WriteLine($"MULTIPLE STORE LISTS FOUND FOR PLANET TAG!?! {planetTag}");
 
                 individualTablesWriter.WriteLine($"=== {planet.Name} ===");
                 individualTablesWriter.WriteLine("");
                 individualTablesWriter.WriteLine("");
-                singleTableWriter.Write(CreateStoreTableHeader(new List<string> { "Planet", "Faction", "Rep Required" }));
+                individualTablesWriter.Write(CreateStoreTableHeader(new List<string> { "Planet", "Faction", "Rep Required" }));
                 string storeTableString = OutputStoreToString(
                     new List<string> { 
                         planet.Name,
                         storeTagData.owner == null ? "Any" : FactionDataHandler.GetUseableFactionNameFromShortName(storeTagData.owner),
                         storeTagData.rep == null ? "None" : storeTagData.rep },
-                    StoreDictionary[storeTagData.itemsListId]);
+                    factoryStoreList);
                 individualTablesWriter.Write(storeTableString);
                 individualTablesWriter.WriteLine("|}");
                 individualTablesWriter.WriteLine("");
@@ -95,35 +95,34 @@ namespace BTA_IdsToStoreTableEntries
         {
             Dictionary<string, string> factionNames = new Dictionary<string, string>();
 
-            foreach(string factionId in factionStoreLists.Keys)
+            foreach(string factionShortName in factionStoreLists.Keys)
             {
-                string factionName = FactionDataHandler.GetUseableFactionNameFromId(factionId);
-                factionNames.Add(factionName, factionId);
+                string factionName = FactionDataHandler.GetUseableFactionNameFromShortName(factionShortName);
+                factionNames.Add(factionName, factionShortName);
             }
 
             List<string> sortedFactionNames = factionNames.Keys.ToList();
             sortedFactionNames.Sort();
 
             StreamWriter singleTableWriter = new StreamWriter(".\\FactionStoresTable.txt", false);
-            StreamWriter individualTablesWriter = new StreamWriter(".\\IndividualFactionStoreTAbles.txt", false);
+            StreamWriter individualTablesWriter = new StreamWriter(".\\IndividualFactionStoreTables.txt", false);
 
             singleTableWriter.Write(CreateStoreTableHeader(new List<string> { "Faction" }, "sortable"));
 
-            List<string> sortedKeys = factoryStoreListsByTag.Keys.ToList();
-            sortedKeys.Sort();
-
             foreach (string factionName in sortedFactionNames) 
             {
-                string factionId = factionNames[factionName];
+                string shortFactionName = factionNames[factionName];
 
-                string factionLink = $"[[File:{factionId}_logo.jpg|link={factionName}|75px]] \r\n{FactionDataHandler.GetLinkFromFactionId(factionId)}";
+                string factionId = FactionDataHandler.GetFactionIdFromShortName(shortFactionName);
 
-                Dictionary<StoreHeadingsGroup, List<StoreEntry>> factionStoreList = ConsolidateStoreLists(factionStoreLists[factionId].Select(itemList => { return itemList.itemsListId; }).ToList());
+                string factionLink = $"[[File:{factionId}_logo.png|link={factionName}|75px]] \r\n{FactionDataHandler.GetLinkFromFactionId(factionId)}";
+
+                Dictionary<StoreHeadingsGroup, List<StoreEntry>> factionStoreList = ConsolidateStoreLists(factionStoreLists[shortFactionName].Select(itemList => { return itemList.itemsListId; }).ToList());
 
                 individualTablesWriter.WriteLine($"=== {factionName} ===");
                 individualTablesWriter.WriteLine("");
                 individualTablesWriter.WriteLine("");
-                singleTableWriter.Write(CreateStoreTableHeader(new List<string> { "Faction" }));
+                individualTablesWriter.Write(CreateStoreTableHeader(new List<string> { "Faction" }));
                 string storeTableString = OutputStoreToString(
                     new List<string> { factionLink },
                     factionStoreList);
@@ -134,7 +133,8 @@ namespace BTA_IdsToStoreTableEntries
                 individualTablesWriter.WriteLine("");
                 individualTablesWriter.WriteLine("");
 
-                singleTableWriter.Write(storeTableString);
+                if(factionName != "Darius")
+                    singleTableWriter.Write(storeTableString);
             }
             singleTableWriter.WriteLine("|}");
 
@@ -193,6 +193,17 @@ namespace BTA_IdsToStoreTableEntries
                     }
                 }
             }
+
+            StoreTagAssociation additionalStoreOverrideTag = new StoreTagAssociation()
+            {
+                itemsListId = "itemCollection_major_ClanDiamondShark",
+                owner = "Diamond Shark",
+                tag = "planet_faction_clandiamondshark"
+            };
+
+            if (!factoryStoreListsByTag.ContainsKey(additionalStoreOverrideTag.tag))
+                factoryStoreListsByTag.Add(additionalStoreOverrideTag.tag, new List<StoreTagAssociation>());
+            factoryStoreListsByTag[additionalStoreOverrideTag.tag].Add(additionalStoreOverrideTag);
         }
 
         private static void GetAllItemLists(string modsFolder)
@@ -203,12 +214,9 @@ namespace BTA_IdsToStoreTableEntries
 
             foreach (BasicFileData factionShopData in ModJsonHandler.SearchFiles(modsFolder.Replace("mods\\", ""), "*.csv"))
             {
-                if (!factionShopData.Path.Contains(".modtek"))
-                {
-                    if (!fileCopiesDict.ContainsKey(factionShopData.FileName))
-                        fileCopiesDict.Add(factionShopData.FileName, new List<BasicFileData>());
-                    fileCopiesDict[factionShopData.FileName].Add(factionShopData);
-                }
+                if (!fileCopiesDict.ContainsKey(factionShopData.FileName))
+                    fileCopiesDict.Add(factionShopData.FileName, new List<BasicFileData>());
+                fileCopiesDict[factionShopData.FileName].Add(factionShopData);
             }
 
             ParallelOptions parallelOptions = new ParallelOptions();
@@ -218,7 +226,7 @@ namespace BTA_IdsToStoreTableEntries
             {
                 foreach (BasicFileData storeFileDef in fileCopiesDict[fileName])
                 {
-                    UnpackStoreList(storeFileDef, modsFolder, true);
+                    BuildStoreList(storeFileDef, modsFolder, true);
                 }
             });
         }
@@ -236,36 +244,23 @@ namespace BTA_IdsToStoreTableEntries
 
                 List<StoreTagAssociation> factionStoreCollection = new List<StoreTagAssociation>();
 
-                string factionId = factionShopData.FileName.Replace(".json", "").Trim();
+                string storeOwner = "";
 
                 foreach (JsonElement factionItems in factionStoreDef.RootElement.EnumerateArray())
                 {
                     factionStoreCollection.Add(new StoreTagAssociation
                     {
                         itemsListId = factionItems.GetProperty("items").ToString(),
-                        owner = factionId
+                        owner = factionItems.GetProperty("factions").ToString()
                     });
+                    storeOwner = factionItems.GetProperty("factions").ToString();
                 }
 
-                factionStoreLists.Add(factionId, factionStoreCollection);
+                factionStoreLists.Add(storeOwner, factionStoreCollection);
             }
         }
 
-        //private static void GetFactoryItemLists(string modsFolder)
-        //{
-        //    var itemLists = ModJsonHandler.SearchFiles(modsFolder + FactoryStoreDirectory, "BTA_List_*");
-        //    itemLists.AddRange(ModJsonHandler.SearchFiles(modsFolder + CommunityContentDirectory, "BTA_List_*"));
-
-        //    ParallelOptions parallelOptions = new ParallelOptions();
-        //    parallelOptions.MaxDegreeOfParallelism = 8;
-
-        //    Parallel.ForEach(itemLists, parallelOptions, fileData =>
-        //    {
-        //        UnpackStoreList(fileData, modsFolder);
-        //    });
-        //}
-
-        private static Dictionary<StoreHeadingsGroup, List<StoreEntry>> UnpackStoreList(BasicFileData storeFile, string modsFolder, bool addToStoreList = false)
+        private static Dictionary<StoreHeadingsGroup, List<StoreEntry>> BuildStoreList(BasicFileData storeFile, string modsFolder, bool addToStoreList = false)
         {
             StreamReader storeListReader = new StreamReader(storeFile.Path);
             storeListReader.ReadLine();
@@ -285,6 +280,7 @@ namespace BTA_IdsToStoreTableEntries
             storeEntries[StoreHeadingsGroup.Vehicles] = new List<StoreEntry>();
             storeEntries[StoreHeadingsGroup.Contracts] = new List<StoreEntry>();
             storeEntries[StoreHeadingsGroup.Weapons] = new List<StoreEntry>();
+            storeEntries[StoreHeadingsGroup.Reference] = new List<StoreEntry>();
 
             while (!storeListReader.EndOfStream)
             {
@@ -309,7 +305,7 @@ namespace BTA_IdsToStoreTableEntries
                     case "Upgrade":
                         if (storeEntry[0].StartsWith("Gear_Contract"))
                             tempStoreEntry.StoreHeading = StoreHeadingsGroup.Contracts;
-                        else if (storeEntry[0].StartsWith("Gear_"))
+                        else if (storeEntry[0].StartsWith("Gear_") || storeEntry[0].StartsWith("emod_"))
                             tempStoreEntry.StoreHeading = StoreHeadingsGroup.Equipment;
                         break;
                     case "Mech":
@@ -326,10 +322,7 @@ namespace BTA_IdsToStoreTableEntries
                     case "Reference":
                         tempStoreEntry.StoreHeading = StoreHeadingsGroup.Reference;
                         tempStoreEntry.Id = storeEntry[0];
-                        //foreach(var pair in UnpackStoreList(ModJsonHandler.SearchFiles(modsFolder, storeEntry[0] + ".csv").First(), modsFolder))
-                        //{
-                        //    storeEntries[pair.Key].AddRange(pair.Value);
-                        //}
+                        storeEntries[tempStoreEntry.StoreHeading].Add(tempStoreEntry);
                         continue;
                 }
 
@@ -342,7 +335,7 @@ namespace BTA_IdsToStoreTableEntries
 
                 if(tempStoreEntry.StoreHeading == StoreHeadingsGroup.FullMechs || tempStoreEntry.StoreHeading == StoreHeadingsGroup.MechParts)
                 {
-                    BasicFileData chassisDefFile = ModJsonHandler.GetChassisDef(itemDefFile);
+                    BasicFileData chassisDefFile = ModJsonHandler.GetChassisDef(fileDoc, itemDefFile);
                     StreamReader chassisReader = new StreamReader(chassisDefFile.Path);
                     tempStoreEntry.PageSubTarget = JsonDocument.Parse(chassisReader.ReadToEnd()).RootElement.GetProperty("VariantName").ToString().Trim();
                     if(MechLinkOverrides.TryGetLinkOverride(tempStoreEntry.PageSubTarget, out string linkOverride))
@@ -393,7 +386,10 @@ namespace BTA_IdsToStoreTableEntries
                 storeEntries[tempStoreEntry.StoreHeading].Add(tempStoreEntry);
             }
 
-            StoreDictionary.TryAdd(storeName, storeEntries);
+            if (StoreDictionary.ContainsKey(storeName))
+                StoreDictionary[storeName] = CombineTwoStoreLists(StoreDictionary[storeName], storeEntries);
+            else
+                StoreDictionary.TryAdd(storeName, storeEntries);
 
             return storeEntries;
         }
@@ -422,71 +418,32 @@ namespace BTA_IdsToStoreTableEntries
 
         private static Dictionary<StoreHeadingsGroup, List<StoreEntry>> CombineTwoStoreLists(Dictionary<StoreHeadingsGroup, List<StoreEntry>> firstList, Dictionary<StoreHeadingsGroup, List<StoreEntry>> secondList)
         {
+            List<StoreHeadingsGroup> headings = new List<StoreHeadingsGroup>()
+            {
+                StoreHeadingsGroup.Weapons,
+                StoreHeadingsGroup.Ammunition,
+                StoreHeadingsGroup.Equipment,
+                StoreHeadingsGroup.FullMechs,
+                StoreHeadingsGroup.MechParts,
+                StoreHeadingsGroup.Vehicles,
+                StoreHeadingsGroup.BattleArmor,
+                StoreHeadingsGroup.Contracts,
+                StoreHeadingsGroup.Reference
+            };
+
             Dictionary<StoreHeadingsGroup, List<StoreEntry>> combinedStoreList = new Dictionary<StoreHeadingsGroup, List<StoreEntry>>();
 
-            if (firstList.ContainsKey(StoreHeadingsGroup.Ammunition) || secondList.ContainsKey(StoreHeadingsGroup.Ammunition))
+            foreach(StoreHeadingsGroup heading in headings)
             {
-                combinedStoreList.Add(StoreHeadingsGroup.Ammunition, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.Ammunition))
-                    combinedStoreList[StoreHeadingsGroup.Ammunition].AddRange(firstList[StoreHeadingsGroup.Ammunition]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.Ammunition))
-                    combinedStoreList[StoreHeadingsGroup.Ammunition].AddRange(secondList[StoreHeadingsGroup.Ammunition]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.BattleArmor) || secondList.ContainsKey(StoreHeadingsGroup.BattleArmor))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.BattleArmor, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.BattleArmor))
-                    combinedStoreList[StoreHeadingsGroup.BattleArmor].AddRange(firstList[StoreHeadingsGroup.BattleArmor]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.BattleArmor))
-                    combinedStoreList[StoreHeadingsGroup.BattleArmor].AddRange(secondList[StoreHeadingsGroup.BattleArmor]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.Contracts) || secondList.ContainsKey(StoreHeadingsGroup.Contracts))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.Contracts, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.Contracts))
-                    combinedStoreList[StoreHeadingsGroup.Contracts].AddRange(firstList[StoreHeadingsGroup.Contracts]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.Contracts))
-                    combinedStoreList[StoreHeadingsGroup.Contracts].AddRange(secondList[StoreHeadingsGroup.Contracts]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.Equipment) || secondList.ContainsKey(StoreHeadingsGroup.Equipment))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.Equipment, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.Equipment))
-                    combinedStoreList[StoreHeadingsGroup.Equipment].AddRange(firstList[StoreHeadingsGroup.Equipment]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.Equipment))
-                    combinedStoreList[StoreHeadingsGroup.Equipment].AddRange(secondList[StoreHeadingsGroup.Equipment]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.FullMechs) || secondList.ContainsKey(StoreHeadingsGroup.FullMechs))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.FullMechs, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.FullMechs))
-                    combinedStoreList[StoreHeadingsGroup.FullMechs].AddRange(firstList[StoreHeadingsGroup.FullMechs]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.FullMechs))
-                    combinedStoreList[StoreHeadingsGroup.FullMechs].AddRange(secondList[StoreHeadingsGroup.FullMechs]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.MechParts) || secondList.ContainsKey(StoreHeadingsGroup.MechParts))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.MechParts, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.MechParts))
-                    combinedStoreList[StoreHeadingsGroup.MechParts].AddRange(firstList[StoreHeadingsGroup.MechParts]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.MechParts))
-                    combinedStoreList[StoreHeadingsGroup.MechParts].AddRange(secondList[StoreHeadingsGroup.MechParts]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.Vehicles) || secondList.ContainsKey(StoreHeadingsGroup.Vehicles))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.Vehicles, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.Vehicles))
-                    combinedStoreList[StoreHeadingsGroup.Vehicles].AddRange(firstList[StoreHeadingsGroup.Vehicles]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.Vehicles))
-                    combinedStoreList[StoreHeadingsGroup.Vehicles].AddRange(secondList[StoreHeadingsGroup.Vehicles]);
-            }
-            if (firstList.ContainsKey(StoreHeadingsGroup.Weapons) || secondList.ContainsKey(StoreHeadingsGroup.Weapons))
-            {
-                combinedStoreList.Add(StoreHeadingsGroup.Weapons, new List<StoreEntry>());
-                if (firstList.ContainsKey(StoreHeadingsGroup.Weapons))
-                    combinedStoreList[StoreHeadingsGroup.Weapons].AddRange(firstList[StoreHeadingsGroup.Weapons]);
-                if (secondList.ContainsKey(StoreHeadingsGroup.Weapons))
-                    combinedStoreList[StoreHeadingsGroup.Weapons].AddRange(secondList[StoreHeadingsGroup.Weapons]);
+                combinedStoreList.Add(heading, new List<StoreEntry>());
+                if (firstList.ContainsKey(heading))
+                    combinedStoreList[heading].AddRange(firstList[heading]);
+                if (secondList.ContainsKey(heading))
+                    foreach (StoreEntry entry in secondList[heading])
+                    {
+                        if (!combinedStoreList[heading].Contains(entry))
+                            combinedStoreList[heading].Add(entry);
+                    }
             }
 
             return combinedStoreList;
@@ -504,9 +461,6 @@ namespace BTA_IdsToStoreTableEntries
                 storeTableBuilder.AppendLine($"! {heading}");
             }
 
-            //storeTableBuilder.AppendLine("! Faction");
-            //storeTableBuilder.AppendLine("! Rep Required");
-
             storeTableBuilder.AppendLine("! Weapons");
             storeTableBuilder.AppendLine("! Ammunition");
             storeTableBuilder.AppendLine("! Equipment");
@@ -523,10 +477,6 @@ namespace BTA_IdsToStoreTableEntries
 
         private static string OutputStoreToString(List<string> otherColumnEntries, Dictionary<StoreHeadingsGroup, List<StoreEntry>> storeDict)
         {
-            foreach(StoreHeadingsGroup heading in storeDict.Keys)
-            {
-                storeDict[heading].Sort();
-            }
 
             StringBuilder storeTableBuilder = new StringBuilder();
 
@@ -536,64 +486,49 @@ namespace BTA_IdsToStoreTableEntries
                 storeTableBuilder.AppendLine($"{columnData}");
             }
 
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.Weapons])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.Weapons) || storeDict[StoreHeadingsGroup.Weapons].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
+            List<StoreHeadingsGroup> headings = new List<StoreHeadingsGroup>()
+            {
+                StoreHeadingsGroup.Weapons,
+                StoreHeadingsGroup.Ammunition,
+                StoreHeadingsGroup.Equipment,
+                StoreHeadingsGroup.FullMechs,
+                StoreHeadingsGroup.MechParts,
+                StoreHeadingsGroup.Vehicles,
+                StoreHeadingsGroup.BattleArmor,
+                StoreHeadingsGroup.Contracts
+            };
 
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.Ammunition])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.Ammunition) || storeDict[StoreHeadingsGroup.Ammunition].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
+            foreach (StoreHeadingsGroup heading in headings)
+            {
+                storeDict[heading].Sort();
 
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.Equipment])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.Equipment) || storeDict[StoreHeadingsGroup.Equipment].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
+                storeTableBuilder.Append("| ");
 
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.FullMechs])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.FullMechs) || storeDict[StoreHeadingsGroup.FullMechs].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
+                if (!storeDict.ContainsKey(heading) || storeDict[heading].Count() == 0)
+                    storeTableBuilder.Append("None");
+                else
+                    foreach (StoreEntry storeEntry in storeDict[heading])
+                    {
+                        if(uniqueHighlightItemIdsList.Contains(storeEntry.Id))
+                            storeTableBuilder.Append($"{{{{Highlight|[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]|LightBlue}}}}</br>");
+                        else
+                            storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
+                    }
+                storeTableBuilder.AppendLine("");
+            }
 
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.MechParts])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.MechParts) || storeDict[StoreHeadingsGroup.MechParts].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
-
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.Vehicles])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.Vehicles) || storeDict[StoreHeadingsGroup.Vehicles].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
-
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.BattleArmor])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.BattleArmor) || storeDict[StoreHeadingsGroup.BattleArmor].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
-
-            storeTableBuilder.Append("| ");
-            foreach (StoreEntry storeEntry in storeDict[StoreHeadingsGroup.Contracts])
-                storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
-            if (!storeDict.ContainsKey(StoreHeadingsGroup.Contracts) || storeDict[StoreHeadingsGroup.Contracts].Count() == 0)
-                storeTableBuilder.Append("None");
-            storeTableBuilder.AppendLine("");
             storeTableBuilder.AppendLine("|-");
 
             return storeTableBuilder.ToString();
+        }
+
+        private static void PopulateUniqueItemList()
+        {
+            StreamReader uniqueItemListReader = new StreamReader(".\\ItemHighlightLists\\UniqueStoreItems.txt");
+            while (!uniqueItemListReader.EndOfStream)
+            {
+                uniqueHighlightItemIdsList.Add(uniqueItemListReader.ReadLine());
+            }
         }
     }
 }

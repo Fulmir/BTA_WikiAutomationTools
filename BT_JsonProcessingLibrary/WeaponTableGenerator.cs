@@ -14,12 +14,12 @@ namespace BT_JsonProcessingLibrary
         {
             StringBuilder weaponUpgradeTableBuilder = new StringBuilder();
 
-            WeaponTableData headerData = new WeaponTableData();
-
-            Dictionary<string, List<WeaponTableData>> gearToUpgradeModeDict = new Dictionary<string, List<WeaponTableData>>();
-
             foreach (string upgradeTag in upgradeTagToUpgradeData.Keys)
             {
+                WeaponTableData headerData = new WeaponTableData();
+
+                Dictionary<EquipmentData, List<WeaponTableData>> gearToUpgradeModeDict = new Dictionary<EquipmentData, List<WeaponTableData>>();
+
                 bool uniformBonusModes = true;
                 WeaponTableData? baseTableData = null;
 
@@ -28,16 +28,17 @@ namespace BT_JsonProcessingLibrary
                     List<string> gearTargetIds = MechGearHandler.GetGearIdsWithGearTag(upgradeTableData.Id);
                     headerData = headerData + upgradeTableData;
 
-                    if(baseTableData == null || !uniformBonusModes)
+                    if(baseTableData == null)
                     {
                         baseTableData = upgradeTableData;
                         // Need to print gear names but there will be multiple gear names per entry... probably a dictionary? OOF.
                         //weaponUpgradeTableBuilder.Append(GetTableRow(upgradeTableData, false, ))
                         foreach(string gearTargetId in gearTargetIds)
                         {
-                            if(!gearToUpgradeModeDict.ContainsKey(gearTargetId))
-                                gearToUpgradeModeDict.Add(gearTargetId, new List<WeaponTableData>());
-                            gearToUpgradeModeDict[gearTargetId].Add(upgradeTableData);
+                            MechGearHandler.TryGetEquipmentData(gearTargetId, out EquipmentData gearData);
+                            if (!gearToUpgradeModeDict.ContainsKey(gearData))
+                                gearToUpgradeModeDict.Add(gearData, new List<WeaponTableData>());
+                            gearToUpgradeModeDict[gearData].Add(upgradeTableData);
                         }
                     }
                     else
@@ -46,27 +47,29 @@ namespace BT_JsonProcessingLibrary
                         {
                             foreach (string gearTargetId in gearTargetIds)
                             {
-                                gearToUpgradeModeDict[gearTargetId].Add(upgradeTableData);
+                                MechGearHandler.TryGetEquipmentData(gearTargetId, out EquipmentData gearData);
+                                gearToUpgradeModeDict[gearData].Add(upgradeTableData);
                             }
                             uniformBonusModes = false;
                         }
                     }
                 }
-            }
 
-            weaponUpgradeTableBuilder.Append(GetTableHeader(false, "sortable", "text-align: center;", headerData));
+                weaponUpgradeTableBuilder.Append(GetTableHeader(false, "sortable", "text-align: center;", headerData));
 
-            foreach (string gearId in gearToUpgradeModeDict.Keys)
-            {
-                MechGearHandler.TryGetEquipmentData(gearId, out EquipmentData weaponAffectedData);
+                List<EquipmentData> sortedGearData = gearToUpgradeModeDict.Keys.ToList();
+                sortedGearData.Sort();
 
-                foreach(WeaponTableData weaponModData in gearToUpgradeModeDict[gearId])
+                foreach (EquipmentData gearData in sortedGearData)
                 {
-                    weaponUpgradeTableBuilder.Append(GetTableRow(weaponModData, false, weaponAffectedData.UIName));
+                    foreach (WeaponTableData weaponModData in gearToUpgradeModeDict[gearData])
+                    {
+                        weaponUpgradeTableBuilder.Append(GetTableRow(weaponModData, false, gearData.UIName));
+                    }
                 }
+                weaponUpgradeTableBuilder.AppendLine("|}");
+                weaponUpgradeTableBuilder.AppendLine("</br>");
             }
-            weaponUpgradeTableBuilder.AppendLine("|}");
-            weaponUpgradeTableBuilder.AppendLine("</br>");
 
             return weaponUpgradeTableBuilder.ToString();
         }

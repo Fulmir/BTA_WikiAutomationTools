@@ -11,7 +11,7 @@ namespace BT_JsonProcessingLibrary
     public static class PlanetDataHandler
     {
         private static string worldDefsFolder = "InnerSphereMap\\StarSystems\\";
-        private static string communityContentWorldsDefFolder = "Community Content\\planet\\";
+        private static string communityContentWorldsDefFolder = "Community Content\\";
 
         private static ConcurrentDictionary<string, PlanetData> planetDefs = new ConcurrentDictionary<string, PlanetData>();
 

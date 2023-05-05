@@ -11,7 +11,7 @@ namespace UtilityClassLibrary.WikiLinkOverrides
         private static Dictionary<string, string> VariantOverridesList = new Dictionary<string, string>();
         public static void PopulateMechOverrides()
         {
-            VariantOverridesList = TextFileListProcessor.GetStringListFromFile(".\\WikiLinkOverrides\\MechLinkOverrides\\VariantOverridesList.txt").ToDictionary(
+            VariantOverridesList = TextFileListProcessor.GetStringListFromFile(".\\MechLinkOverrides\\VariantOverridesList.txt").ToDictionary(
                 (csvString) => csvString.Split(',')[0]
                 , (csvString) => csvString.Split(',')[1]);
         }
