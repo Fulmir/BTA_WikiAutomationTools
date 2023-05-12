@@ -208,6 +208,8 @@ namespace BTA_WikiTableGen
                     return "XL";
                 case "emod_engineslots_cxl_center":
                     return "cXL";
+                case "emod_engineslots_protoxl_center":
+                    return "Proto XL";
                 case "emod_engineslots_xxl_center":
                     return "XXL";
                 case "emod_engineslots_cxxl_center":
@@ -276,6 +278,8 @@ namespace BTA_WikiTableGen
                     return "Endo";
                 case "emod_structureslots_clanendosteel":
                     return "Clan Endo";
+                case "emod_structureslots_endosteelprototype":
+                    return "Proto Endo";
                 case "Gear_structureslots_Composite":
                     return "Composite";
                 case "emod_structureslots_endocomposite":

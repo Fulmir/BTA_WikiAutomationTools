@@ -16,3 +16,11 @@ COR-3X,Corsair_(55T)
 BJ-1M,Blackjack_(50T)
 GRF-1A,Griffin_(60T)
 GRF-2N-X,Griffin_(60T)
+FS9-O,Firestarter_Omni
+FS9-OA,Firestarter_Omni
+FS9-OB,Firestarter_Omni
+FS9-OC,Firestarter_Omni
+FS9-OD,Firestarter_Omni
+FS9-OF,Firestarter_Omni
+FS9-OR,Firestarter_Omni
+FS9-OX,Firestarter_Omni
