@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public static class MechGearHandler
     {
@@ -112,95 +112,7 @@ namespace BTA_WikiTableGen
             string fileText = reader.ReadToEnd();
             JsonDocument gearJsonDoc = JsonDocument.Parse(fileText);
 
-            bool haveCategories = false;
-            JsonElement categoriesJson = new JsonElement();
-            if (gearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement custom))
-                haveCategories = custom.TryGetProperty("Category", out categoriesJson);
-
-            EquipmentData equipmentData = new EquipmentData()
-            {
-                Id = ModJsonHandler.GetIdFromJsonDoc(gearJsonDoc),
-                UIName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonDoc),
-                Tonnage = gearJsonDoc.RootElement.GetProperty("Tonnage").GetDouble(),
-                GearType = haveCategories ? DetermineGearCategory(gearId, fileText, categoriesJson) : DetermineGearCategory(gearId, fileText),
-                GearJsonDoc = gearJsonDoc
-            };
-
-            if (MechTonnageCalculator.TryGetStructureWeightFactor(gearJsonDoc, out double tempStructureFactor))
-                equipmentData.StructureFactor = tempStructureFactor;
-
-            return equipmentData;
-        }
-
-        private static List<GearCategory> DetermineGearCategory(string itemId, string fileText, JsonElement? categories = null)
-        {
-            List<GearCategory> categoryList = new List<GearCategory>();
-
-            if (categories != null && categories.Value.ValueKind == JsonValueKind.Array)
-            {
-                foreach (JsonElement category in categories.Value.EnumerateArray())
-                {
-                    if (category.TryGetProperty("CategoryID", out JsonElement categoryId))
-                    {
-                        switch (categoryId.ToString())
-                        {
-                            case "Structure":
-                                categoryList.Add(GearCategory.Structure);
-                                break;
-                            case "Quirk":
-                                categoryList.Add(GearCategory.Quirk);
-                                break;
-                            case "Heatsink":
-                                categoryList.Add(GearCategory.Heatsink);
-                                break;
-                            case "Gyro":
-                                categoryList.Add(GearCategory.Gyro);
-                                break;
-                            case "Cockpit":
-                                categoryList.Add(GearCategory.Cockpit);
-                                break;
-                            case "LifeSupportA":
-                                categoryList.Add(GearCategory.LifeSupportA);
-                                break;
-                            case "LifeSupportB":
-                                categoryList.Add(GearCategory.LifeSupportB);
-                                break;
-                            case "WeaponAttachment":
-                                categoryList.Add(GearCategory.WeaponAttachment);
-                                break;
-                            case "Armor":
-                                categoryList.Add(GearCategory.Armor);
-                                break;
-                            case "EngineHeatBlock":
-                                categoryList.Add(GearCategory.EngineHeatsinks);
-                                break;
-                            case "Cooling":
-                                categoryList.Add(GearCategory.HeatsinkKit);
-                                break;
-                            case "EngineShield":
-                                categoryList.Add(GearCategory.EngineShield);
-                                break;
-                            case "EngineCore":
-                                categoryList.Add(GearCategory.EngineCore);
-                                break;
-                            case "w/s/m/melee":
-                                categoryList.Add(GearCategory.MeleeWeapon);
-                                break;
-                        }
-                    }
-                }
-            }
-
-            if (itemId.StartsWith("Weapon"))
-                categoryList.Add(GearCategory.Weapon);
-            if (structureRegex.IsMatch(itemId) && !categoryList.Contains(GearCategory.Structure))
-                categoryList.Add(GearCategory.Structure);
-            if (armorRegex.IsMatch(itemId) && !categoryList.Contains(GearCategory.Armor))
-                categoryList.Add(GearCategory.Armor);
-            if (categoryList.Count == 0)
-                categoryList.Add(GearCategory.None);
-
-            return categoryList;
+            return new EquipmentData(gearJsonDoc);
         }
 
         private static void GetMechEngineerDefaults(string modsFolder)

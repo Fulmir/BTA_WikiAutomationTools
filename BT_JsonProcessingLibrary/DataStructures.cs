@@ -30,12 +30,162 @@ namespace BT_JsonProcessingLibrary
 
     public struct EquipmentData : IComparable<EquipmentData>
     {
+        public EquipmentData(JsonDocument equipmentJson)
+        {
+            Id = ModJsonHandler.GetIdFromJsonDoc(equipmentJson);
+            UIName = ModJsonHandler.GetUiNameFromJsonDoc(equipmentJson);
+            Tonnage = equipmentJson.RootElement.GetProperty("Tonnage").GetDouble();
+            GearJsonDoc = equipmentJson;
+
+
+            ProcessGearJson();
+        }
         public string Id { get; set; }
         public string UIName { get; set; }
         public double Tonnage { get; set; }
-        public List<GearCategory> GearType { get; set; }
-        public double? StructureFactor { get; set; }
+        public List<GearCategory> GearType { get; set; } = new List<GearCategory>();
+        public double? StructureWeightFactor { get; set; }
         public JsonDocument GearJsonDoc { get; set; }
+        public double? GlobalStructureFactor { get; set; }
+        public double? GlobalArmorFactor { get; set; }
+        public Statisticdata? LocalStructureFactor { get; set; }
+        public Statisticdata? LocalArmorFactor { get; set; }
+
+        private void ProcessGearJson()
+        {
+            if (GearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement custom))
+                if (custom.TryGetProperty("Category", out JsonElement categoriesJson))
+                {
+                    List<JsonElement> categories = new List<JsonElement>();
+                    if(categoriesJson.ValueKind == JsonValueKind.Object)
+                    {
+                        categories.Add(categoriesJson);
+                    }
+                    else if(categoriesJson.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach(JsonElement tempCat in categoriesJson.EnumerateArray())
+                            categories.Add(tempCat);
+                    }
+                    foreach (JsonElement category in categories)
+                    {
+                        if (category.TryGetProperty("CategoryID", out JsonElement categoryId))
+                        {
+                            switch (categoryId.ToString())
+                            {
+                                case "Structure":
+                                    GearType.Add(GearCategory.Structure);
+                                    break;
+                                case "Quirk":
+                                    GearType.Add(GearCategory.Quirk);
+                                    break;
+                                case "Heatsink":
+                                    GearType.Add(GearCategory.Heatsink);
+                                    break;
+                                case "Gyro":
+                                    GearType.Add(GearCategory.Gyro);
+                                    break;
+                                case "Cockpit":
+                                    GearType.Add(GearCategory.Cockpit);
+                                    break;
+                                case "LifeSupportA":
+                                    GearType.Add(GearCategory.LifeSupportA);
+                                    break;
+                                case "LifeSupportB":
+                                    GearType.Add(GearCategory.LifeSupportB);
+                                    break;
+                                case "WeaponAttachment":
+                                    GearType.Add(GearCategory.WeaponAttachment);
+                                    break;
+                                case "Armor":
+                                    GearType.Add(GearCategory.Armor);
+                                    break;
+                                case "EngineHeatBlock":
+                                    GearType.Add(GearCategory.EngineHeatsinks);
+                                    break;
+                                case "Cooling":
+                                    GearType.Add(GearCategory.HeatsinkKit);
+                                    break;
+                                case "EngineShield":
+                                    GearType.Add(GearCategory.EngineShield);
+                                    break;
+                                case "EngineCore":
+                                    GearType.Add(GearCategory.EngineCore);
+                                    break;
+                                case "EngineSlots":
+                                    GearType.Add(GearCategory.EngineSlots);
+                                    break;
+                                case "TankStuff":
+                                    GearType.Add(GearCategory.TankStuff);
+                                    break;
+                                case "w/s/m/melee":
+                                    GearType.Add(GearCategory.MeleeWeapon);
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+            if (Id.StartsWith("Weapon"))
+                GearType.Add(GearCategory.Weapon);
+            if (MechGearHandler.structureRegex.IsMatch(Id) && !GearType.Contains(GearCategory.Structure))
+                GearType.Add(GearCategory.Structure);
+            if (MechGearHandler.armorRegex.IsMatch(Id) && !GearType.Contains(GearCategory.Armor))
+                GearType.Add(GearCategory.Armor);
+
+            if (GearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement customElement))
+            {
+                if (customElement.TryGetProperty("ArmorStructureChanges", out JsonElement armorStructureElement))
+                {
+                    if (armorStructureElement.TryGetProperty("StructureFactor", out JsonElement structureFactorElement))
+                    {
+                        GearType.Add(GearCategory.StructureModItem);
+                        GlobalStructureFactor = structureFactorElement.GetDouble();
+                    }
+                    if (armorStructureElement.TryGetProperty("ArmorFactor", out JsonElement armorFactorElement))
+                    {
+                        GearType.Add(GearCategory.ArmorModItem);
+                        GlobalArmorFactor = armorFactorElement.GetDouble();
+                    }
+                }
+            }
+
+            if (ModJsonHandler.TryGetBaseEffectsForGear(GearJsonDoc, out List<StatusEffect> gearStatusEffects))
+            {
+                foreach(StatusEffect effect in gearStatusEffects)
+                {
+                    if (effect.statisticData?.statName.Contains(".Structure") ?? false)
+                    {
+                        if (!GearType.Contains(GearCategory.StructureModItem))
+                            GearType.Add(GearCategory.StructureModItem);
+                        LocalStructureFactor = effect.statisticData;
+                    }
+                    if (effect.statisticData?.statName.Contains(".Armor") ?? false)
+                    {
+                        if (!GearType.Contains(GearCategory.ArmorModItem))
+                            GearType.Add(GearCategory.ArmorModItem);
+                        LocalStructureFactor = effect.statisticData;
+                    }
+                }
+            }
+
+            if (GearType.Count == 0)
+                GearType.Add(GearCategory.None);
+        }
+
+        public bool IsCoreGear()
+        {
+            if(GearType.Count == 0)
+                return false;
+            if (GearType.Contains(GearCategory.Gyro) ||
+                GearType.Contains(GearCategory.EngineHeatsinks) ||
+                GearType.Contains(GearCategory.EngineCore) ||
+                GearType.Contains(GearCategory.EngineShield) ||
+                GearType.Contains(GearCategory.EngineSlots) ||
+                GearType.Contains(GearCategory.Armor) ||
+                GearType.Contains(GearCategory.Structure))
+                return true;
+            return false;
+        }
 
         public int CompareTo(EquipmentData other)
         {
@@ -111,7 +261,7 @@ namespace BT_JsonProcessingLibrary
         public string itemsListId { get; set; }
     }
 
-    public struct StoreEntry: IComparable<StoreEntry>
+    public struct StoreEntry : IComparable<StoreEntry>
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -123,7 +273,7 @@ namespace BT_JsonProcessingLibrary
         int IComparable<StoreEntry>.CompareTo(StoreEntry other)
         {
             int compareVal = 0;
-            if(this.UiName != null || other.UiName != null)
+            if (this.UiName != null || other.UiName != null)
                 compareVal = CompareStringsWithNumbersByNumericalOrder.CompareStrings(this.UiName, other.UiName);
             if (compareVal != 0)
                 return compareVal;
@@ -159,7 +309,7 @@ namespace BT_JsonProcessingLibrary
                 DamageVarianceNormal = damageVariance.GetDouble();
             DamageHeat = weaponRoot.GetProperty("HeatDamage").GetDouble();
             DamageStab = weaponRoot.GetProperty("Instability").GetDouble();
-            if(weaponRoot.TryGetProperty("StructureDamage", out var structureDamage))
+            if (weaponRoot.TryGetProperty("StructureDamage", out var structureDamage))
                 DamageStructure = structureDamage.GetDouble();
 
             Shots = weaponRoot.GetProperty("ShotsWhenFired").GetInt32();
@@ -186,7 +336,7 @@ namespace BT_JsonProcessingLibrary
                         if (customCategory.ToString() == "NeverMelee")
                             FiresInMelee = false;
                     }
-                if(weaponRoot.TryGetProperty("BonusDescriptions", out JsonElement bonusDescElement))
+                if (weaponRoot.TryGetProperty("BonusDescriptions", out JsonElement bonusDescElement))
                     foreach (JsonElement bonusDesc in bonusDescElement.EnumerateArray())
                     {
                         string bonusName = bonusDesc.GetString().Split(':')[0];
@@ -203,7 +353,7 @@ namespace BT_JsonProcessingLibrary
         {
             Id = upgradeTagName;
 
-            if(modifierEffects.TryGetProperty("AmmoCategory", out var ammoElement))
+            if (modifierEffects.TryGetProperty("AmmoCategory", out var ammoElement))
                 AmmoTypeString = ammoElement.GetString();
 
             if (modifierEffects.TryGetProperty("DamagePerShot", out var damageElement))
@@ -256,8 +406,8 @@ namespace BT_JsonProcessingLibrary
             result.Id = left.Id + "," + right.Id;
             result.UiName = "Combined Table Data";
 
-            if(left.AmmoTypeString != null || right.AmmoTypeString != null)
-                result.AmmoTypeString = left.AmmoTypeString?? "" + right.AmmoTypeString?? "";
+            if (left.AmmoTypeString != null || right.AmmoTypeString != null)
+                result.AmmoTypeString = left.AmmoTypeString ?? "" + right.AmmoTypeString ?? "";
 
             if (left.DamageNormal != null || right.DamageNormal != null)
                 result.DamageNormal = left.DamageNormal ?? 0 + right.DamageNormal ?? 0;
@@ -345,7 +495,7 @@ namespace BT_JsonProcessingLibrary
         }
         public static bool operator !=(WeaponTableData left, WeaponTableData right)
         {
-            if(left == right)
+            if (left == right)
                 return false;
             return true;
         }
@@ -480,7 +630,7 @@ namespace BT_JsonProcessingLibrary
             Name = planetDescription.GetProperty("Name").ToString();
             Description = planetDescription.GetProperty("Details").ToString();
 
-            foreach(JsonElement tag in planetDef.RootElement.GetProperty("Tags").GetProperty("items").EnumerateArray())
+            foreach (JsonElement tag in planetDef.RootElement.GetProperty("Tags").GetProperty("items").EnumerateArray())
                 Tags.Add(tag.ToString());
 
             foreach (JsonElement biome in planetDef.RootElement.GetProperty("SupportedBiomes").EnumerateArray())
@@ -539,6 +689,7 @@ namespace BT_JsonProcessingLibrary
         Gyro,
         EngineShield,
         EngineCore,
+        EngineSlots,
         HeatsinkKit,
         EngineHeatsinks,
         Armor,
@@ -550,7 +701,11 @@ namespace BT_JsonProcessingLibrary
         LifeSupportA,
         LifeSupportB,
         Heatsink,
-        Quirk
+        TankStuff,
+        Quirk,
+        MovementModItem,
+        StructureModItem,
+        ArmorModItem
     }
 
     public enum StoreHeadingsGroup
@@ -566,19 +721,28 @@ namespace BT_JsonProcessingLibrary
         Reference
     }
 
+    public enum VehicleMovementTypes
+    {
+        Wheeled,
+        Tracked,
+        Hover,
+        VTOL,
+        Jet
+    }
+
     public static class CompareStringsWithNumbersByNumericalOrder
     {
         public static int CompareStrings(string caller, string target)
         {
-            if(caller == null || target == null)
+            if (caller == null || target == null)
             {
                 if (caller == null)
                     return -1;
-                else 
+                else
                     return 1;
             }
 
-            for(int charPos = 0; charPos < (caller.Length <= target.Length ? caller.Length : target.Length); charPos++)
+            for (int charPos = 0; charPos < (caller.Length <= target.Length ? caller.Length : target.Length); charPos++)
             {
                 if (Char.IsDigit(caller[charPos]))
                 {
@@ -591,12 +755,12 @@ namespace BT_JsonProcessingLibrary
                         while (((charPos + callerOffset + 1) < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
                             || ((charPos + targetOffset + 1) < target.Length && Char.IsDigit(target[charPos + targetOffset + 1])))
                         {
-                            if((charPos + callerOffset + 1) < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
+                            if ((charPos + callerOffset + 1) < caller.Length && Char.IsDigit(caller[charPos + callerOffset + 1]))
                             {
                                 callerOffset++;
                                 callerIntStr += caller[charPos + callerOffset];
                             }
-                            if((charPos + targetOffset + 1) < target.Length && Char.IsDigit(target[charPos + targetOffset + 1]))
+                            if ((charPos + targetOffset + 1) < target.Length && Char.IsDigit(target[charPos + targetOffset + 1]))
                             {
                                 targetOffset++;
                                 targetIntStr += target[charPos + targetOffset];
@@ -619,7 +783,7 @@ namespace BT_JsonProcessingLibrary
                 else if (caller[charPos] != target[charPos])
                     return caller[charPos].CompareTo(target[charPos]);
             }
-            if(caller.Length < target.Length) 
+            if (caller.Length < target.Length)
                 return -1;
             else if (caller.Length > target.Length)
                 return 1;

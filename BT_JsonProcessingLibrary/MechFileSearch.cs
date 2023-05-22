@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using UtilityClassLibrary;
 using UtilityClassLibrary.WikiLinkOverrides;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public static class MechFileSearch
     {
@@ -25,13 +25,13 @@ namespace BTA_WikiTableGen
         internal static List<string> WhitelistMechVariants = new List<string>();
         internal static List<string> SeparateMechEntries = new List<string>();
 
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> InnerSphereMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> ClanMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> SanctuaryMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> QuadMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> HeroMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CommunityContentMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
-        private static ConcurrentDictionary<string, Dictionary<string, MechStats>> CustomMechs = new ConcurrentDictionary<string, Dictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> InnerSphereMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> ClanMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> SanctuaryMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> QuadMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> HeroMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> CommunityContentMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> CustomMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
 
         private static Dictionary<string, BasicFileData> chassisDefIndex = new Dictionary<string, BasicFileData>();
 
@@ -82,14 +82,14 @@ namespace BTA_WikiTableGen
 
                     AddToGroupKeyToNameTracker(chassisName, variantName);
 
-                    if (CustomMechVariants.Contains(variantName))
+                    if (IsHeroMech(variantName))
+                        AddToNestedDictionary(variantName, ref HeroMechs);
+
+                    else if (CustomMechVariants.Contains(variantName))
                         AddToNestedDictionary(variantName, ref CustomMechs);
 
                     else if (CommunityContentDirectories.IsMatch(chassisDef.Path))
                         AddToNestedDictionary(variantName, ref CommunityContentMechs);
-
-                    else if (IsHeroMech(variantName))
-                        AddToNestedDictionary(variantName, ref HeroMechs);
 
                     else if (IsClanMech(variantName, chassisDef.Path))
                         AddToNestedDictionary(variantName, ref ClanMechs);
@@ -104,17 +104,13 @@ namespace BTA_WikiTableGen
                         AddToNestedDictionary(variantName, ref InnerSphereMechs);
                 }
             });
-
-            //foreach (BasicFileData chassisDef in chassisDefs)
-            //{
-            //}
         }
 
-        private static void AddToNestedDictionary(string variantName, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> target)
+        private static void AddToNestedDictionary(string variantName, ref ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> target)
         {
-            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechTonnage;
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechWeight;
             if (!target.ContainsKey(mechGroupKey))
-                target[mechGroupKey] = new Dictionary<string, MechStats>();
+                target[mechGroupKey] = new ConcurrentDictionary<string, MechStats>();
 
             target[mechGroupKey][variantName] = allMechs[variantName];
         }
@@ -128,7 +124,7 @@ namespace BTA_WikiTableGen
         {
             chassisName = CleanNameForKey(chassisName);
 
-            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechTonnage;
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechWeight;
             if (!GroupKeyToNameTracker.ContainsKey(mechGroupKey))
                 GroupKeyToNameTracker[mechGroupKey] = new List<MechNameCounter>();
 
@@ -161,7 +157,7 @@ namespace BTA_WikiTableGen
             }
         }
 
-        private static string TryGetNameForGroupKey(string mechGroupKey, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> targetDictionary)
+        private static string TryGetNameForGroupKey(string mechGroupKey, ref ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> targetDictionary)
         {
             Dictionary<string, MechNameCounter> mechNameCounters = new Dictionary<string, MechNameCounter>();
             int highestUseCount = 0;
@@ -248,7 +244,7 @@ namespace BTA_WikiTableGen
             mechTablePageWriter.Close();
         }
 
-        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref ConcurrentDictionary<string, Dictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
+        private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
         {
             Dictionary<string, List<string>> mechNamesToMechGroupKeys = new Dictionary<string, List<string>>();
 
@@ -339,11 +335,12 @@ namespace BTA_WikiTableGen
                         {
                             excludedVariantsCount++;
                             otherVariants.Add(variant.MechModel);
-                            variantMechName = variant.MechName;
+                            if(variantMechName == "ERROR")
+                                variantMechName = variant.MechName;
                         }
                     }
 
-                    int tonnage = targetDictionary[mechGroupKey].First().Value.MechTonnage;
+                    int tonnage = targetDictionary[mechGroupKey].First().Value.MechWeight;
 
                     StringWriter variantWriter;
                     if (breakUpListByTonnage)
@@ -473,14 +470,14 @@ namespace BTA_WikiTableGen
             tableWriter.WriteLine("!<small>Model</small>");
             tableWriter.WriteLine("!<small>Mass</small>");
             tableWriter.WriteLine("!<small>Role</small>");
-            tableWriter.WriteLine("!<small>Ba</small>");
-            tableWriter.WriteLine("!<small>En</small>");
-            tableWriter.WriteLine("!<small>Mi</small>");
-            tableWriter.WriteLine("!<small>Ar</small>");
-            tableWriter.WriteLine("!<small>Su</small>");
-            tableWriter.WriteLine("!<small>O</small>");
-            tableWriter.WriteLine("!<small>Bo</small>");
-            tableWriter.WriteLine("!<small>Me</small>");
+            tableWriter.WriteLine("!<small>[[File:Ballistic_Icon.png|20px|Ballistic hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Energy_Icon.png|20px|Energy hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Missile_Icon.png|20px|Missile hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Artillery_Icon.png|20px|Artillery hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Support_Icon.png|20px|Support hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Omni_Icon.png|20px|Omni hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Bomb_Icon.png|20px|Bomb hardpoint icon]]</small>");
+            tableWriter.WriteLine("!<small>[[File:Melee_Icon.png|20px|Melee hardpoint icon]]</small>");
             tableWriter.WriteLine("!<small>Type</small>");
             tableWriter.WriteLine("!<small>Core</small>");
             tableWriter.WriteLine("!<small>Heat Sinks</small>");
@@ -498,7 +495,7 @@ namespace BTA_WikiTableGen
         private static void StartMechTitleSection(StringWriter writer, string mechName, string firstVariantName, int variantCount)
         {
             string cleanMechName = "";
-            if (MechLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
+            if (VehicleLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
                 cleanMechName = linkOverride;
             else
                 cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');

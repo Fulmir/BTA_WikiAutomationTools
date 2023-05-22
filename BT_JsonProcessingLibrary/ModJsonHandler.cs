@@ -156,5 +156,65 @@ namespace BT_JsonProcessingLibrary
             string outputString = ColorCodeRegex.Replace(toConvert, "<span style=\"color:${colorCode};\">");
             return outputString.Replace("</color>", "</span>");
         }
+
+        public static bool TryGetAuraEffectsForGear(JsonDocument gearJsonDoc, out List<StatusEffect> statusEffectList)
+        {
+            if(gearJsonDoc.RootElement.TryGetProperty("Auras", out JsonElement auras))
+            {
+                if(auras.TryGetProperty("statusEffects", out JsonElement auraStatusEffects))
+                {
+                    statusEffectList = auraStatusEffects.Deserialize<StatusEffect[]>().ToList();
+
+                    if (statusEffectList.Count > 0)
+                        return true;
+                }
+            }
+
+            statusEffectList = new List<StatusEffect>();
+
+            return false;
+        }
+
+        public static bool TryGetActivatableEffectsForGear(JsonDocument gearJsonDoc, out List<StatusEffect> statusEffectList)
+        {
+            if (gearJsonDoc.RootElement.TryGetProperty("Custom", out JsonElement auras))
+            {
+                if (auras.TryGetProperty("ActivatableComponent", out JsonElement activatableComponent))
+                {
+                    if (activatableComponent.TryGetProperty("statusEffects", out JsonElement activatableStatusEffects))
+                    {
+                        statusEffectList = activatableStatusEffects.Deserialize<StatusEffect[]>().ToList();
+
+                        if (statusEffectList.Count > 0)
+                            return true;
+                    }
+                }
+            }
+
+            statusEffectList = new List<StatusEffect>();
+
+            return false;
+        }
+
+        public static bool TryGetBaseEffectsForGear(JsonDocument gearJsonDoc, out List<StatusEffect> statusEffectList)
+        {
+            if (gearJsonDoc.RootElement.TryGetProperty("statusEffects", out JsonElement gearStatusEffects))
+            {
+                if (gearStatusEffects.ToString() != "")
+                    statusEffectList = gearStatusEffects.Deserialize<StatusEffect[]>().ToList();
+                else
+                {
+                    statusEffectList = new List<StatusEffect>();
+                    return false;
+                }
+
+                if (statusEffectList.Count > 0)
+                    return true;
+            }
+
+            statusEffectList = new List<StatusEffect>();
+
+            return false;
+        }
     }
 }

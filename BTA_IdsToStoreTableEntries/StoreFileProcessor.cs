@@ -338,7 +338,7 @@ namespace BTA_IdsToStoreTableEntries
                     BasicFileData chassisDefFile = ModJsonHandler.GetChassisDef(fileDoc, itemDefFile);
                     StreamReader chassisReader = new StreamReader(chassisDefFile.Path);
                     tempStoreEntry.PageSubTarget = JsonDocument.Parse(chassisReader.ReadToEnd()).RootElement.GetProperty("VariantName").ToString().Trim();
-                    if(MechLinkOverrides.TryGetLinkOverride(tempStoreEntry.PageSubTarget, out string linkOverride))
+                    if(VehicleLinkOverrides.TryGetLinkOverride(tempStoreEntry.PageSubTarget, out string linkOverride))
                     {
                         tempStoreEntry.LinkPageTarget = linkOverride;
                     }

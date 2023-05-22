@@ -38,6 +38,12 @@
     <None Update="MechLinkOverrides\VariantOverridesList.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="VehicleClassificationFiles\VehicleBlacklistById.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="VehicleLinkOverrides\VehicleNameOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="WeaponLinkOverrides\BaWeaponOverridesList.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

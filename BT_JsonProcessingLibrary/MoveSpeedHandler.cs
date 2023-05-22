@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public static class MoveSpeedHandler
     {
@@ -27,6 +27,9 @@ namespace BTA_WikiTableGen
 
         static bool MovementSearchDone = false;
 
+        public static int BaseWalkSpeedMultiplier { get; set; } = 28;
+        public static int BaseHexSizeValue { get; set; } = 24;
+
         public static void InstantiateMoveSpeedHandler(string modsFolder)
         {
             if (!MovementSearchDone)
@@ -41,10 +44,7 @@ namespace BTA_WikiTableGen
                 {
                     SearchFileForMovement(gearFile.Path);
                 });
-                //foreach (BasicFileData gearFile in gearFiles)
-                //{
-                //    SearchFileForMovement(gearFile.Path);
-                //}
+
                 MovementSearchDone = true;
             }
         }
@@ -150,7 +150,7 @@ namespace BTA_WikiTableGen
                 }
             }
 
-            return baseJumpDistance * jumpMultiply;
+            return baseJumpDistance * BaseWalkSpeedMultiplier * jumpMultiply;
         }
 
         private static void SearchFileForMovement(string filePath)
@@ -207,24 +207,20 @@ namespace BTA_WikiTableGen
 
         private static void AddJumpJetEffect(JsonDocument gearJsonContents)
         {
-            var statusEffects = gearJsonContents.RootElement.GetProperty("statusEffects").EnumerateArray();
             string gearUiName = ModJsonHandler.GetUiNameFromJsonDoc(gearJsonContents);
             string gearId = ModJsonHandler.GetIdFromJsonDoc(gearJsonContents);
-            foreach (var statusEffect in statusEffects)
+            if (gearJsonContents.RootElement.TryGetProperty("JumpCapacity", out JsonElement value))
             {
-                if (statusEffect.TryGetProperty("JumpCapacity", out JsonElement value))
+                var movementEffect = new MovementItem()
                 {
-                    var movementEffect = new MovementItem()
-                    {
-                        GearId = gearId,
-                        EffectId = statusEffect.GetProperty("Description").GetProperty("Id").ToString(),
-                        UIName = gearUiName,
-                        MoveType = MovementType.Jump,
-                        Operation = Operation.Add,
-                        Value = value.GetDouble()
-                    };
-                    JumpJetItems[movementEffect.GearId] = movementEffect;
-                }
+                    GearId = gearId,
+                    EffectId = gearId,
+                    UIName = gearUiName,
+                    MoveType = MovementType.Jump,
+                    Operation = Operation.Add,
+                    Value = value.GetDouble()
+                };
+                JumpJetItems[movementEffect.GearId] = movementEffect;
             }
         }
 

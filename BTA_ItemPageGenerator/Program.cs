@@ -1,5 +1,4 @@
 ﻿using BT_JsonProcessingLibrary;
-using BTA_WikiTableGen;
 using UtilityClassLibrary.WikiLinkOverrides;
 
 namespace BTA_ItemPageGenerator

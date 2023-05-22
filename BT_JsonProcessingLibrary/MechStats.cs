@@ -1,5 +1,4 @@
-﻿using BT_JsonProcessingLibrary;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -8,13 +7,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public class MechStats
     {
         public string MechName { get; set; }
         public string MechModel { get; set; }
-        public int MechTonnage { get; set; } = 0;
+        public int MechWeight { get; set; } = 0;
         public string Role { get; set; } = string.Empty;
         public Dictionary<string, int> Hardpoints { get; set; } = new Dictionary<string, int>()
         {
@@ -118,13 +117,13 @@ namespace BTA_WikiTableGen
 
             if (AffinityHandler.TryGetAssemblyVariant(this, out AssemblyVariant variant))
             {
-                PrefabId = $"{variant.PrefabId}_{MechTonnage}";
+                PrefabId = $"{variant.PrefabId}_{MechWeight}";
                 if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef)) MechAffinity = tempAffinityDef;
                 VariantAssemblyRules = variant;
             }
             else
             {
-                PrefabIdentifier = $"{this.GetPrefabIdentifier()}_{MechTonnage}";
+                PrefabIdentifier = $"{this.GetPrefabIdentifier()}_{MechWeight}";
                 if (AffinityHandler.TryGetAffinityForMech(null, PrefabIdentifier, out AffinityDef tempAffinityDef))
                     MechAffinity = tempAffinityDef;
             }
@@ -143,7 +142,7 @@ namespace BTA_WikiTableGen
         public void OutputStatsToString(TextWriter writer)
         {
             writer.WriteLine(OutputTableLine(MechModel));
-            writer.WriteLine(OutputTableLine(MechTonnage + "t"));
+            writer.WriteLine(OutputTableLine(MechWeight + "t"));
             writer.WriteLine(OutputTableLine(Role));
             foreach (string hardpointType in Hardpoints.Keys)
             {
@@ -160,7 +159,7 @@ namespace BTA_WikiTableGen
             writer.WriteLine(OutputTableLine(WalkSpeed.ToString()));
             writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
             writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
-            writer.WriteLine(OutputTableLine("-"));
+            writer.WriteLine("|-");
         }
 
         private string OutputMeleeWeapons()
@@ -189,7 +188,7 @@ namespace BTA_WikiTableGen
 
         private string OutputTableLine(string line)
         {
-            return "|" + line;
+            return "| " + line;
         }
 
         private string EngineDecode(string engineShieldGearId)
@@ -444,7 +443,7 @@ namespace BTA_WikiTableGen
         private void GetUnitTonnage()
         {
             if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
-                MechTonnage = tonnage.GetInt32();
+                MechWeight = tonnage.GetInt32();
             else
                 Console.WriteLine($"FAILURE TO GET TONNAGE {MechModel}");
         }
@@ -499,7 +498,7 @@ namespace BTA_WikiTableGen
 
         private void CalculateAllMovements()
         {
-            double baseMoveInMeters = EngineSize / MechTonnage * 28;
+            double baseMoveInMeters = EngineSize / MechWeight * MoveSpeedHandler.BaseWalkSpeedMultiplier;
 
             List<string> gearIds = new List<string>();
             gearIds.AddRange(from gearEntry in FixedGear select gearEntry.Id);
@@ -509,12 +508,12 @@ namespace BTA_WikiTableGen
             if (MoveSpeedHandler.TryGetMovementEffectsForGear(gearIds, out Dictionary<MovementType, List<MovementItem>> movements))
             {
                 double adjustedWalkSpeed = MoveSpeedHandler.GetAdjustedWalkSpeed(baseMoveInMeters, movements[MovementType.Walk]);
-                double adjustedSprintSpeed = MoveSpeedHandler.GetAdjustedSprintSpeed(adjustedWalkSpeed, movements[MovementType.Walk]);
-                double jumpDistance = MoveSpeedHandler.GetJumpDistance(movements[MovementType.Walk]);
+                double adjustedSprintSpeed = MoveSpeedHandler.GetAdjustedSprintSpeed(adjustedWalkSpeed, movements[MovementType.Sprint]);
+                double jumpDistance = MoveSpeedHandler.GetJumpDistance(movements[MovementType.Jump]);
 
                 WalkSpeed = ConvertMetersToHexes(adjustedWalkSpeed);
                 RunSpeed = ConvertMetersToHexes(adjustedSprintSpeed);
-                JumpDistance = jumpDistance;
+                JumpDistance = ConvertMetersToHexes(jumpDistance);
             }
             else
             {
@@ -526,7 +525,7 @@ namespace BTA_WikiTableGen
 
         private int ConvertMetersToHexes(double movementInMeters)
         {
-            return (int)Math.Round(movementInMeters / 24, 0, MidpointRounding.ToZero);
+            return (int)Math.Round(movementInMeters / MoveSpeedHandler.BaseHexSizeValue, 0, MidpointRounding.ToZero);
         }
 
         private void CountWeaponHardpoints()

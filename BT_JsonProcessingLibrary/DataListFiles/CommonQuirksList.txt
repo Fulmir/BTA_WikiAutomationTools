@@ -7,3 +7,6 @@ Gear_LifeSupportA_Clan_Quirk
 Gear_Quirk_Hero_BattleMech
 Gear_Quirk_Industrial_BattleMech
 Gear_armorslots_Primitive
+Gear_Cockpit_Industrial_AdvFCS
+Gear_Cockpit_Industrial
+Gear_Cockpit_Primitive

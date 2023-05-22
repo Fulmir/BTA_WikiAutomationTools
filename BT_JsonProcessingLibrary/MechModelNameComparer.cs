@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     internal class MechModelNameComparer : IComparer<string>
     {
@@ -28,6 +28,16 @@ namespace BTA_WikiTableGen
 
             if (!NumberRegex.IsMatch(x) && !NumberRegex.IsMatch(y))
             {
+                string[] xSplit = x.Split('-');
+                string[] ySplit = y.Split('-');
+                if (xSplit.Length > 1 && ySplit.Length > 1)
+                {
+                    if (xSplit[1] == "PRIME" && ySplit[1].Length == 1)
+                        return -1;
+                    else if (ySplit[1] == "PRIME" && xSplit[1].Length == 1)
+                        return 1;
+                }
+
                 return x.CompareTo(y);
             }
             if (!NumberRegex.IsMatch(x))

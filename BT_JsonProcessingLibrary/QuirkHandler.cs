@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using UtilityClassLibrary;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public static class QuirkHandler
     {
@@ -23,7 +23,7 @@ namespace BTA_WikiTableGen
 
         static List<string> DebugBlacklist = new List<string>();
 
-        static List<string> GearBlacklistFromQuirkStatus = new List<string>() { "emod_armorslots_clstandard", "Gear_Cockpit_Industrial_AdvFCS", "Gear_Cockpit_Industrial" };
+        static List<string> GearBlacklistFromQuirkStatus = new List<string>() { "emod_armorslots_clstandard", "emod_avionics_size1" };
 
         static List<string> CommonQuirks = new List<string>();
         static List<string> HeadlineQuirks = new List<string>();
@@ -42,7 +42,6 @@ namespace BTA_WikiTableGen
             CommonQuirks.Sort();
             HeadlineQuirks = TextFileListProcessor.GetStringListFromFile(".\\DataListFiles\\AdditionalHeadlineQuirksList.txt");
             HeadlineQuirks.AddRange(CommonQuirks);
-            HeadlineQuirks.Sort();
 
             BonusTextHandler.CreateEquipmentBonusesIndex(modsFolder);
         }
@@ -57,9 +56,11 @@ namespace BTA_WikiTableGen
             writer.WriteLine();
             writer.WriteLine();
 
-            foreach (string quirkName in HeadlineQuirks)
+            HeadlineQuirks.Sort(new ReferentialStringComparer<QuirkDef>(QuirkLookupTable, "UiName", new List<string> { "Omni" }));
+
+            foreach (string quirkId in HeadlineQuirks)
             {
-                OutputQuirkToString(QuirkLookupTable[quirkName], writer, true, true);
+                OutputQuirkToString(QuirkLookupTable[quirkId], writer, true, true);
             }
 
             writer.Close();
@@ -126,7 +127,6 @@ namespace BTA_WikiTableGen
             {
                 stringWriter.WriteLine($"'''[[Full_List_of_Mechs#Quirks|Mech Quirk:'''  {quirkDef.UiName}]]");
                 stringWriter.WriteLine();
-                stringWriter.WriteLine();
                 return;
             }
             if (quirkDef.Id.Contains("Avionics") && !forceFullDesc)
@@ -137,7 +137,7 @@ namespace BTA_WikiTableGen
                 {
                     if (bonus.BonusId == "LAMStabTaken")
                     {
-                        stringWriter.WriteLine(string.Format(bonus.LongDescription, bonus.BonusValues));
+                        stringWriter.WriteLine(string.Format(bonus.FullDescription, bonus.BonusValues.First()));
                         stringWriter.WriteLine();
                         return;
                     }
@@ -172,10 +172,10 @@ namespace BTA_WikiTableGen
                 {
                     prevEndedInPunctuation = true;
                     if(newLineBetweenBonuses)
-                        stringWriter.WriteLine("<br/>");
+                        stringWriter.WriteLine("<br>");
                 }
                 else if(newLineBetweenBonuses)
-                    stringWriter.WriteLine(".<br/>");
+                    stringWriter.WriteLine(".<br>");
             }
 
             stringWriter.WriteLine();
@@ -193,7 +193,6 @@ namespace BTA_WikiTableGen
                 InstanceCount = 1
             };
 
-            JsonElement bonuses;
             if (gearJson.RootElement.GetProperty("Custom").TryGetProperty("BonusDescriptions", out JsonElement bonusDescs))
             {
                 foreach (JsonElement bonusElement in bonusDescs.EnumerateArray())

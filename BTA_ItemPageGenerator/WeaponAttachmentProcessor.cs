@@ -1,5 +1,4 @@
 ﻿using BT_JsonProcessingLibrary;
-using BTA_WikiTableGen;
 using System.Collections.Concurrent;
 using System.Text.Json;
 

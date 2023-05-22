@@ -1,0 +1,1 @@
+﻿vehicledef_LIGHTNING_AERO

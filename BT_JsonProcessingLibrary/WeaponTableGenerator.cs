@@ -1,5 +1,4 @@
-﻿using BTA_WikiTableGen;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +19,6 @@ namespace BT_JsonProcessingLibrary
 
                 Dictionary<EquipmentData, List<WeaponTableData>> gearToUpgradeModeDict = new Dictionary<EquipmentData, List<WeaponTableData>>();
 
-                bool uniformBonusModes = true;
                 WeaponTableData? baseTableData = null;
 
                 foreach(WeaponTableData upgradeTableData in upgradeTagToUpgradeData[upgradeTag])
@@ -50,7 +48,6 @@ namespace BT_JsonProcessingLibrary
                                 MechGearHandler.TryGetEquipmentData(gearTargetId, out EquipmentData gearData);
                                 gearToUpgradeModeDict[gearData].Add(upgradeTableData);
                             }
-                            uniformBonusModes = false;
                         }
                     }
                 }

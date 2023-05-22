@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTA_WikiTableGen
+namespace BT_JsonProcessingLibrary
 {
     public static class MechTonnageCalculator
     {
@@ -15,7 +15,7 @@ namespace BTA_WikiTableGen
 
         public static double GetCoreWeight(MechStats mechStats)
         {
-            double baseChassisWeight = Math.Round((double)mechStats.MechTonnage / 10, 1);
+            double baseChassisWeight = Math.Round((double)mechStats.MechWeight / 10, 1);
 
             List<EquipmentData> allEquipment = new List<EquipmentData>();
             allEquipment.AddRange(mechStats.BaseGear);
@@ -62,9 +62,9 @@ namespace BTA_WikiTableGen
 
             double realStructureWeight = baseChassisWeight;
             // Get real structure weight
-            if (structureData != null && structureData.Value.StructureFactor.HasValue)
+            if (structureData != null && structureData.Value.StructureWeightFactor.HasValue)
             {
-                realStructureWeight = baseChassisWeight + CalculateStructureWeightAdjust(baseChassisWeight, (double)structureData.Value.StructureFactor);
+                realStructureWeight = baseChassisWeight + CalculateStructureWeightAdjust(baseChassisWeight, (double)structureData.Value.StructureWeightFactor);
                 realStructureWeight = DoHalfTonRounding(realStructureWeight);
             }
 
@@ -94,11 +94,11 @@ namespace BTA_WikiTableGen
             }
 
             // Add any extra gyro weight and base gyro weight
-            if (gyroData.HasValue && (gyroData.Value.Tonnage > 0 || gyroData.Value.StructureFactor.HasValue))
+            if (gyroData.HasValue && (gyroData.Value.Tonnage > 0 || gyroData.Value.StructureWeightFactor.HasValue))
             {
                 gyroTonnage += gyroData.Value.Tonnage;
-                if (gyroData.Value.StructureFactor.HasValue)
-                    gyroTonnage += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, gyroData.Value.StructureFactor.Value));
+                if (gyroData.Value.StructureWeightFactor.HasValue)
+                    gyroTonnage += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, gyroData.Value.StructureWeightFactor.Value));
             }
 
             double fixedGearWeight = 0;
@@ -117,7 +117,7 @@ namespace BTA_WikiTableGen
                 if (fixedGear.GearType.Contains(GearCategory.LifeSupportB))
                     lifeSupportCount++;
 
-                if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage != 0 || fixedGear.StructureFactor != null))
+                if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage != 0 || fixedGear.StructureWeightFactor != null))
                 {
                     if (fixedGear.Tonnage != 0)
                     {
@@ -126,8 +126,8 @@ namespace BTA_WikiTableGen
                         else
                             fixedGearWeight += fixedGear.Tonnage;
                     }
-                    if (fixedGear.StructureFactor != null)
-                        fixedGearWeight += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, fixedGear.StructureFactor.Value));
+                    if (fixedGear.StructureWeightFactor != null)
+                        fixedGearWeight += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, fixedGear.StructureWeightFactor.Value));
                 }
             }
 
@@ -136,12 +136,12 @@ namespace BTA_WikiTableGen
             if (engineHeatsinkData.HasValue)
                 eCoolingWeight = (int)engineHeatsinkData.Value.Tonnage;
 
-            return mechStats.MechTonnage - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
+            return mechStats.MechWeight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
         }
 
         public static double GetBareWeight(MechStats mechStats)
         {
-            double baseChassisWeight = Math.Round((double)mechStats.MechTonnage / 10, 1);
+            double baseChassisWeight = Math.Round((double)mechStats.MechWeight / 10, 1);
 
             EquipmentData? engineTypeData = null;
             EquipmentData? engineCoreData = null;
@@ -178,9 +178,9 @@ namespace BTA_WikiTableGen
 
             double realStructureWeight = baseChassisWeight;
             // Get real structure weight
-            if (structureData != null && structureData.Value.StructureFactor.HasValue)
+            if (structureData != null && structureData.Value.StructureWeightFactor.HasValue)
             {
-                realStructureWeight = baseChassisWeight + CalculateStructureWeightAdjust(baseChassisWeight, (double)structureData.Value.StructureFactor);
+                realStructureWeight = baseChassisWeight + CalculateStructureWeightAdjust(baseChassisWeight, (double)structureData.Value.StructureWeightFactor);
                 realStructureWeight = DoHalfTonRounding(realStructureWeight);
             }
 
@@ -210,11 +210,11 @@ namespace BTA_WikiTableGen
             }
 
             // Add any extra gyro weight and base gyro weight
-            if (gyroData.HasValue && (gyroData.Value.Tonnage > 0 || gyroData.Value.StructureFactor.HasValue))
+            if (gyroData.HasValue && (gyroData.Value.Tonnage > 0 || gyroData.Value.StructureWeightFactor.HasValue))
             {
                 gyroTonnage += gyroData.Value.Tonnage;
-                if (gyroData.Value.StructureFactor.HasValue)
-                    gyroTonnage += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, gyroData.Value.StructureFactor.Value));
+                if (gyroData.Value.StructureWeightFactor.HasValue)
+                    gyroTonnage += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, gyroData.Value.StructureWeightFactor.Value));
             }
 
             double fixedGearWeight = 0;
@@ -233,7 +233,7 @@ namespace BTA_WikiTableGen
                 if (fixedGear.GearType.Contains(GearCategory.LifeSupportB))
                     lifeSupportCount++;
 
-                if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage > 0 || fixedGear.StructureFactor != null))
+                if (!coreGearIds.Contains(fixedGear.Id) && (fixedGear.Tonnage > 0 || fixedGear.StructureWeightFactor != null))
                 {
                     if (fixedGear.Tonnage > 0)
                     {
@@ -242,8 +242,8 @@ namespace BTA_WikiTableGen
                         else
                             fixedGearWeight += fixedGear.Tonnage;
                     }
-                    if (fixedGear.StructureFactor != null)
-                        fixedGearWeight += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, fixedGear.StructureFactor.Value));
+                    if (fixedGear.StructureWeightFactor != null)
+                        fixedGearWeight += DoHalfTonRounding(CalculateStructureWeightAdjust(baseChassisWeight, fixedGear.StructureWeightFactor.Value));
                 }
             }
 
@@ -252,7 +252,7 @@ namespace BTA_WikiTableGen
             if (engineHeatsinkData.HasValue)
                 eCoolingWeight = (int)engineHeatsinkData.Value.Tonnage;
 
-            return mechStats.MechTonnage - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
+            return mechStats.MechWeight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
         }
 
         private static bool TryGetEngineWeightFactor(EquipmentData engineTypeData, out double engineFactor)

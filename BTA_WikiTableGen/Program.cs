@@ -1,5 +1,4 @@
 ﻿using BT_JsonProcessingLibrary;
-using BTA_WikiTableGen;
 using System.Text.RegularExpressions;
 
 class Program
@@ -27,6 +26,9 @@ class Program
         if (string.IsNullOrEmpty(modsFolder))
             modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
         Console.WriteLine("");
+
+        if(!modsFolder.EndsWith('\\'))
+            modsFolder += "\\";
 
         QuirkHandler.LoadQuirkHandlerData(modsFolder);
 
@@ -59,23 +61,9 @@ class Program
 
             MechFileSearch.OutputMechsToWikiTables();
 
-            //Console.WriteLine("Populated all mech defs!");
+            VehicleFileSearch.GetAllVehiclesFromDefs(modsFolder);
+
+            VehicleFileSearch.OutputVehiclesToWikiTables();
         }
     }
-
-    public static void CreateMechEntry(string mechModel, List<string> fileInputs = null)
-    {
-        if (fileInputs == null)
-        {
-            Console.WriteLine("Model of mech? eg: \"AS7-A\"");
-            Console.Write(":");
-            mechModel = Console.ReadLine() ?? "";
-            Console.WriteLine("");
-        }
-        else
-            mechModel = fileInputs[0];
-
-        using StreamWriter outputFile = new("MechTableOutput.txt", append: true);
-    }
-
 }
