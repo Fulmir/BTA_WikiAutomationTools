@@ -29,8 +29,7 @@ namespace BT_JsonProcessingLibrary
                     if(baseTableData == null)
                     {
                         baseTableData = upgradeTableData;
-                        // Need to print gear names but there will be multiple gear names per entry... probably a dictionary? OOF.
-                        //weaponUpgradeTableBuilder.Append(GetTableRow(upgradeTableData, false, ))
+
                         foreach(string gearTargetId in gearTargetIds)
                         {
                             MechGearHandler.TryGetEquipmentData(gearTargetId, out EquipmentData gearData);
@@ -237,9 +236,9 @@ namespace BT_JsonProcessingLibrary
                 weaponDataRowBuilder.AppendLine($"| {weaponTableData.Recoil?.ToString("+#;-#;0")}");
 
             if (weaponEntryLine || weaponTableData.AccuracyMod.HasValue)
-                weaponDataRowBuilder.AppendLine($"| {weaponTableData.AccuracyMod?.ToString("+#;-#;0")}");
+                weaponDataRowBuilder.AppendLine($"| {(weaponTableData.AccuracyMod * -1)?.ToString("+#;-#;0")}");
             if (!weaponEntryLine && weaponTableData.DirectFireAccuracy.HasValue)
-                weaponDataRowBuilder.AppendLine($"| {weaponTableData.DirectFireAccuracy?.ToString("+#;-#;0")}");
+                weaponDataRowBuilder.AppendLine($"| {(weaponTableData.DirectFireAccuracy * -1)?.ToString("+#;-#;0")}");
             if (!weaponEntryLine && weaponTableData.ClusteringMod.HasValue)
                 weaponDataRowBuilder.AppendLine($"| {weaponTableData.ClusteringMod?.ToString("+#.##%;-#.##%;0")}");
             if (weaponEntryLine || weaponTableData.EvasionIgnored.HasValue)

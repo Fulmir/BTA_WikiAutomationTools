@@ -103,6 +103,9 @@ namespace BTA_ItemPageGenerator
                 attachmentStreamWriter.WriteLine("<div class=\"mw-collapsible-content\">");
                 attachmentStreamWriter.WriteLine($"{{{{EquipmentMechs|{attachmentData.Id}}}}}");
                 attachmentStreamWriter.WriteLine("</div></div>");
+                attachmentStreamWriter.WriteLine();
+                attachmentStreamWriter.WriteLine();
+                attachmentStreamWriter.WriteLine();
             }
 
             attachmentStreamWriter.Close();
