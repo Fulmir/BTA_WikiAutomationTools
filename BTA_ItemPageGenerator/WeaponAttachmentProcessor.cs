@@ -7,7 +7,6 @@ namespace BTA_ItemPageGenerator
     public static class WeaponAttachmentProcessor
     {
         private static ConcurrentDictionary<string, Dictionary<string,List<WeaponTableData>>> WeaponAttachmentUpgradesDict = new ConcurrentDictionary<string, Dictionary<string, List<WeaponTableData>>>();
-        //private static ConcurrentDictionary<string, Dictionary<string, List<string>>> WeaponAttachmentUpgradeTags = new ConcurrentDictionary<string, Dictionary<string, List<string>>>();
 
         public static void GetAllGearAttachments(string modsFolder)
         {

@@ -235,6 +235,8 @@ namespace BT_JsonProcessingLibrary
                     return "3GE";
                 case "emod_engineslots_3gxxl_center":
                     return "3G-XXL";
+                case "emod_engineslots_3gul_center":
+                    return "3G-UL";
             }
 
             return engineShieldGearId + " TYPE NOT FOUND";

@@ -26,6 +26,5 @@ FS9-OR,Firestarter_Omni
 FS9-OX,Firestarter_Omni
 EXE-II-PRIME,Executioner_II
 STG-14G,Stag
-STG-24G,Stag
 ACW-1,Arctic_Wolf
 ACW-2,Arctic_Wolf
