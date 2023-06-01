@@ -54,6 +54,8 @@ namespace BT_JsonProcessingLibrary
         private static ConcurrentDictionary<string, JsonDocument> factionDefsById = new ConcurrentDictionary<string, JsonDocument>();
         private static ConcurrentDictionary<string, JsonDocument> factionDefsByShortName = new ConcurrentDictionary<string, JsonDocument>();
 
+        //private static bool DataPopulated = false;
+
         public static void PopulateFactionDefData(string modsFolder)
         {
             List<BasicFileData> factionDefFiles = ModJsonHandler.SearchFiles(modsFolder + factionsFolder, @"faction_*.json");
@@ -73,6 +75,8 @@ namespace BT_JsonProcessingLibrary
                     factionDefsByShortName[factionShortName.ToString()] = temp;
                 }
             });
+
+            //DataPopulated = true;
         }
 
         public static string GetUseableFactionNameFromId(string factionId)
@@ -112,6 +116,13 @@ namespace BT_JsonProcessingLibrary
                 return GetUseableFactionNameFromId(factionId);
         }
 
+        public static JsonDocument GetFactionDataById(string factionId)
+        {
+            if (factionDefsById.TryGetValue(factionId, out JsonDocument factionData))
+                return factionData;
+            return null;
+        }
+
         private static bool CheckForSpecialTranslation(string factionId, out string factionName)
         {
             switch (factionId)
@@ -139,6 +150,56 @@ namespace BT_JsonProcessingLibrary
                     return true;
             }
             factionName = "";
+            return false;
+        }
+
+        public static void OutputIdsToNamesFile()
+        {
+            using StreamWriter outputFile = new("IdsToNamesForLua.txt", append: false);
+
+            bool firstLine = true;
+
+            List<string> sortedFactionIds = factionDefsById.Keys.ToList();
+            sortedFactionIds.Sort();
+
+            foreach (string key in sortedFactionIds)
+            {
+
+                JsonDocument currentDoc = factionDefsById[key];
+                if (currentDoc != null)
+                {
+                    string name;
+                    if (!CheckForSpecialTranslation(key, out name))
+                    {
+                        name = currentDoc.RootElement.GetProperty("Name").ToString();
+                        if (name.StartsWith("the "))
+                            name = name.Substring(4);
+                    }
+                    if (!BlacklistedFactionNames(name))
+                    {
+                        if (!firstLine)
+                            outputFile.WriteLine(",");
+                        outputFile.Write($"  [\"{key}\"] = \"{name}\"");
+                    }
+                }
+                else
+                    Console.Write("ERROR: No JSON for " + key);
+                if (firstLine)
+                    firstLine = false;
+            }
+        }
+
+        private static bool BlacklistedFactionNames(string name)
+        {
+            switch (name)
+            {
+                case "Darius":
+                    return true;
+                case "Mercenary Review Board":
+                    return true;
+                case "Security Solutions, Inc.":
+                    return true;
+            }
             return false;
         }
     }

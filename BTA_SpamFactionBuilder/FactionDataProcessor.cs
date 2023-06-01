@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BT_JsonProcessingLibrary;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,56 +26,14 @@ namespace BTA_SpamFactionBuilder
 
             Console.WriteLine("");
 
+            if (!modsFolder.EndsWith('\\'))
+                modsFolder += "\\";
+
+            PlanetDataHandler.PopulatePlanetFileData(modsFolder);
+            FactionDataHandler.PopulateFactionDefData(modsFolder);
 
             spamConfig = JsonDocument.Parse(File.ReadAllText(modsFolder + spamFolder + "mod.json"), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
             var MercPlanets = spamConfig.RootElement.GetProperty("Settings").GetProperty("PlanetFactionConfigs").EnumerateObject();
-        }
-
-        public void OutputIdsToNamesFile()
-        {
-            using StreamWriter outputFile = new("IdsToNamesForLua.txt", append: false);
-
-            bool firstLine = true;
-
-            foreach (string key in factionDefs.Keys)
-            {
-
-                JsonDocument currentDoc = factionDefs[key];
-                if (currentDoc != null)
-                {
-                    string name;
-                    if (!CheckForSpecialTranslation(key, out name))
-                    {
-                        name = currentDoc.RootElement.GetProperty("Name").ToString();
-                        if (name.StartsWith("the "))
-                            name = name.Substring(4);
-                    }
-                    if (!BlacklistedNames(name))
-                    {
-                        if (!firstLine)
-                            outputFile.WriteLine(",");
-                        outputFile.Write($"  [\"{key}\"] = \"{name}\"");
-                    }
-                }
-                else
-                    Console.Write("ERROR: No JSON for " + key);
-                if (firstLine)
-                    firstLine = false;
-            }
-        }
-
-        private bool BlacklistedNames(string name)
-        {
-            switch (name)
-            {
-                case "Darius":
-                    return true;
-                case "Mercenary Review Board":
-                    return true;
-                case "Security Solutions, Inc.":
-                    return true;
-            }
-            return false;
         }
 
         public void OutputSpamFactionsToParentsTranslation()
@@ -136,13 +95,13 @@ namespace BTA_SpamFactionBuilder
 
             foreach (var mercConfig in mercConfigs)
             {
-                JsonDocument mercFactionDef = factionDefs[mercConfig.Name];
+                JsonDocument mercFactionDef = FactionDataHandler.GetFactionDataById(mercConfig.Name);
                 SpamFactionData tempMercFaction = new SpamFactionData();
 
                 if (mercFactionDef != null)
                 {
                     tempMercFaction.FactionID = mercConfig.Name;
-                    tempMercFaction.Name = GetUseableFactionName(mercFactionDef, tempMercFaction.FactionID);
+                    tempMercFaction.Name = FactionDataHandler.GetUseableFactionNameFromId(tempMercFaction.FactionID);
 
                     tempMercFaction.Description = mercFactionDef.RootElement.GetProperty("Description").ToString();
 
@@ -153,9 +112,9 @@ namespace BTA_SpamFactionBuilder
                     var listOfEmployers = mercConfig.Value.GetProperty("EmployerRestrictions").EnumerateArray();
                     foreach (var val in listOfEmployers)
                     {
-                        tempMercFaction.EmployerList.Add(GetUseableFactionName(factionDefs[val.ToString()], val.ToString()));
+                        tempMercFaction.EmployerList.Add(FactionDataHandler.GetUseableFactionNameFromId(val.ToString()));
                         if (tempMercFaction.PrimaryEmployer == null && (val.ToString() != "Locals" && val.ToString() != "Mercenaries"))
-                            tempMercFaction.PrimaryEmployer = GetUseableFactionName(factionDefs[val.ToString()], val.ToString());
+                            tempMercFaction.PrimaryEmployer = FactionDataHandler.GetUseableFactionNameFromId(val.ToString());
                     }
 
                     if (mercPlanetMap.ContainsKey(tempMercFaction.FactionID))
@@ -219,15 +178,18 @@ namespace BTA_SpamFactionBuilder
 
             foreach (var planetDef in planetFactionDefs)
             {
-                string planetName = planetDefs[planetDef.Name].RootElement.GetProperty("Description").GetProperty("Name").ToString();
-                var mercCompanies = planetDef.Value.GetProperty("AlternateOpforWeights").EnumerateArray();
-
-                foreach (JsonElement merc in mercCompanies)
+                if(PlanetDataHandler.TryGetPlanetDataForId(planetDef.Name, out PlanetData planetData))
                 {
-                    string tempMercId = merc.GetProperty("FactionName").ToString();
-                    if (!mercPlanetMap.ContainsKey(tempMercId))
-                        mercPlanetMap[tempMercId] = new List<string>();
-                    mercPlanetMap[tempMercId].Add(planetName);
+                    string planetName = planetData.Name;
+                    var mercCompanies = planetDef.Value.GetProperty("AlternateOpforWeights").EnumerateArray();
+
+                    foreach (JsonElement merc in mercCompanies)
+                    {
+                        string tempMercId = merc.GetProperty("FactionName").ToString();
+                        if (!mercPlanetMap.ContainsKey(tempMercId))
+                            mercPlanetMap[tempMercId] = new List<string>();
+                        mercPlanetMap[tempMercId].Add(planetName);
+                    }
                 }
             }
 
@@ -277,7 +239,8 @@ namespace BTA_SpamFactionBuilder
             {"CWEpsilonGalaxy", "Garrison"},
             {"CNCOmicronGalaxy", "Garrison"},
             {"CJFIotaGalaxy", "Garrison"},
-            {"CGBThetaGalaxy", "Garrison"}
+            {"CGBThetaGalaxy", "Garrison"},
+            {"CSRDeltaGalaxy", "Garrison"}
         };
 
 
@@ -290,7 +253,7 @@ namespace BTA_SpamFactionBuilder
 
             foreach (var parentFaction in factionParentCommands)
             {
-                string parentFactionProperName = GetUseableFactionName(factionDefs[parentFaction.Name], parentFaction.Name);
+                string parentFactionProperName = FactionDataHandler.GetUseableFactionNameFromId(parentFaction.Name);
                 if (!parentFactions.ContainsKey(parentFactionProperName))
                     parentFactions[parentFactionProperName] = new List<SpamFactionData>();
 
@@ -299,13 +262,13 @@ namespace BTA_SpamFactionBuilder
                 {
                     string subCommandId = subCommand.GetProperty("FactionName").ToString();
 
-                    JsonDocument subCommandJsonData = factionDefs[subCommandId];
+                    JsonDocument subCommandJsonData = FactionDataHandler.GetFactionDataById(subCommandId);
                     SpamFactionData tempSubCommandData = new SpamFactionData();
 
                     if (subCommandJsonData != null)
                     {
                         tempSubCommandData.FactionID = subCommandId;
-                        tempSubCommandData.Name = GetUseableFactionName(subCommandJsonData, tempSubCommandData.FactionID);
+                        tempSubCommandData.Name = FactionDataHandler.GetUseableFactionNameFromId(tempSubCommandData.FactionID);
 
                         tempSubCommandData.Description = subCommandJsonData.RootElement.GetProperty("Description").ToString();
 

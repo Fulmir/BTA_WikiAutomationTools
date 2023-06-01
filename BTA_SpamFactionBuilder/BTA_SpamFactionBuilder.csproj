@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BT_JsonProcessingLibrary\BT_JsonProcessingLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

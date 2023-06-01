@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BT_JsonProcessingLibrary;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -10,7 +11,7 @@ namespace BTA_SpamFactionBuilder
         {
             FactionDataProcessor processor = new FactionDataProcessor();
 
-            processor.OutputIdsToNamesFile();
+            FactionDataHandler.OutputIdsToNamesFile();
 
             processor.OutputSpamFactionsToParentsTranslation();
 
