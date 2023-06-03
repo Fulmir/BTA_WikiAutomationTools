@@ -669,6 +669,30 @@ namespace BT_JsonProcessingLibrary
         public string UiName { get; set; }
     }
 
+    public struct FactionData
+    {
+        public FactionData(JsonDocument jsonData)
+        {
+            Id = jsonData.RootElement.GetProperty("ID").ToString();
+            FactionId = jsonData.RootElement.GetProperty("factionID").ToString();
+            Name = jsonData.RootElement.GetProperty("Name").ToString();
+            ShortName = jsonData.RootElement.GetProperty("ShortName").ToString();
+            Description = jsonData.RootElement.GetProperty("Description").ToString();
+
+            foreach (var enemy in jsonData.RootElement.GetProperty("Enemies").EnumerateArray())
+                Enemies.Add(enemy.ToString());
+
+            FactionJsonDoc = jsonData;
+        }
+        public string Id { get; set; }
+        public string FactionId { get; set; }
+        public string Name { get; set; }
+        public string ShortName { get; set; }
+        public string Description { get; set; }
+        public List<string> Enemies { get; set; } = new List<string>();
+        public JsonDocument FactionJsonDoc { get; set; }
+    }
+
     public enum Operation
     {
         Add,

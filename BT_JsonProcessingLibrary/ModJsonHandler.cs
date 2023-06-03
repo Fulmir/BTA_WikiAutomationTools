@@ -216,5 +216,13 @@ namespace BT_JsonProcessingLibrary
 
             return false;
         }
+
+        public static string GetWeightClassFromTonnage(int tonnage)
+        {
+            if (tonnage <= 35) return "Light";
+            else if (tonnage <= 55) return "Medium";
+            else if (tonnage <= 75) return "Heavy";
+            else return "Assault";
+        }
     }
 }

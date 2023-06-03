@@ -28,3 +28,5 @@ EXE-II-PRIME,Executioner_II
 STG-14G,Stag
 ACW-1,Arctic_Wolf
 ACW-2,Arctic_Wolf
+VON-4RH-LAM,Von_Rohrs_LAM
+VON-4RH-LAM-O,Von_Rohrs_LAM

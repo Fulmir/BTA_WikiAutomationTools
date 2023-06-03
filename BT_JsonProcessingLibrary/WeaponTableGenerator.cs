@@ -64,7 +64,7 @@ namespace BT_JsonProcessingLibrary
                     }
                 }
                 weaponUpgradeTableBuilder.AppendLine("|}");
-                weaponUpgradeTableBuilder.AppendLine("</br>");
+                weaponUpgradeTableBuilder.AppendLine("<br>");
             }
 
             return weaponUpgradeTableBuilder.ToString();

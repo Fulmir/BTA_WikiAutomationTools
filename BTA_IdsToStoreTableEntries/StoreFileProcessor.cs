@@ -510,9 +510,9 @@ namespace BTA_IdsToStoreTableEntries
                     foreach (StoreEntry storeEntry in storeDict[heading])
                     {
                         if(uniqueHighlightItemIdsList.Contains(storeEntry.Id))
-                            storeTableBuilder.Append($"{{{{Highlight|[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]|LightBlue}}}}</br>");
+                            storeTableBuilder.Append($"{{{{Highlight|[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]|LightBlue}}}}<br>");
                         else
-                            storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]</br>");
+                            storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]<br>");
                     }
                 storeTableBuilder.AppendLine("");
             }

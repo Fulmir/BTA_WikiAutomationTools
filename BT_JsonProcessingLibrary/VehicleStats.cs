@@ -35,6 +35,7 @@ namespace BT_JsonProcessingLibrary
         public JsonDocument VehicleChassisDefFile { get; set; }
         public JsonDocument VehicleDefFile { get; set; }
         public List<string> Tags { get; set; } = new List<string>();
+        public List<string> WikiTags { get; set; } = new List<string>();
         public bool PlayerControllable { get; set; }
         public bool Blacklisted { get; set; }
 
@@ -107,6 +108,56 @@ namespace BT_JsonProcessingLibrary
             writer.WriteLine("|-");
         }
 
+        public void OutputVehicleToPageTab(TextWriter writer)
+        {
+            writer.WriteLine($"<tab name=\"{VehicleUiName}\">");
+            writer.WriteLine("{{InfoboxVehicle");
+            writer.WriteLine(OutputTableLine($"vehiclename = {VehicleUiName}"));
+            writer.WriteLine(OutputTableLine($"image = Vehicle_{VehicleChassisName}.png"));
+            writer.WriteLine(OutputTableLine("controllable = Yes"));
+            writer.WriteLine(OutputTableLine($"class = {ModJsonHandler.GetWeightClassFromTonnage(VehicleWeight)}"));
+            writer.WriteLine(OutputTableLine($"weight = {VehicleWeight}t"));
+            writer.WriteLine(OutputTableLine($"speed = {WalkSpeed}/{RunSpeed}"));
+            writer.WriteLine(OutputTableLine($"propulsion = {ConvertVehicleMovementTypeToString(VehicleMoveType)}"));
+
+            // TODO: Implement these...
+            writer.WriteLine(OutputTableLine($"maxdamage = {VehicleChassisName}.png"));
+            writer.WriteLine(OutputTableLine($"maxstability = {VehicleChassisName}.png"));
+            writer.WriteLine(OutputTableLine($"maxheat = {VehicleChassisName}.png"));
+
+            writer.WriteLine(OutputTableLine($"armor = {TotalLocationStatType(ArmorByLocation, ArmorModifiersByLocation)}"));
+            writer.WriteLine(OutputTableLine($"structure = {TotalLocationStatType(StructureByLocation, StructureModifiersByLocation)}"));
+            writer.WriteLine(OutputTableLine($"frontarmor = {PrintLocationArmorAndStructure("Front")}"));
+            writer.WriteLine(OutputTableLine($"leftarmor = {PrintLocationArmorAndStructure("Left")}"));
+            writer.WriteLine(OutputTableLine($"rightarmor = {PrintLocationArmorAndStructure("Right")}"));
+            writer.WriteLine(OutputTableLine($"reararmor = {PrintLocationArmorAndStructure("Rear")}"));
+            if(StructureByLocation.ContainsKey("Turret"))
+                writer.WriteLine(OutputTableLine($"turretarmor = {PrintLocationArmorAndStructure("Turret")}"));
+
+            writer.WriteLine(OutputTableLine($"weapon1 = {OutputEquipmentForTable(VehicleWeapons)}"));
+
+            writer.WriteLine(OutputTableLine($"ammo1 = {OutputEquipmentForTable(VehicleAmmo)}"));
+
+            writer.WriteLine(OutputTableLine($"gear1 = {OutputEquipmentForTable(VehicleUtilityGear)}"));
+
+            writer.WriteLine("}}");
+            writer.WriteLine("<br>");
+            writer.WriteLine("===Description===");
+
+            string baseDescription = ModJsonHandler.GetDescriptionDetailsFromJsonDoc(VehicleDefFile);
+            string[] tempDescriptionParse = baseDescription.Split("<b>");
+            string communityContentText = "";
+            if(baseDescription.Contains("COMMUNITY CONTENT"))
+                communityContentText = "<b>" + tempDescriptionParse[tempDescriptionParse.Length - 1];
+
+            writer.WriteLine(tempDescriptionParse[0] + communityContentText);
+
+            writer.WriteLine("<br>");
+            writer.WriteLine("===Factions===");
+            FactionDataHandler.TagsListToFactionsSection(Tags, writer);
+            writer.WriteLine("</tab>");
+        }
+
         private string OutputTableLine(string line)
         {
             return "| " + line;
@@ -174,9 +225,15 @@ namespace BT_JsonProcessingLibrary
             if(equipmentData.Count == 0)
                 gearStringBuilder.Append("None");
 
+            bool first = true;
+
             foreach(EquipmentData equipment in equipmentData)
             {
-                gearStringBuilder.Append(equipment.UIName + "<br>");
+                if (!first)
+                    gearStringBuilder.Append("<br>");
+                else first = false;
+
+                gearStringBuilder.Append(equipment.UIName);
             }
 
             return gearStringBuilder.ToString();

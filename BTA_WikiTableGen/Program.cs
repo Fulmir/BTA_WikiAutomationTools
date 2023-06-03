@@ -36,6 +36,8 @@ class Program
 
         AffinityHandler.CreateAffinitiesIndex(modsFolder);
 
+        FactionDataHandler.PopulateFactionDefData(modsFolder);
+
         List<MechStats> listOfMechs = new List<MechStats>();
 
         if (useFile)
@@ -64,6 +66,8 @@ class Program
             VehicleFileSearch.GetAllVehiclesFromDefs(modsFolder);
 
             VehicleFileSearch.OutputVehiclesToWikiTables();
+
+            VehicleFileSearch.PrintVehiclePagesToFiles();
         }
     }
 }

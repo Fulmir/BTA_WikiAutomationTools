@@ -95,15 +95,14 @@ namespace BTA_SpamFactionBuilder
 
             foreach (var mercConfig in mercConfigs)
             {
-                JsonDocument mercFactionDef = FactionDataHandler.GetFactionDataById(mercConfig.Name);
                 SpamFactionData tempMercFaction = new SpamFactionData();
 
-                if (mercFactionDef != null)
+                if (FactionDataHandler.TryGetFactionById(mercConfig.Name, out FactionData mercFactionDef))
                 {
                     tempMercFaction.FactionID = mercConfig.Name;
                     tempMercFaction.Name = FactionDataHandler.GetUseableFactionNameFromId(tempMercFaction.FactionID);
 
-                    tempMercFaction.Description = mercFactionDef.RootElement.GetProperty("Description").ToString();
+                    tempMercFaction.Description = mercFactionDef.Description;
 
                     tempMercFaction.UnitRating = mercConfig.Value.GetProperty("UnitRating").GetInt32();
 
@@ -197,50 +196,50 @@ namespace BTA_SpamFactionBuilder
         }
 
         Dictionary<string, string> subCommandRatings = new Dictionary<string, string>(){
-            {"40thShadowDivision", "Elite"}, 
-            {"DeathCommandos", "Elite"}, 
-            {"1stMcCarronsArmoredCavalry", "Elite"}, 
-            {"1stSwordOfLight", "Elite"}, 
-            {"DavionAssaultGuards", "Elite"}, 
-            {"6thLyranGuards", "Elite"}, 
-            {"1stKnightsOfTheInnerSphere", "Elite"}, 
-            {"2ndArmyVMu", "Elite"}, 
-            {"1stTyr", "Elite"}, 
-            {"TaurianGuard", "Elite"}, 
-            {"RaventhirsIronHand", "Elite"}, 
-            {"1stAllianceAirWing", "Elite"}, 
-            {"ILegioMartiaVictrix", "Elite"}, 
-            {"9thDivisionWoB", "Regular"}, 
-            {"WarriorHouseImarra", "Regular"}, 
-            {"3rdNightStalkers", "Regular"}, 
-            {"2ndCrucisLancers", "Regular"}, 
-            {"10thLyranGuards", "Regular"}, 
-            {"5thDonegalGuards", "Regular"}, 
-            {"11thAvalonHussars", "Regular"}, 
-            {"2ndFreeWorldsGuards", "Regular"}, 
-            {"11thArmyVEta", "Regular"}, 
-            {"2ndFreemen", "Regular"}, 
-            {"PleiadesHussars", "Regular"}, 
-            {"2ndCanopianFusiliers", "Regular"}, 
-            {"3rdAllianceAirWing", "Regular"}, 
-            {"VLegioRipariensis", "Regular"}, 
-            {"WoBProtectorateMilitia", "Garrison"}, 
-            {"6thConfederationReserveCavalry", "Garrison"}, 
-            {"2ndLegionOfVega", "Garrison"}, 
-            {"1stKitteryBorderers", "Garrison"}, 
-            {"15thLyranRegulars", "Garrison"}, 
-            {"30thMarikMilitia", "Garrison"}, 
-            {"7thArmyVIota", "Garrison"}, 
-            {"4thKavalleri", "Garrison"}, 
-            {"3rdTaurianLancers", "Garrison"}, 
-            {"MagistracyCavaliers", "Garrison"}, 
-            {"4thAllianceAirWing", "Garrison"}, 
-            {"CohorsMorituri", "Garrison"},
-            {"CWEpsilonGalaxy", "Garrison"},
-            {"CNCOmicronGalaxy", "Garrison"},
-            {"CJFIotaGalaxy", "Garrison"},
-            {"CGBThetaGalaxy", "Garrison"},
-            {"CSRDeltaGalaxy", "Garrison"}
+            {"40thShadowDivision", "Elite" }, 
+            {"DeathCommandos", "Elite" }, 
+            {"1stMcCarronsArmoredCavalry", "Elite" }, 
+            {"1stSwordOfLight", "Elite" }, 
+            {"DavionAssaultGuards", "Elite" }, 
+            {"6thLyranGuards", "Elite" }, 
+            {"1stKnightsOfTheInnerSphere", "Elite" }, 
+            {"2ndArmyVMu", "Elite" }, 
+            {"1stTyr", "Elite" }, 
+            {"TaurianGuard", "Elite" }, 
+            {"RaventhirsIronHand", "Elite" }, 
+            {"1stAllianceAirWing", "Elite" }, 
+            {"ILegioMartiaVictrix", "Elite" }, 
+            {"9thDivisionWoB", "Regular" }, 
+            {"WarriorHouseImarra", "Regular" }, 
+            {"3rdNightStalkers", "Regular" }, 
+            {"2ndCrucisLancers", "Regular" }, 
+            {"10thLyranGuards", "Regular" }, 
+            {"5thDonegalGuards", "Regular" }, 
+            {"11thAvalonHussars", "Regular" }, 
+            {"2ndFreeWorldsGuards", "Regular" }, 
+            {"11thArmyVEta", "Regular" }, 
+            {"2ndFreemen", "Regular" }, 
+            {"PleiadesHussars", "Regular" }, 
+            {"2ndCanopianFusiliers", "Regular" }, 
+            {"3rdAllianceAirWing", "Regular" }, 
+            {"VLegioRipariensis", "Regular" }, 
+            {"WoBProtectorateMilitia", "Garrison" }, 
+            {"6thConfederationReserveCavalry", "Garrison" }, 
+            {"2ndLegionOfVega", "Garrison" }, 
+            {"1stKitteryBorderers", "Garrison" }, 
+            {"15thLyranRegulars", "Garrison" }, 
+            {"30thMarikMilitia", "Garrison" }, 
+            {"7thArmyVIota", "Garrison" }, 
+            {"4thKavalleri", "Garrison" }, 
+            {"3rdTaurianLancers", "Garrison" }, 
+            {"MagistracyCavaliers", "Garrison" }, 
+            {"4thAllianceAirWing", "Garrison" }, 
+            {"CohorsMorituri", "Garrison" },
+            {"CWEpsilonGalaxy", "Garrison" },
+            {"CNCOmicronGalaxy", "Garrison" },
+            {"CJFIotaGalaxy", "Garrison" },
+            {"CGBThetaGalaxy", "Garrison" },
+            {"CSRDeltaGalaxy", "Garrison" }
         };
 
 
@@ -262,15 +261,14 @@ namespace BTA_SpamFactionBuilder
                 {
                     string subCommandId = subCommand.GetProperty("FactionName").ToString();
 
-                    JsonDocument subCommandJsonData = FactionDataHandler.GetFactionDataById(subCommandId);
                     SpamFactionData tempSubCommandData = new SpamFactionData();
 
-                    if (subCommandJsonData != null)
+                    if (FactionDataHandler.TryGetFactionById(subCommandId, out FactionData subCommandFactionData))
                     {
                         tempSubCommandData.FactionID = subCommandId;
                         tempSubCommandData.Name = FactionDataHandler.GetUseableFactionNameFromId(tempSubCommandData.FactionID);
 
-                        tempSubCommandData.Description = subCommandJsonData.RootElement.GetProperty("Description").ToString();
+                        tempSubCommandData.Description = subCommandFactionData.Description;
 
                         tempSubCommandData.IncludeUnitsSectionInOutput = true;
 

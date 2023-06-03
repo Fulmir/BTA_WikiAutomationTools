@@ -26,6 +26,8 @@ namespace BT_JsonProcessingLibrary
         private static ConcurrentDictionary<string, Dictionary<string, VehicleStats>> VtolVehicles = new ConcurrentDictionary<string, Dictionary<string, VehicleStats>>();
         private static ConcurrentDictionary<string, Dictionary<string, VehicleStats>> CommunityContentVehicles = new ConcurrentDictionary<string, Dictionary<string, VehicleStats>>();
 
+        private static ConcurrentDictionary<string, Dictionary<string, VehicleStats>> PlayerControllableVehicles = new ConcurrentDictionary<string, Dictionary<string, VehicleStats>>();
+
         private static Dictionary<string, BasicFileData> chassisDefIndex = new Dictionary<string, BasicFileData>();
 
         private static ConcurrentDictionary<string, VehicleStats> allVehicles = new ConcurrentDictionary<string, VehicleStats>();
@@ -77,22 +79,46 @@ namespace BT_JsonProcessingLibrary
                         return;
 
                     if (allVehicles[vehicleId].VehicleMoveType == VehicleMovementTypes.Jet)
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_AerospaceFighter");
                         AddToNestedDictionary(chassisName, vehicleId, ref AirSupportFighters);
+                    }
 
                     else if (CommunityContentDirectories.IsMatch(vehicleChassisDef.Path))
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_CommunityContent");
                         AddToNestedDictionary(chassisName, vehicleId, ref CommunityContentVehicles);
+                    }
 
                     else if (allVehicles[vehicleId].VehicleMoveType == VehicleMovementTypes.VTOL)
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_VTOL");
                         AddToNestedDictionary(chassisName, vehicleId, ref VtolVehicles);
+                    }
 
                     else if (ClanVehicleDirectories.IsMatch(vehicleChassisDef.Path))
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_ClanVehicle");
                         AddToNestedDictionary(chassisName, vehicleId, ref ClanVehicles);
+                    }
 
                     else if (SanctuaryVehicleDirectories.IsMatch(vehicleChassisDef.Path))
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_SanctuaryAlliance");
                         AddToNestedDictionary(chassisName, vehicleId, ref SanctuaryVehicles);
+                    }
 
                     else
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_InnerSphere");
                         AddToNestedDictionary(chassisName, vehicleId, ref InnerSphereVehicles);
+                    }
+
+                    if (allVehicles[vehicleId].PlayerControllable)
+                    {
+                        allVehicles[vehicleId].WikiTags.Add("Wiki_PlayerControl");
+                        AddToNestedDictionary(chassisName, vehicleId, ref PlayerControllableVehicles);
+                    }
                 }
             });
         }
@@ -238,6 +264,77 @@ namespace BT_JsonProcessingLibrary
                 return AllVehiclesOutput.ToString();
             }
 
+
+        }
+
+        public static void PrintVehiclePagesToFiles()
+        {
+            string wikiPagesFolder = ".\\VehicleWikiPages\\";
+
+            Directory.Delete(wikiPagesFolder, true);
+            Directory.CreateDirectory(wikiPagesFolder);
+
+            foreach(string vehicleChassisName in PlayerControllableVehicles.Keys)
+            {
+                List<string> vehicleNameCheckList = new List<string>();
+
+                string linkName = vehicleChassisName;
+                if (VehicleLinkOverrides.TryGetLinkOverride(vehicleChassisName, out string linkNameOverride))
+                {
+                    linkName = linkNameOverride;
+                }
+
+                StreamWriter vehiclePageWriter = new StreamWriter(wikiPagesFolder + linkName + ".wiki", false);
+
+                vehiclePageWriter.WriteLine("<tabs>");
+
+                List<string> sortedVehicleIds = PlayerControllableVehicles[vehicleChassisName].Keys.ToList();
+                sortedVehicleIds.Sort(new ReferentialStringComparer<VehicleStats>(PlayerControllableVehicles[vehicleChassisName], "VehicleUiName", new List<string>()));
+
+                List<string> aggregateWikiTags = new List<string>();
+
+                foreach(string vehicleId in sortedVehicleIds)
+                {
+                    PlayerControllableVehicles[vehicleChassisName][vehicleId].OutputVehicleToPageTab(vehiclePageWriter);
+                    aggregateWikiTags.AddRange(PlayerControllableVehicles[vehicleChassisName][vehicleId].WikiTags);
+
+                    if (vehicleNameCheckList.Contains(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName))
+                        Console.WriteLine($"Vehicle name duplicated for id: \"{vehicleId}\"");
+                    vehicleNameCheckList.Add(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName);
+                }
+
+                vehiclePageWriter.WriteLine("</tabs>");
+                vehiclePageWriter.WriteLine();
+                vehiclePageWriter.WriteLine();
+
+                GetWikiCategoriesForTags(aggregateWikiTags, vehiclePageWriter);
+
+                vehiclePageWriter.Close();
+            }
+        }
+
+        public static void GetWikiCategoriesForTags(List<string> tags, TextWriter writer)
+        {
+            if (tags.Contains("Wiki_AerospaceFighter"))
+                writer.WriteLine($"[[Category:Aerospace Fighters]]");
+
+            if (tags.Contains("Wiki_CommunityContent"))
+                writer.WriteLine($"[[Category:Community Content]]");
+
+            if (tags.Contains("Wiki_VTOL"))
+                writer.WriteLine($"[[Category:VTOLs]]");
+
+            if (tags.Contains("Wiki_ClanVehicle"))
+                writer.WriteLine($"[[Category:Clan Vehicles]]");
+
+            if (tags.Contains("Wiki_SanctuaryAlliance"))
+                writer.WriteLine($"[[Category:Sanctuary Alliance Vehicles]]");
+
+            if (tags.Contains("Wiki_InnerSphere"))
+                writer.WriteLine($"[[Category:Inner Sphere Vehicles]]");
+
+            if (tags.Contains("Wiki_PlayerControl"))
+                writer.WriteLine($"[[Category:Controllable Vehicles]]");
 
         }
 
