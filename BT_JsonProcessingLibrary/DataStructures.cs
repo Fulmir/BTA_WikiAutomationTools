@@ -44,6 +44,7 @@ namespace BT_JsonProcessingLibrary
         public string UIName { get; set; }
         public double Tonnage { get; set; }
         public List<GearCategory> GearType { get; set; } = new List<GearCategory>();
+        public List<string> GearCategories { get; set; } = new List<string>();
         public double? StructureWeightFactor { get; set; }
         public JsonDocument GearJsonDoc { get; set; }
         public double? GlobalStructureFactor { get; set; }
@@ -121,12 +122,15 @@ namespace BT_JsonProcessingLibrary
                                     GearType.Add(GearCategory.MeleeWeapon);
                                     break;
                             }
+                            GearCategories.Add(categoryId.ToString());
                         }
                     }
                 }
 
             if (Id.StartsWith("Weapon"))
                 GearType.Add(GearCategory.Weapon);
+            if (Id.StartsWith("Ammo_AmmunitionBox"))
+                GearType.Add(GearCategory.AmmoBox);
             if (MechGearHandler.structureRegex.IsMatch(Id) && !GearType.Contains(GearCategory.Structure))
                 GearType.Add(GearCategory.Structure);
             if (MechGearHandler.armorRegex.IsMatch(Id) && !GearType.Contains(GearCategory.Armor))
@@ -729,7 +733,8 @@ namespace BT_JsonProcessingLibrary
         Quirk,
         MovementModItem,
         StructureModItem,
-        ArmorModItem
+        ArmorModItem,
+        AmmoBox
     }
 
     public enum StoreHeadingsGroup

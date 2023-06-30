@@ -18,6 +18,12 @@ namespace BT_JsonProcessingLibrary
         private static ConcurrentDictionary<string, List<string>> MechTagsToGearIds = new ConcurrentDictionary<string, List<string>>();
         private static ConcurrentDictionary<string, List<string>> GearTagsToGearIds = new ConcurrentDictionary<string, List<string>>();
 
+        private static ConcurrentDictionary<string, List<string>> WeaponCategoriesToIds = new ConcurrentDictionary<string, List<string>>();
+        private static ConcurrentDictionary<string, List<string>> AmmoBoxCategoriesToIds = new ConcurrentDictionary<string, List<string>>();
+
+        private static Dictionary<string, string> AmmoBoxCategoriesToDisplayNames = new Dictionary<string, string>();
+        private static Dictionary<string, string> WeaponCategoriesToDisplayNames = new Dictionary<string, string>();
+
         public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex structureRegex = new Regex(@"(\w*structureslots\w*)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex armorRegex = new Regex(@"(emod_armorslots\w*|Gear_armorslots\w*|Gear_Reflective_Coating)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -28,6 +34,8 @@ namespace BT_JsonProcessingLibrary
         {
             ModFolder = modsFolder;
             GetMechEngineerDefaults(modsFolder);
+            GetWeaponCategories(modsFolder);
+            GetAmmoCategories(modsFolder);
         }
 
         public static void PopulateGearData()
@@ -52,6 +60,22 @@ namespace BT_JsonProcessingLibrary
                             GearTagsToGearIds[tag.ToString()].Add(gearId);
                         }
                     }
+                if(GearData[gearId].GearType.Contains(GearCategory.Weapon))
+                {
+                    foreach (string categoryId in GearData[gearId].GearCategories)
+                    {
+                        if(WeaponCategoriesToDisplayNames.ContainsKey(categoryId))
+                            WeaponCategoriesToIds[categoryId].Add(gearId);
+                    }
+                }
+                if (GearData[gearId].GearType.Contains(GearCategory.AmmoBox))
+                {
+                    foreach (string categoryId in GearData[gearId].GearCategories)
+                    {
+                        if (AmmoBoxCategoriesToDisplayNames.ContainsKey(categoryId))
+                            AmmoBoxCategoriesToIds[categoryId].Add(gearId);
+                    }
+                }
             }
         }
 
@@ -135,6 +159,40 @@ namespace BT_JsonProcessingLibrary
                             MechTagsToGearIds[tagName.ToString()].Add(tagDefault.GetProperty("DefID").ToString());
                         }
                     }
+                }
+            }
+        }
+
+        private static void GetWeaponCategories(string modsFolder)
+        {
+            StreamReader weaponCategoriesReader = new StreamReader(modsFolder + "BT Advanced Core\\settings\\categories\\Categories_Weapons.json");
+            JsonDocument mechEngDefaultsJson = JsonDocument.Parse(weaponCategoriesReader.ReadToEnd());
+
+            foreach (JsonElement category in mechEngDefaultsJson.RootElement.GetProperty("Settings").EnumerateArray())
+            {
+                if (category.TryGetProperty("Name", out JsonElement categoryName))
+                {
+                    JsonElement displayName = category.GetProperty("DisplayName");
+
+                    AmmoBoxCategoriesToDisplayNames[categoryName.ToString()] = displayName.ToString();
+                    AmmoBoxCategoriesToIds[categoryName.ToString()] = new List<string>();
+                }
+            }
+        }
+
+        private static void GetAmmoCategories(string modsFolder)
+        {
+            StreamReader ammoCategoriesReader = new StreamReader(modsFolder + "BT Advanced Core\\settings\\categories\\Categories_Ammo.json");
+            JsonDocument mechEngDefaultsJson = JsonDocument.Parse(ammoCategoriesReader.ReadToEnd());
+
+            foreach (JsonElement category in mechEngDefaultsJson.RootElement.GetProperty("Settings").EnumerateArray())
+            {
+                if (category.TryGetProperty("Name", out JsonElement categoryName))
+                {
+                    JsonElement displayName = category.GetProperty("DisplayName");
+
+                    WeaponCategoriesToDisplayNames[categoryName.ToString()] = displayName.ToString();
+                    WeaponCategoriesToIds[categoryName.ToString()] = new List<string>();
                 }
             }
         }

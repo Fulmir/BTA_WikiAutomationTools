@@ -372,6 +372,8 @@ namespace BTA_IdsToStoreTableEntries
                     tempStoreEntry.LinkPageTarget = "Ammunition";
                     if (AmmoBoxLinkOverrides.TryGetLinkOverride(tempStoreEntry.UiName, out string linkOverride))
                         tempStoreEntry.PageSubTarget = linkOverride;
+                    else
+                        tempStoreEntry.PageSubTarget = tempStoreEntry.UiName.Replace("Ammo", "").Trim();
                 }
                 else if (tempStoreEntry.StoreHeading == StoreHeadingsGroup.Contracts)
                 {

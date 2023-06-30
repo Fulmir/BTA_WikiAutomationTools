@@ -5,27 +5,44 @@ class Program
 {
     static void Main(string[] args)
     {
-        using StreamReader inputFile = new("MechInputFile.txt");
-        List<string> inputFileValues = new List<string>();
-        bool useFile = false;
+        string modsFolder = "";
+        string textFile = "";
 
-        if (inputFile.Peek() != -1)
+        for(int index = 0; index < args.Length; index++)
         {
-            useFile = true;
+            if (args[index] == "-f")
+                modsFolder = args[index+1];
+            else if (args[index] == "-i")
+                textFile = args[index+1];
+        }
 
-            while (!inputFile.EndOfStream)
+        bool useFile = false;
+        List<string> inputFileValues = new List<string>();
+        if (textFile.Length > 0)
+        {
+            using StreamReader inputFile = new(textFile);
+
+            if (inputFile.Peek() != -1)
             {
-                inputFileValues.Add(inputFile.ReadLine() ?? "ERROR");
+                useFile = true;
+
+                while (!inputFile.EndOfStream)
+                {
+                    inputFileValues.Add(inputFile.ReadLine() ?? "ERROR");
+                }
             }
         }
 
-        Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
-        Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
-        Console.Write(":");
-        string modsFolder = Console.ReadLine() ?? "";
-        if (string.IsNullOrEmpty(modsFolder))
-            modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
-        Console.WriteLine("");
+        if(modsFolder.Length == 0)
+        {
+            Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
+            Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
+            Console.Write(":");
+            modsFolder = Console.ReadLine() ?? "";
+            if (string.IsNullOrEmpty(modsFolder))
+                modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
+            Console.WriteLine("");
+        }
 
         if(!modsFolder.EndsWith('\\'))
             modsFolder += "\\";
@@ -43,16 +60,12 @@ class Program
         if (useFile)
         {
             foreach (string line in inputFileValues)
-            {
                 listOfMechs.Add(new MechStats(line, modsFolder));
-            }
 
             using (StreamWriter outputFile = new("MechTableOutput.txt", append: true))
             {
                 foreach (MechStats mech in listOfMechs)
-                {
                     mech.OutputStatsToFile(outputFile);
-                }
             }
         }
         else

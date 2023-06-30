@@ -1,3 +1,4 @@
 ﻿Paladin,Paladin (Vehicle)
 LTV-4,LTV-4_Hover_Tank
 Sleipnir APC,Sleipnir_(Vehicle)
+Scorpion,Scorpion_(Vehicle)
