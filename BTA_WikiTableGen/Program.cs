@@ -1,85 +1,94 @@
 ﻿using BT_JsonProcessingLibrary;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
+using UtilityClassLibrary.WikiLinkOverrides;
 
-class Program
+namespace BTA_WikiGeneration
 {
-    static void Main(string[] args)
+    class Program
     {
-        string modsFolder = "";
-        string textFile = "";
-
-        for(int index = 0; index < args.Length; index++)
+        static void Main(string[] args)
         {
-            if (args[index] == "-f")
-                modsFolder = args[index+1];
-            else if (args[index] == "-i")
-                textFile = args[index+1];
-        }
+            string modsFolder = "";
 
-        bool useFile = false;
-        List<string> inputFileValues = new List<string>();
-        if (textFile.Length > 0)
-        {
-            using StreamReader inputFile = new(textFile);
-
-            if (inputFile.Peek() != -1)
+            for (int index = 0; index < args.Length; index++)
             {
-                useFile = true;
-
-                while (!inputFile.EndOfStream)
-                {
-                    inputFileValues.Add(inputFile.ReadLine() ?? "ERROR");
-                }
+                if (args[index] == "-f")
+                    modsFolder = args[index + 1];
             }
-        }
 
-        if(modsFolder.Length == 0)
-        {
-            Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
-            Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
-            Console.Write(":");
-            modsFolder = Console.ReadLine() ?? "";
-            if (string.IsNullOrEmpty(modsFolder))
-                modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
-            Console.WriteLine("");
-        }
-
-        if(!modsFolder.EndsWith('\\'))
-            modsFolder += "\\";
-
-        QuirkHandler.LoadQuirkHandlerData(modsFolder);
-
-        MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
-
-        AffinityHandler.CreateAffinitiesIndex(modsFolder);
-
-        FactionDataHandler.PopulateFactionDefData(modsFolder);
-
-        List<MechStats> listOfMechs = new List<MechStats>();
-
-        if (useFile)
-        {
-            foreach (string line in inputFileValues)
-                listOfMechs.Add(new MechStats(line, modsFolder));
-
-            using (StreamWriter outputFile = new("MechTableOutput.txt", append: true))
+            if (modsFolder.Length == 0)
             {
-                foreach (MechStats mech in listOfMechs)
-                    mech.OutputStatsToFile(outputFile);
+                Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
+                Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
+                Console.Write(":");
+                modsFolder = Console.ReadLine() ?? "";
+                if (string.IsNullOrEmpty(modsFolder))
+                    modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
+                Console.WriteLine("");
             }
-        }
-        else
-        {
+
+            if (!modsFolder.EndsWith('\\'))
+                modsFolder += "\\";
+
+
+            QuirkHandler.LoadQuirkHandlerData(modsFolder);
+
+            MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
+
+            AffinityHandler.CreateAffinitiesIndex(modsFolder);
+
+            PlanetDataHandler.PopulatePlanetFileData(modsFolder);
+
+            FactionDataHandler.PopulateFactionDefData(modsFolder);
+
+
+            BonusTextHandler.CreateEquipmentBonusesIndex(modsFolder);
+
+            AmmoBoxLinkOverrides.PopulateAmmoCategoryOverrides();
+
             MechGearHandler.InstantiateModsFolder(modsFolder);
+            MechGearHandler.PopulateGearData();
+
+            WeaponAttachmentProcessor.GetAllGearAttachments(modsFolder);
+
+            WeaponAttachmentProcessor.PrintGearEntriesToFile();
+
+
+
+            StoreFileProcessor.LoadStoreFileData(modsFolder);
+
+            StoreFileProcessor.OutputFactoryStoresToString();
+
+            StoreFileProcessor.OutputFactionStoresToString();
+
+
 
             MechFileSearch.GetAllMechsFromDefs(modsFolder);
 
+            // Output faction names to file for Lua use
+            FactionDataHandler.OutputIdsToNamesFile();
+
+            FactionDataProcessor processor = new FactionDataProcessor(modsFolder);
+
+            // Output SPAM factions to parent factions translation for Lua use
+            processor.OutputSpamFactionsToParentsTranslation();
+
+            // Output the Mercenary SPAM faction page data
+            processor.OutputMercFactionInfo();
+
+            // Output the Sub-Command factions to page data
+            processor.OutputFactionSubCommands();
+
+            // Output mechs to big table
             MechFileSearch.OutputMechsToWikiTables();
 
             VehicleFileSearch.GetAllVehiclesFromDefs(modsFolder);
 
+            // Output vehicles to big table
             VehicleFileSearch.OutputVehiclesToWikiTables();
 
+            // Output vehicles to individual pages
             VehicleFileSearch.PrintVehiclePagesToFiles();
         }
     }

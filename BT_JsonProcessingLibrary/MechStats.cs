@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
@@ -89,7 +90,7 @@ namespace BT_JsonProcessingLibrary
             MechName = chassisName;
             MechModel = variantName;
 
-            ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
+            ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd(), UtilityStatics.GeneralJsonDocOptions);
             MechDefFile = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
 
             CalculateMechStats();

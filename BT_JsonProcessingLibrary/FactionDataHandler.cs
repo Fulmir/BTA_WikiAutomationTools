@@ -70,7 +70,7 @@ namespace BT_JsonProcessingLibrary
 
             Parallel.ForEach(factionDefFiles, parallelOptions, factionDefFile =>
             {
-                var temp = JsonDocument.Parse(File.ReadAllText(factionDefFile.Path), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+                var temp = JsonDocument.Parse(File.ReadAllText(factionDefFile.Path), UtilityStatics.GeneralJsonDocOptions);
                 if (temp.RootElement.TryGetProperty("factionID", out var factionId))
                 {
                     factionDefsById[factionId.ToString()] = new FactionData(temp);
@@ -81,7 +81,7 @@ namespace BT_JsonProcessingLibrary
                 }
             });
 
-            SpamConfigJson = JsonDocument.Parse(File.ReadAllText(modsFolder + spamFolder + "mod.json"), new JsonDocumentOptions() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            SpamConfigJson = JsonDocument.Parse(File.ReadAllText(modsFolder + spamFolder + "mod.json"), UtilityStatics.GeneralJsonDocOptions);
 
             OutputSpamFactionsToParentsTranslation();
         }

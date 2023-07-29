@@ -13,6 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ItemHighlightLists\BestInSlotStoreItems.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ItemHighlightLists\UniqueStoreItems.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="MechInputFile.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

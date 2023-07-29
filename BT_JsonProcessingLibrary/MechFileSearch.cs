@@ -66,12 +66,12 @@ namespace BT_JsonProcessingLibrary
             {
                 if (!BlacklistDirectories.IsMatch(mechDef.Path))
                 {
-                    JsonDocument mechJson = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
+                    JsonDocument mechJson = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd(), UtilityStatics.GeneralJsonDocOptions);
                     BasicFileData chassisDef = chassisDefIndex[ModJsonHandler.GetChassisDefId(mechJson, mechDef)];
                     if (!File.Exists(mechDef.Path))
                         return;
 
-                    var tempChassisDoc = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd());
+                    var tempChassisDoc = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd(), UtilityStatics.GeneralJsonDocOptions);
 
                     string variantName = tempChassisDoc.RootElement.GetProperty("VariantName").ToString().Trim();
                     string chassisName = ModJsonHandler.GetNameFromJsonDoc(tempChassisDoc);

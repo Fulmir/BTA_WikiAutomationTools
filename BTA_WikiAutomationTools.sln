@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_WikiTableGen", "BTA_WikiTableGen\BTA_WikiTableGen.csproj", "{7D6C3CEC-A8EE-4A52-8933-B373312ED4C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_WikiGeneration", "BTA_WikiTableGen\BTA_WikiGeneration.csproj", "{7D6C3CEC-A8EE-4A52-8933-B373312ED4C8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_SpamFactionBuilder", "BTA_SpamFactionBuilder\BTA_SpamFactionBuilder.csproj", "{E29ADDB7-286F-403E-AB6E-96BEAC745369}"
 EndProject
@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT_JsonProcessingLibrary", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UtilityClassLibrary", "UtilityClassLibrary\UtilityClassLibrary.csproj", "{D0001060-103A-4B51-929F-620889DC52A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTA_ItemPageGenerator", "BTA_ItemPageGenerator\BTA_ItemPageGenerator.csproj", "{7F52DED3-03ED-4D39-A7A6-A65510FAE2D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_ItemPageGenerator", "BTA_ItemPageGenerator\BTA_ItemPageGenerator.csproj", "{7F52DED3-03ED-4D39-A7A6-A65510FAE2D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
