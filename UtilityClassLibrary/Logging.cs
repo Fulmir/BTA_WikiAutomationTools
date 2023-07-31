@@ -17,19 +17,29 @@ namespace UtilityClassLibrary
     public enum LogLevel
     { Debug, Info, Warning, Error, Critical };
 
-    public static class Logging
+    public class Logging
     {
-        private static ConcurrentQueue<LogMessage> _LogMessages = new ConcurrentQueue<LogMessage>();
-        private static Dictionary<string, string> _ReportsByCategory = new Dictionary<string, string>();
+        private ConcurrentQueue<LogMessage> _LogMessages = new ConcurrentQueue<LogMessage>();
+        private Dictionary<string, List<LogMessage>> _ReportsByCategory = new Dictionary<string, List<LogMessage>>();
 
-        public static async void AddLogToQueue(LogMessage message)
+        public async void AddLogToQueue(LogMessage message)
         {
             _LogMessages.Enqueue(message);
         }
 
-        public static async void AddLogToQueue(string message, string? category = null, int? level = null)
+        public async void AddLogToQueue(string message, string? category = null, int? level = null)
         {
             _LogMessages.Enqueue(new LogMessage { Message = message, Category = category, Level = level});
+        }
+
+        public async void ProcessLogMessages(CancellationToken cancellationToken = default)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                _LogMessages.TryDequeue(out LogMessage message);
+
+                _ReportsByCategory[message.Category].Add(message);
+            }
         }
     }
 }

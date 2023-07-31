@@ -9,9 +9,13 @@ ZEU-X,Zeus_X
 ZEU-X-X,Zeus_X
 ZEU-X-OL,Zeus_X
 COR-4A,Corsair_(75T)
+COR-4C,Corsair_(75T)
+COR-4D,Corsair_(75T)
+COR-4PA,Corsair_(75T)
 COR-4R,Corsair_(75T)
 COR-TB,Corsair_(75T)
 COR-MKD,Corsair_(75T)
+COR-3PA,Corsair_(55T)
 COR-3X,Corsair_(55T)
 BJ-1M,Blackjack_(50T)
 GRF-1A,Griffin_(60T)
