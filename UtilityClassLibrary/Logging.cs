@@ -10,156 +10,124 @@ namespace UtilityClassLibrary
     public struct LogMessage
     {
         public string Message;
-        public string? Category;
-        public int? Level;
+        public LogCategories Category;
+        public LogLevel Level;
     }
 
     public enum LogLevel
-    { Debug, Info, Warning, Error, Critical };
+    { Debug, Info, Reporting, Warning, Error, Critical };
 
-    public class Logging
+    public enum LogCategories
+    { Immediate, Quirks, Affinities, MechDefs, VehicleDefs, Gear, Factions, Planets, Stores, Bonuses };
+
+    public static class Logging
     {
-        private ConcurrentQueue<LogMessage> _LogMessages = new ConcurrentQueue<LogMessage>();
-        private Dictionary<string, List<LogMessage>> _ReportsByCategory = new Dictionary<string, List<LogMessage>>();
+        private static ConcurrentQueue<LogMessage> _LogMessages = new ConcurrentQueue<LogMessage>();
+        private static Dictionary<LogCategories, List<LogMessage>> _ReportsByCategory = new Dictionary<LogCategories, List<LogMessage>>();
 
-        public async void AddLogToQueue(LogMessage message)
+        public static bool ActiveLogging = false;
+
+        public static async void AddLogToQueue(LogMessage message)
         {
             _LogMessages.Enqueue(message);
         }
 
-        public async void AddLogToQueue(string message, string? category = null, int? level = null)
+        public static async void AddLogToQueue(string message, LogLevel level, LogCategories category)
         {
             _LogMessages.Enqueue(new LogMessage { Message = message, Category = category, Level = level});
         }
 
-        public async void ProcessLogMessages(CancellationToken cancellationToken = default)
+        public static async void ProcessLogMessages(CancellationToken cancellationToken = default)
         {
+            ActiveLogging = true;
+
+            StreamWriter logWriter = new StreamWriter(".\\BTA_WikiPageGenLog.txt", false, Encoding.UTF8);
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                _LogMessages.TryDequeue(out LogMessage message);
-
-                _ReportsByCategory[message.Category].Add(message);
+                if(_LogMessages.TryDequeue(out LogMessage message))
+                {
+                    if (message.Category != LogCategories.Immediate)
+                    {
+                        if(!_ReportsByCategory.ContainsKey(message.Category))
+                            _ReportsByCategory.Add(message.Category, new List<LogMessage>());
+                        _ReportsByCategory[message.Category].Add(message);
+                    }
+                    else
+                    {
+                        logWriter.WriteLine(GetMessagePrefixForLogLevel(message.Level) + message.Message);
+                    }
+                }
+                else
+                    await Task.Delay(1000);
             }
+            
+            foreach(LogCategories category in _ReportsByCategory.Keys)
+            {
+                logWriter.WriteLine();
+                logWriter.WriteLine();
+                logWriter.WriteLine(GetSectionTitleFromCategory(category));
+                logWriter.WriteLine();
+
+                foreach(LogMessage message in _ReportsByCategory[category])
+                { 
+                    logWriter.WriteLine(GetMessagePrefixForLogLevel(message.Level) + message.Message);
+                }
+            }
+
+            logWriter.Close();
+
+            logWriter.Dispose();
+
+            ActiveLogging = false;
+        }
+
+        private static string GetSectionTitleFromCategory(LogCategories category)
+        {
+            switch(category)
+            {
+                case LogCategories.Immediate:
+                    return "-------- STARTING BTA WIKI GENERATION --------";
+                case LogCategories.Affinities:
+                    return "-------- UNIT AFFINITY REPORT --------";
+                case LogCategories.Gear:
+                    return "-------- GEAR DATA REPORT --------";
+                case LogCategories.MechDefs:
+                    return "-------- MECH DEF DATA REPORT --------";
+                case LogCategories.Quirks:
+                    return "-------- QUIRK DATA REPORT --------";
+                case LogCategories.VehicleDefs:
+                    return "-------- VEHICLE DEF DATA REPORT --------";
+                case LogCategories.Factions:
+                    return "-------- FACTION DATA REPORT --------";
+                case LogCategories.Planets:
+                    return "-------- PLANET DATA REPORT --------";
+                case LogCategories.Stores:
+                    return "-------- STORE DATA REPORT --------";
+            }
+
+            return "-------- CATEGORY NOT FOUND --------";
+        }
+
+        private static string GetMessagePrefixForLogLevel(LogLevel logLevel)
+        {
+            switch(logLevel)
+            {
+                case LogLevel.Debug:
+                    return "[DEBUG]: ";
+                case LogLevel.Info:
+                    return "[INFO]: ";
+                case LogLevel.Warning:
+                    return "[WARNING]: ";
+                case LogLevel.Error:
+                    return "[ERROR]: ";
+                case LogLevel.Critical:
+                    return "[CRITICAL]: ";
+                case LogLevel.Reporting:
+                    return "";
+            }
+
+            return "";
         }
     }
 }
-//    public class LogFile
-//    {
-//        private string m_logfile;
-//        private SpinLock spinlock;
-//        private StringBuilder m_cache = null;
-//        //private StreamWriter m_fs = null;
-//        public LogFile(string name)
-//        {
-//            try
-//            {
-//                this.spinlock = new SpinLock();
-//                this.m_cache = new StringBuilder();
-//                this.m_logfile = Path.Combine(Log.BaseDirectory, name);
-//                File.Delete(this.m_logfile);
-//                //this.m_fs = new StreamWriter(this.m_logfile);
-//                //this.m_fs.AutoFlush = true;
-//            }
-//            catch (Exception)
-//            {
-
-//            }
-//        }
-//        public void flush()
-//        {
-//            bool locked = false;
-//            try
-//            {
-//                if (spinlock.IsHeldByCurrentThread == false) { spinlock.Enter(ref locked); }
-//                if (this.m_cache.Length > 0)
-//                {
-//                    //this.m_fs.Write(this.m_cache.ToString());
-//                    //this.m_fs.Flush();
-//                    this.m_cache.Length = 0;
-//                }
-//            }
-//            finally
-//            {
-//                if (locked) { spinlock.Exit(); }
-//            }
-//        }
-//        public void W(string line, bool isCritical = false)
-//        {
-//            //bool locked = false;
-//            try
-//            {
-//                Console.Write(line);
-//                //if (spinlock.IsHeldByCurrentThread == false) { spinlock.Enter(ref locked); }
-//                //m_cache.Append(line);
-//            }
-//            finally
-//            {
-//                //if (locked) { spinlock.Exit(); }
-//            }
-//            //if (isCritical) { this.flush(); };
-//            //if (m_logfile.Length > Log.flushBufferLength) { this.flush(); };
-//        }
-//        public void WL(string line, bool isCritical = false)
-//        {
-//            Console.WriteLine(line);
-//            //line += "\n"; this.W(line, isCritical);
-//        }
-//        public void W(int initiation, string line, bool isCritical = false)
-//        {
-//            string init = new string(' ', initiation);
-//            line = init + line; this.W(line, isCritical);
-//        }
-//        public void WL(int initiation, string line, bool isCritical = false)
-//        {
-//            string init = new string(' ', initiation);
-//            line = init + line; this.WL(line, isCritical);
-//        }
-//        public void TW(int initiation, string line, bool isCritical = false)
-//        {
-//            string init = new string(' ', initiation);
-//            line = "[" + DateTime.Now.ToString("HH:mm:ss.fff") + "]" + init + line;
-//            this.W(line, isCritical);
-//        }
-//        public void TWL(int initiation, string line, bool isCritical = false)
-//        {
-//            string init = new string(' ', initiation);
-//            line = "[" + DateTime.Now.ToString("HH:mm:ss.fff") + "]" + init + line;
-//            this.WL(line, isCritical);
-//        }
-//    }
-//    public static class Log
-//    {
-//        private static Dictionary<LogFileType, LogFile> logs = new Dictionary<LogFileType, LogFile>();
-//        public static bool enabled = true;
-//        //private static string m_assemblyFile;
-//        public static string BaseDirectory;
-//        public static readonly int flushBufferLength = 16 * 1024;
-//        public static bool flushThreadActive = true;
-//        public static Thread flushThread = new Thread(flushThreadProc);
-//        public static void flushThreadProc()
-//        {
-//            while (Log.flushThreadActive == true)
-//            {
-//                Thread.Sleep(30 * 1000);
-//                Log.flush();
-//            }
-//        }
-//        public static void flush()
-//        {
-//            foreach (var log in Log.logs) { log.Value.flush(); }
-//        }
-//        public static void LogWrite(string line, bool isCritical = false)
-//        {
-//            if (Log.logs.ContainsKey(LogFileType.Main) == false) { return; }
-//            Log.logs[LogFileType.Main].W(line, isCritical);
-//        }
-//        public static LogFile M { get { return Injector.settings.debugLog ? Log.logs[LogFileType.Main] : null; } }
-//        public static LogFile Err { get { return Log.logs[LogFileType.Main]; } }
-//        public static void InitLog()
-//        {
-//            Log.logs.Add(LogFileType.Main, new LogFile("StatisticEffectDataInjector_main_log.txt"));
-//            //Log.flushThread.Start();
-//        }
-//    }
-
-//}

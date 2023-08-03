@@ -52,14 +52,14 @@ namespace BTA_WikiGeneration
 
                 PlanetData planet = data.First();
                 if (data.Count() > 1)
-                    Console.WriteLine($"MULTIPLE PLANET ENTRIES FOUND FOR PLANET TAG?!?! {planetTag}");
+                    Logging.AddLogToQueue($"MULTIPLE PLANET ENTRIES FOUND FOR PLANET TAG?!?! {planetTag}", LogLevel.Reporting, LogCategories.Planets);
 
                 StoreTagAssociation storeTagData = factoryStoreListsByTag[planetTag].First();
 
                 Dictionary<StoreHeadingsGroup, List<StoreEntry>> factoryStoreList = ConsolidateStoreLists(factoryStoreListsByTag[planetTag].Select(itemList => { return itemList.itemsListId; }).ToList());
 
                 if (factoryStoreListsByTag[planetTag].Count() > 1)
-                    Console.WriteLine($"MULTIPLE STORE LISTS FOUND FOR PLANET TAG!?! {planetTag}");
+                    Logging.AddLogToQueue($"MULTIPLE STORE LISTS FOUND FOR PLANET TAG!?! {planetTag}", LogLevel.Reporting, LogCategories.Planets);
 
                 individualTablesWriter.WriteLine($"=== {planet.Name} ===");
                 individualTablesWriter.WriteLine("");

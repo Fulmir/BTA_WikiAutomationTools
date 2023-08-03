@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
@@ -114,10 +115,10 @@ namespace BT_JsonProcessingLibrary
                     fullDescUsable = false;
                     if (!DebugBlacklist.Contains(bonus.BonusId))
                     {
-                        Console.WriteLine($"DISCARDED FULL DESCRIPTION: {bonus.BonusId}");
-                        Console.WriteLine($"Full: {string.Format(bonus.FullDescription, tempBonusValues.ToArray())}");
-                        Console.WriteLine($"Long: {string.Format(bonus.LongDescription, tempBonusValues.ToArray())}");
-                        Console.WriteLine("");
+                        Logging.AddLogToQueue($"DISCARDED FULL DESCRIPTION: {bonus.BonusId}\n\r" +
+                            $"Full: {string.Format(bonus.FullDescription, tempBonusValues.ToArray())}\n\r" +
+                            $"Long: {string.Format(bonus.LongDescription, tempBonusValues.ToArray())}"
+                            , LogLevel.Reporting, LogCategories.Bonuses);
                         DebugBlacklist.Add(bonus.BonusId);
                     }
                 }

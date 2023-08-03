@@ -119,7 +119,8 @@ namespace BTA_WikiGeneration
 
                     if (tempMercFaction.PrimaryEmployer == null)
                     {
-                        Console.WriteLine($"{tempMercFaction.Name} don't have a primary employer! Sticking them in the \"other\" group!\r\n ID: {tempMercFaction.FactionID}");
+                        Logging.AddLogToQueue($"{tempMercFaction.Name} don't have a primary employer! Sticking them in the \"other\" group!\r\n ID: {tempMercFaction.FactionID}",
+                            LogLevel.Reporting, LogCategories.Factions);
                         tempMercFaction.PrimaryEmployer = "Other Merc Commands";
                     }
 
@@ -260,12 +261,12 @@ namespace BTA_WikiGeneration
                         if (subCommandRatings.ContainsKey(subCommandId))
                             tempSubCommandData.SubcommandRating = subCommandRatings[subCommandId];
                         else
-                            Console.WriteLine("ERROR: No SUBCOMMAND RATING for " + subCommandId);
+                            Logging.AddLogToQueue("No SUBCOMMAND RATING for " + subCommandId, LogLevel.Reporting, LogCategories.Factions);
 
                         parentFactions[parentFactionProperName].Add(tempSubCommandData);
                     }
                     else
-                        Console.WriteLine("ERROR: No JSON for " + subCommandId);
+                        Logging.AddLogToQueue("No JSON for " + subCommandId, LogLevel.Reporting, LogCategories.Factions);
                 }
             }
 

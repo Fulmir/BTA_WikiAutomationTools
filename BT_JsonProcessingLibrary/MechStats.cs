@@ -61,13 +61,12 @@ namespace BT_JsonProcessingLibrary
 
             if (files.Count > 2 || files.Count < 2)
             {
-                Console.WriteLine("");
-                Console.WriteLine("Found the WRONG NUMBER OF FILES for " + MechModel + ": ");
+                string countProblem = $"Found {files.Count} for {MechModel}. File names are: ";
                 foreach (BasicFileData file in files)
                 {
-                    Console.WriteLine(file.FileName);
+                    countProblem += $"\n\r{file.FileName}";
                 }
-                Console.WriteLine("");
+                Logging.AddLogToQueue(countProblem, LogLevel.Warning, LogCategories.MechDefs);
             }
 
             foreach (BasicFileData file in files)
@@ -425,7 +424,7 @@ namespace BT_JsonProcessingLibrary
                         }
                 }
             else
-                Console.WriteLine($"FAILURE TO GET FIXED GEAR {MechModel}");
+                Logging.AddLogToQueue($"FAILURE TO GET FIXED GEAR FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetBaseGearList()
@@ -440,7 +439,7 @@ namespace BT_JsonProcessingLibrary
                         }
                 }
             else
-                Console.WriteLine($"FAILURE TO GET BASE GEAR {MechModel}");
+                Logging.AddLogToQueue($"FAILURE TO GET BASE GEAR FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetUnitTonnage()
@@ -448,7 +447,7 @@ namespace BT_JsonProcessingLibrary
             if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
                 MechWeight = tonnage.GetInt32();
             else
-                Console.WriteLine($"FAILURE TO GET TONNAGE {MechModel}");
+                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetUnitStockRole()
@@ -456,7 +455,7 @@ namespace BT_JsonProcessingLibrary
             if (ChassisDefFile.RootElement.TryGetProperty("StockRole", out JsonElement role))
                 Role = role.ToString();
             else
-                Console.WriteLine($"FAILURE TO GET STOCK ROLE: {MechModel}");
+                Logging.AddLogToQueue($"FAILURE TO GET STOCK ROLE FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetCoreGear()
@@ -563,7 +562,7 @@ namespace BT_JsonProcessingLibrary
                 return prefab.ToString();
             else
             {
-                Console.WriteLine($"MECH {this.MechModel} HAS NO PREFAB! WOOPS!");
+                Logging.AddLogToQueue($"NO PREFAB IDENTIFIER FOR {this.MechModel}", LogLevel.Warning, LogCategories.MechDefs);
                 return "ERROR PREFAB";
             }
         }

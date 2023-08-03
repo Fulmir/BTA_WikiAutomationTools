@@ -1,6 +1,7 @@
 ﻿using BT_JsonProcessingLibrary;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using UtilityClassLibrary;
 using UtilityClassLibrary.WikiLinkOverrides;
 
 namespace BTA_WikiGeneration
@@ -9,6 +10,10 @@ namespace BTA_WikiGeneration
     {
         static void Main(string[] args)
         {
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            Task.Run(() => Logging.ProcessLogMessages(tokenSource.Token));
+
             string modsFolder = "";
 
             for (int index = 0; index < args.Length; index++)
@@ -31,7 +36,7 @@ namespace BTA_WikiGeneration
             if (!modsFolder.EndsWith('\\'))
                 modsFolder += "\\";
 
-
+            Console.WriteLine("Loading Widely Used Mod Data...");
             QuirkHandler.LoadQuirkHandlerData(modsFolder);
 
             MoveSpeedHandler.InstantiateMoveSpeedHandler(modsFolder);
@@ -42,7 +47,6 @@ namespace BTA_WikiGeneration
 
             FactionDataHandler.PopulateFactionDefData(modsFolder);
 
-
             BonusTextHandler.CreateEquipmentBonusesIndex(modsFolder);
 
             AmmoBoxLinkOverrides.PopulateAmmoCategoryOverrides();
@@ -50,22 +54,22 @@ namespace BTA_WikiGeneration
             MechGearHandler.InstantiateModsFolder(modsFolder);
             MechGearHandler.PopulateGearData();
 
+            MechFileSearch.GetAllMechsFromDefs(modsFolder);
+
             WeaponAttachmentProcessor.GetAllGearAttachments(modsFolder);
+            Console.WriteLine("FINISHED: Loading Widely Used Mod Data...");
 
+            Console.WriteLine("Creating Gear pages...");
             WeaponAttachmentProcessor.PrintGearEntriesToFile();
+            Console.WriteLine("FINISHED: Creating Gear pages...");
 
-
-
+            Console.WriteLine("Creating Store data pages...");
             StoreFileProcessor.LoadStoreFileData(modsFolder);
 
             StoreFileProcessor.OutputFactoryStoresToString();
+            Console.WriteLine("FINISHED: Creating Store data pages...");
 
-            StoreFileProcessor.OutputFactionStoresToString();
-
-
-
-            MechFileSearch.GetAllMechsFromDefs(modsFolder);
-
+            Console.WriteLine("Creating faction data pages...");
             // Output faction names to file for Lua use
             FactionDataHandler.OutputIdsToNamesFile();
 
@@ -79,17 +83,32 @@ namespace BTA_WikiGeneration
 
             // Output the Sub-Command factions to page data
             processor.OutputFactionSubCommands();
+            Console.WriteLine("FINISHED: Creating faction data pages...");
 
+            Console.WriteLine("Creating Mechs Table Page...");
             // Output mechs to big table
             MechFileSearch.OutputMechsToWikiTables();
+            Console.WriteLine("FINISHED: Creating Mechs Table Page...");
 
+            Console.WriteLine("Creating Vehicles Table Page...");
             VehicleFileSearch.GetAllVehiclesFromDefs(modsFolder);
 
             // Output vehicles to big table
             VehicleFileSearch.OutputVehiclesToWikiTables();
+            Console.WriteLine("FINISHED: Creating Vehicles Table Page...");
 
+            Console.WriteLine("Creating Individual Vehicle Pages...");
             // Output vehicles to individual pages
             VehicleFileSearch.PrintVehiclePagesToFiles();
+            Console.WriteLine("FINISHED: Creating Individual Vehicle Pages...");
+
+            tokenSource.Cancel();
+
+            while (Logging.ActiveLogging)
+                Task.Delay(1000);
+
+            tokenSource.Dispose();
+            Console.WriteLine("----- DONE -----");
         }
     }
 }

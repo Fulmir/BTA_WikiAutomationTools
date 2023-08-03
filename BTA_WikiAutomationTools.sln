@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_WikiGeneration", "BTA_WikiTableGen\BTA_WikiGeneration.csproj", "{7D6C3CEC-A8EE-4A52-8933-B373312ED4C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_WikiGeneration", "BTA_WikiGeneration\BTA_WikiGeneration.csproj", "{7D6C3CEC-A8EE-4A52-8933-B373312ED4C8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_SpamFactionBuilder", "BTA_SpamFactionBuilder\BTA_SpamFactionBuilder.csproj", "{E29ADDB7-286F-403E-AB6E-96BEAC745369}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_GenerateStoreTableEntries", "BTA_IdsToStoreTableEntries\BTA_GenerateStoreTableEntries.csproj", "{06078E84-612A-4660-963F-5C2F77863EBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTA_GenerateStoreTableEntries", "BTA_GenerateStoreTableEntries\BTA_GenerateStoreTableEntries.csproj", "{06078E84-612A-4660-963F-5C2F77863EBB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT_JsonProcessingLibrary", "BT_JsonProcessingLibrary\BT_JsonProcessingLibrary.csproj", "{4383690E-FCA2-4AC8-9CF2-96A829A984CF}"
 EndProject

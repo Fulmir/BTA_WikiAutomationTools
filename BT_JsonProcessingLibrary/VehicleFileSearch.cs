@@ -54,7 +54,7 @@ namespace BT_JsonProcessingLibrary
                 if (!chassisDefIndex.ContainsKey(chassisId))
                     chassisDefIndex.Add(chassisId, vehicleChassisDefFile);
                 else
-                    Console.WriteLine($"Duplicate VehicleChassisDef found for {chassisId}");
+                    Logging.AddLogToQueue($"Duplicate VehicleChassisDef found for {chassisId}", LogLevel.Error, LogCategories.VehicleDefs);
             }
 
             List<BasicFileData> vehicleDefs = ModJsonHandler.SearchFiles(modsFolder, "vehicledef_*.json");
@@ -299,7 +299,7 @@ namespace BT_JsonProcessingLibrary
                     aggregateWikiTags.AddRange(PlayerControllableVehicles[vehicleChassisName][vehicleId].WikiTags);
 
                     if (vehicleNameCheckList.Contains(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName))
-                        Console.WriteLine($"Vehicle name duplicated for id: \"{vehicleId}\"");
+                        Logging.AddLogToQueue($"Vehicle name duplicated for id: {vehicleId}", LogLevel.Warning, LogCategories.VehicleDefs);
                     vehicleNameCheckList.Add(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName);
                 }
 

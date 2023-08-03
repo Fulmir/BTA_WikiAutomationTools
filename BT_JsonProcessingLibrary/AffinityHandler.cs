@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
@@ -47,7 +48,7 @@ namespace BT_JsonProcessingLibrary
                         AffinityLookupTable.Add(chassisName.ToString(), affinityDef);
                     }
                     else
-                        Console.WriteLine("ERROR: Duplicate Affinity Found for Chassis!");
+                        Logging.AddLogToQueue("Duplicate Affinity Found for Chassis!", LogLevel.Reporting, LogCategories.Affinities);
                 }
             }
         }
@@ -99,7 +100,7 @@ namespace BT_JsonProcessingLibrary
                 if (mech.MechAffinity.HasValue)
                     affinities[mech.MechAffinity.Value.Id] = mech.MechAffinity.Value;
                 else if (!mech.Blacklisted)
-                    Console.WriteLine($"MECH {mech.MechModel} HAS NO AFFINITY!");
+                    Logging.AddLogToQueue($"MECH {mech.MechModel} HAS NO AFFINITY!", LogLevel.Reporting, LogCategories.Affinities);
             }
 
             return affinities.Values.ToList();

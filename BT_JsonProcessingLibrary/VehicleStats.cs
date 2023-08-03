@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
@@ -333,7 +334,7 @@ namespace BT_JsonProcessingLibrary
                     }
                 }
             else
-                Console.WriteLine($"FAILURE TO GET VEHICLE GEAR {VehicleChassisName}");
+                Logging.AddLogToQueue($"FAILURE TO GET VEHICLE GEAR {VehicleChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
         }
 
         private bool IsListableTankEquipment(string gearId)
@@ -377,7 +378,7 @@ namespace BT_JsonProcessingLibrary
             if (VehicleChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
                 VehicleWeight = tonnage.GetInt32();
             else
-                Console.WriteLine($"FAILURE TO GET TONNAGE {VehicleChassisName}");
+                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE {VehicleChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
         }
 
         private void GetCoreGear()
@@ -444,7 +445,7 @@ namespace BT_JsonProcessingLibrary
 
             if (!movementDef.Contains('-'))
             {
-                Console.WriteLine(ModJsonHandler.GetIdFromJsonDoc(VehicleChassisDefFile));
+                Logging.AddLogToQueue($"Vehicle has incorrect movement def: {ModJsonHandler.GetIdFromJsonDoc(VehicleChassisDefFile)}", LogLevel.Warning, LogCategories.VehicleDefs);
 
                 WalkSpeed = 0;
                 RunSpeed = 0;
@@ -493,7 +494,7 @@ namespace BT_JsonProcessingLibrary
                 }
                 else
                 {
-                    Console.WriteLine($"Invalid location {location} found in vehicle {VehicleUiName}");
+                    Logging.AddLogToQueue($"Invalid location {location} found in vehicle {VehicleUiName}", LogLevel.Error, LogCategories.VehicleDefs);
                 }
             }
         }

@@ -57,7 +57,7 @@ namespace BT_JsonProcessingLibrary
                 if (!chassisDefIndex.ContainsKey(chassisId))
                     chassisDefIndex.Add(chassisId, chassisDefFile);
                 else
-                    Console.WriteLine($"Duplicate ChassisDef found for {chassisId}");
+                    Logging.AddLogToQueue($"Duplicate ChassisDef found for {chassisId}", LogLevel.Reporting, LogCategories.MechDefs);
             }
 
             List<BasicFileData> mechDefs = ModJsonHandler.SearchFiles(modsFolder, "mechdef*.json");
@@ -257,7 +257,7 @@ namespace BT_JsonProcessingLibrary
                     primaryMechName = TryGetNameForGroupKey(mechGroupKey, ref targetDictionary);
 
                 if (mechNamesToMechGroupKeys.ContainsKey(primaryMechName))
-                    Console.WriteLine($"Already have value for name {primaryMechName} and mechGroupKey {mechGroupKey}. Other mechGroupKey is {mechNamesToMechGroupKeys[primaryMechName].Last()}. Adding mechGroupKey to list.");
+                    Logging.AddLogToQueue($"Already have value for name {primaryMechName} and mechGroupKey {mechGroupKey}. Other mechGroupKey is {mechNamesToMechGroupKeys[primaryMechName].Last()}. Adding mechGroupKey to list.", LogLevel.Warning, LogCategories.Immediate);
                 else
                     mechNamesToMechGroupKeys[primaryMechName] = new List<string>();
 

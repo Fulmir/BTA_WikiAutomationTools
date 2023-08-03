@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
@@ -97,10 +98,10 @@ namespace BT_JsonProcessingLibrary
                 List<BasicFileData> gearFileData = ModJsonHandler.SearchFiles(ModFolder, $"{gearId}.json");
                 if (gearFileData.Count > 1)
                 {
-                    Console.WriteLine($"Too many files found for {gearId}, trying to filter, otherwise using first file.");
+                    Logging.AddLogToQueue($"Too many files found for {gearId}, trying to filter, otherwise using first file.", LogLevel.Reporting, LogCategories.Gear);
                     gearFileData = gearFileData.FindAll((file) => !DirectoryExcludeRegex.IsMatch(file.Path));
                     if (gearFileData.Count > 1)
-                        Console.WriteLine("KINDA FAILED TO FILTER! WOOPS!");
+                        Logging.AddLogToQueue($"FAILED TO FILTER GEAR FILES {gearId}! WOOPS!", LogLevel.Warning, LogCategories.Immediate);
                 }
                 if (gearFileData.Count > 0)
                 {
@@ -111,7 +112,7 @@ namespace BT_JsonProcessingLibrary
                     return true;
                 }
                 else
-                    Console.WriteLine($"NO GEAR FILE FOUND FOR {gearId} WOOPS!");
+                    Logging.AddLogToQueue($"NO GEAR FILE FOUND FOR: {gearId}", LogLevel.Error, LogCategories.Gear);
             }
             return false;
         }
