@@ -219,7 +219,7 @@ namespace BT_JsonProcessingLibrary
 
         public static void OutputIdsToNamesFile()
         {
-            using StreamWriter outputFile = new("IdsToNamesForLua.txt", append: false);
+            using StreamWriter outputFile = new(".\\Output\\IdsToNamesForLua.txt", append: false);
 
             bool firstLine = true;
 

@@ -182,6 +182,11 @@ namespace BT_JsonProcessingLibrary
                     highestUseCount = mechNameCounters[cleanedName].UseCount;
                     highestUseName = cleanedName;
                 }
+                else if (mechNameCounters[cleanedName].UseCount == highestUseCount)
+                {
+                    if(highestUseName.Contains(cleanedName))
+                        highestUseName = cleanedName;
+                }
             }
             return highestUseName;
         }
@@ -207,7 +212,9 @@ namespace BT_JsonProcessingLibrary
 
         public static void OutputMechsToWikiTables()
         {
-            StreamWriter mechTablePageWriter = new StreamWriter("MechPageTables.txt", false);
+            string mechTableOutputFilePath = ".\\Output\\MechPageTables.txt";
+
+            StreamWriter mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, false);
 
             mechTablePageWriter.WriteLine(QuirkHandler.WriteOutCommonQuirkEffects());
 
@@ -215,31 +222,31 @@ namespace BT_JsonProcessingLibrary
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Inner Sphere {0} Mechs", ref InnerSphereMechs, true, false));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.WriteLine("==Clan Mechs==");
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Clan {0} Mechs", ref ClanMechs, true, false));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.WriteLine("==Sanctuary Worlds Mechs==");
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Sanctuary Worlds {0} Mechs", ref SanctuaryMechs, true, false));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.WriteLine("==Hero Mechs==");
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("{0} Hero Mechs", ref HeroMechs, true, true));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.WriteLine("==Other Mechs==");
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Quad Mechs", ref QuadMechs, false, false));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Custom Mechs", ref CustomMechs, false, false));
             mechTablePageWriter.Close();
 
-            mechTablePageWriter = new StreamWriter("MechPageTables.txt", true);
+            mechTablePageWriter = new StreamWriter(mechTableOutputFilePath, true);
             mechTablePageWriter.Write(OutputDictionaryToStringByTonnage("Community Content Mechs", ref CommunityContentMechs, false, true));
             mechTablePageWriter.Close();
         }
@@ -483,7 +490,7 @@ namespace BT_JsonProcessingLibrary
             tableWriter.WriteLine("!<small>Heat Sinks</small>");
             tableWriter.WriteLine("!<small>Structure</small>");
             tableWriter.WriteLine("!<small>Armor</small>");
-            tableWriter.WriteLine("!<small>Melee Weapon </small>");
+            tableWriter.WriteLine("!<small>Melee Weapon</small>");
             tableWriter.WriteLine("!<small>Core Gear</small>");
             tableWriter.WriteLine("!<small>Bare</small>");
             tableWriter.WriteLine("!<small>Walk</small>");
@@ -495,7 +502,7 @@ namespace BT_JsonProcessingLibrary
         private static void StartMechTitleSection(StringWriter writer, string mechName, string firstVariantName, int variantCount)
         {
             string cleanMechName = "";
-            if (VehicleLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
+            if (MechLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
                 cleanMechName = linkOverride;
             else
                 cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');

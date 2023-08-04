@@ -133,31 +133,33 @@ namespace BT_JsonProcessingLibrary
 
         public static void OutputVehiclesToWikiTables()
         {
-            StreamWriter vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", false);
+            string vehiclePageTablesOutputFilePath = ".\\Output\\VehiclePageTables.txt";
+
+            StreamWriter vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, false);
 
             vehicleTablePageWriter.WriteLine("==Inner Sphere Vehicles==");
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("===Inner Sphere {0} Vehicles===", ref InnerSphereVehicles, true, true));
             vehicleTablePageWriter.Close();
 
-            vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", true);
+            vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, true);
             vehicleTablePageWriter.WriteLine("==Clan Vehicles==");
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("===Clan {0} Vehicles===", ref ClanVehicles, true, true));
             vehicleTablePageWriter.Close();
 
-            vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", true);
+            vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, true);
             vehicleTablePageWriter.WriteLine("==Sanctuary Worlds Vehicles==");
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("===Sanctuary Worlds {0} Vehicles===", ref SanctuaryVehicles, true, true));
             vehicleTablePageWriter.Close();
 
-            vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", true);
+            vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, true);
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("==VTOL Vehicles==", ref VtolVehicles, false, true));
             vehicleTablePageWriter.Close();
 
-            vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", true);
+            vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, true);
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("==Aerospace Fighters==", ref AirSupportFighters, false, false));
             vehicleTablePageWriter.Close();
 
-            vehicleTablePageWriter = new StreamWriter("VehiclePageTables.txt", true);
+            vehicleTablePageWriter = new StreamWriter(vehiclePageTablesOutputFilePath, true);
             vehicleTablePageWriter.Write(OutputDictionaryToStringByTonnage("==Community Content Vehicles==", ref CommunityContentVehicles, false, true));
             vehicleTablePageWriter.Close();
         }
@@ -269,9 +271,10 @@ namespace BT_JsonProcessingLibrary
 
         public static void PrintVehiclePagesToFiles()
         {
-            string wikiPagesFolder = ".\\VehicleWikiPages\\";
+            string wikiPagesFolder = ".\\Output\\VehicleWikiPages\\";
 
-            Directory.Delete(wikiPagesFolder, true);
+            if(Directory.Exists(wikiPagesFolder))
+                Directory.Delete(wikiPagesFolder, true);
             Directory.CreateDirectory(wikiPagesFolder);
 
             foreach(string vehicleChassisName in PlayerControllableVehicles.Keys)

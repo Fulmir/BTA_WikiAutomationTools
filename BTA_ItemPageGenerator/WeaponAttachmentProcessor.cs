@@ -44,7 +44,7 @@ namespace BTA_ItemPageGenerator
 
         public static void PrintGearEntriesToFile()
         {
-            StreamWriter attachmentStreamWriter = new StreamWriter(".\\AttachmentsPageData.txt", false);
+            StreamWriter attachmentStreamWriter = new StreamWriter(".\\Output\\AttachmentsPageData.txt", false);
 
             List<string> sortedKeys = WeaponAttachmentUpgradesDict.Keys.ToList();
             sortedKeys.Sort();

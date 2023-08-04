@@ -8,6 +8,7 @@ namespace BTA_WikiGeneration
     {
         private static ConcurrentDictionary<string, Dictionary<string,List<WeaponTableData>>> WeaponAttachmentUpgradesDict = new ConcurrentDictionary<string, Dictionary<string, List<WeaponTableData>>>();
 
+        // TODO: FINISH THIS CLASS
         public static void GetAllWeapons(string modsFolder)
         {
             foreach(BasicFileData weaponFile in ModJsonHandler.SearchFiles(modsFolder, "Weapon_*.json"))
@@ -44,7 +45,7 @@ namespace BTA_WikiGeneration
 
         public static void PrintGearEntriesToFile()
         {
-            StreamWriter attachmentStreamWriter = new StreamWriter(".\\AttachmentsPageData.txt", false);
+            StreamWriter weaponWriter = new StreamWriter(".\\Output\\AttachmentsPageData.txt", false);
 
             List<string> sortedKeys = WeaponAttachmentUpgradesDict.Keys.ToList();
             sortedKeys.Sort();
@@ -53,62 +54,62 @@ namespace BTA_WikiGeneration
             {
                 MechGearHandler.TryGetEquipmentData(attachmentGearId, out EquipmentData attachmentData);
 
-                attachmentStreamWriter.WriteLine($"=== {attachmentData.UIName} ===");
-                attachmentStreamWriter.WriteLine();
-                attachmentStreamWriter.WriteLine($"{ModJsonHandler.GetDescriptionDetailsFromJsonDoc(attachmentData.GearJsonDoc)}");
-                attachmentStreamWriter.WriteLine();
+                weaponWriter.WriteLine($"=== {attachmentData.UIName} ===");
+                weaponWriter.WriteLine();
+                weaponWriter.WriteLine($"{ModJsonHandler.GetDescriptionDetailsFromJsonDoc(attachmentData.GearJsonDoc)}");
+                weaponWriter.WriteLine();
 
                 JsonElement attachmentDescriptionJson = attachmentData.GearJsonDoc.RootElement.GetProperty("Description");
 
-                attachmentStreamWriter.WriteLine("{| class=\"wikitable\"");
-                attachmentStreamWriter.WriteLine("! Manufacturer: ");
-                attachmentStreamWriter.WriteLine($"| {attachmentDescriptionJson.GetProperty("Manufacturer").ToString()}");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("{| class=\"wikitable\"");
+                weaponWriter.WriteLine("! Manufacturer: ");
+                weaponWriter.WriteLine($"| {attachmentDescriptionJson.GetProperty("Manufacturer").ToString()}");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("! Tonnage: ");
-                attachmentStreamWriter.WriteLine($"| {attachmentData.GearJsonDoc.RootElement.GetProperty("Tonnage").ToString()}");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("! Tonnage: ");
+                weaponWriter.WriteLine($"| {attachmentData.GearJsonDoc.RootElement.GetProperty("Tonnage").ToString()}");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("! Critical Slots: ");
-                attachmentStreamWriter.WriteLine($"| {attachmentData.GearJsonDoc.RootElement.GetProperty("InventorySize").ToString()}");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("! Critical Slots: ");
+                weaponWriter.WriteLine($"| {attachmentData.GearJsonDoc.RootElement.GetProperty("InventorySize").ToString()}");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("! Install Location:");
-                attachmentStreamWriter.WriteLine($"| Any (same as Weapon)");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("! Install Location:");
+                weaponWriter.WriteLine($"| Any (same as Weapon)");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("! Value: ");
-                attachmentStreamWriter.WriteLine($"| {attachmentDescriptionJson.GetProperty("Cost").GetInt32().ToString("###,###,###")}");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("! Value: ");
+                weaponWriter.WriteLine($"| {attachmentDescriptionJson.GetProperty("Cost").GetInt32().ToString("###,###,###")}");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("! Gear ID: ");
-                attachmentStreamWriter.WriteLine($"| {attachmentData.Id}");
-                attachmentStreamWriter.WriteLine("|-");
+                weaponWriter.WriteLine("! Gear ID: ");
+                weaponWriter.WriteLine($"| {attachmentData.Id}");
+                weaponWriter.WriteLine("|-");
 
-                attachmentStreamWriter.WriteLine("|}");
+                weaponWriter.WriteLine("|}");
 
-                attachmentStreamWriter.WriteLine("<br/>");
-                attachmentStreamWriter.WriteLine("'''Equipped Effects By Weapon:'''");
+                weaponWriter.WriteLine("<br/>");
+                weaponWriter.WriteLine("'''Equipped Effects By Weapon:'''");
 
-                attachmentStreamWriter.WriteLine(WeaponTableGenerator.OutputWeaponEntriesToTable(WeaponAttachmentUpgradesDict[attachmentGearId]));
-                attachmentStreamWriter.WriteLine("<br/>");
+                weaponWriter.WriteLine(WeaponTableGenerator.OutputWeaponEntriesToTable(WeaponAttachmentUpgradesDict[attachmentGearId]));
+                weaponWriter.WriteLine("<br/>");
 
-                attachmentStreamWriter.WriteLine("'''Critical Effects:'''");
-                attachmentStreamWriter.WriteLine("* DESTROYED: Equipped effects disabled");
-                attachmentStreamWriter.WriteLine("<br/>");
+                weaponWriter.WriteLine("'''Critical Effects:'''");
+                weaponWriter.WriteLine("* DESTROYED: Equipped effects disabled");
+                weaponWriter.WriteLine("<br/>");
 
-                attachmentStreamWriter.WriteLine("<div class=\"toccolours mw-collapsible mw-collapsed\" style=\"max-width:1000px;\">");
-                attachmentStreamWriter.WriteLine("<div style=\"font-weight:bold;line-height:1.6;\">'''Found On These 'Mechs: (Click Expand For List)'''</div>");
-                attachmentStreamWriter.WriteLine("<div class=\"mw-collapsible-content\">");
-                attachmentStreamWriter.WriteLine($"{{{{EquipmentMechs|{attachmentData.Id}}}}}");
-                attachmentStreamWriter.WriteLine("</div></div>");
-                attachmentStreamWriter.WriteLine();
-                attachmentStreamWriter.WriteLine();
-                attachmentStreamWriter.WriteLine();
+                weaponWriter.WriteLine("<div class=\"toccolours mw-collapsible mw-collapsed\" style=\"max-width:1000px;\">");
+                weaponWriter.WriteLine("<div style=\"font-weight:bold;line-height:1.6;\">'''Found On These 'Mechs: (Click Expand For List)'''</div>");
+                weaponWriter.WriteLine("<div class=\"mw-collapsible-content\">");
+                weaponWriter.WriteLine($"{{{{EquipmentMechs|{attachmentData.Id}}}}}");
+                weaponWriter.WriteLine("</div></div>");
+                weaponWriter.WriteLine();
+                weaponWriter.WriteLine();
+                weaponWriter.WriteLine();
             }
 
-            attachmentStreamWriter.Close();
-            attachmentStreamWriter.Dispose();
+            weaponWriter.Close();
+            weaponWriter.Dispose();
         }
     }
 }

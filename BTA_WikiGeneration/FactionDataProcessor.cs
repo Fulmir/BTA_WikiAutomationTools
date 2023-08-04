@@ -24,7 +24,7 @@ namespace BTA_WikiGeneration
         public void OutputSpamFactionsToParentsTranslation()
         {
             JsonElement factionJson = spamConfig.RootElement.GetProperty("Settings");
-            using StreamWriter outputFile = new("SpamParentIdsDictionary.txt", append: false);
+            using StreamWriter outputFile = new(".\\Output\\SpamParentIdsDictionary.txt", append: false);
 
             var factionConfigs = factionJson.GetProperty("AlternateFactionConfigs").EnumerateObject();
 
@@ -140,7 +140,7 @@ namespace BTA_WikiGeneration
                     Console.Write("ERROR: No JSON for " + mercConfig.Name);
             }
 
-            using StreamWriter outputFile = new("MercenariesListPage.txt", append: false);
+            using StreamWriter outputFile = new(".\\Output\\MercenariesListPage.txt", append: false);
 
             foreach (string key in mercFactions.Keys)
             {
@@ -270,7 +270,7 @@ namespace BTA_WikiGeneration
                 }
             }
 
-            using StreamWriter outputFile = new("SubcommandsOuput.txt", append: false);
+            using StreamWriter outputFile = new(".\\Output\\SubcommandsOuput.txt", append: false);
 
             foreach (string key in parentFactions.Keys)
             {

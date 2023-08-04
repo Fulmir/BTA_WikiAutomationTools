@@ -115,9 +115,9 @@ namespace BT_JsonProcessingLibrary
                     fullDescUsable = false;
                     if (!DebugBlacklist.Contains(bonus.BonusId))
                     {
-                        Logging.AddLogToQueue($"DISCARDED FULL DESCRIPTION: {bonus.BonusId}\n\r" +
-                            $"Full: {string.Format(bonus.FullDescription, tempBonusValues.ToArray())}\n\r" +
-                            $"Long: {string.Format(bonus.LongDescription, tempBonusValues.ToArray())}"
+                        Logging.AddLogToQueue($"DISCARDED FULL DESCRIPTION: {bonus.BonusId}\n" +
+                            $"Full: {string.Format(bonus.FullDescription, tempBonusValues.ToArray())}\n" +
+                            $"Long: {string.Format(bonus.LongDescription, tempBonusValues.ToArray())}\n"
                             , LogLevel.Reporting, LogCategories.Bonuses);
                         DebugBlacklist.Add(bonus.BonusId);
                     }

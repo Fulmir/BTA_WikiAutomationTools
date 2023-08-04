@@ -239,7 +239,11 @@ namespace BT_JsonProcessingLibrary
                     return "3G-UL";
             }
 
-            return engineShieldGearId + " TYPE NOT FOUND";
+            string badEngineType = "ENGINE TYPE NOT FOUND: " + engineShieldGearId;
+
+            Logging.AddLogToQueue(badEngineType, LogLevel.Error, LogCategories.MechDefs);
+
+            return badEngineType;
         }
 
         private string HeatsinkDecode(string heatsinkKidGearId)
@@ -264,7 +268,11 @@ namespace BT_JsonProcessingLibrary
                     return "3GHS";
             }
 
-            return heatsinkKidGearId + " TYPE NOT FOUND";
+            string badHeatsinkType = "HEATSINK TYPE NOT FOUND: " + heatsinkKidGearId;
+
+            Logging.AddLogToQueue(badHeatsinkType, LogLevel.Error, LogCategories.MechDefs);
+
+            return badHeatsinkType;
         }
 
         private string StructureDecode(string structureGearId)
@@ -307,7 +315,11 @@ namespace BT_JsonProcessingLibrary
             if (structureGearId.Contains("Reinforcement"))
                 return "Reinforced";
 
-            return structureGearId + " TYPE NOT FOUND";
+            string badStructureType = "STRUCTURE TYPE NOT FOUND: " + structureGearId;
+
+            Logging.AddLogToQueue(badStructureType, LogLevel.Error, LogCategories.MechDefs);
+
+            return badStructureType;
         }
 
         private string ArmorDecode(string armorGearId)
@@ -360,7 +372,11 @@ namespace BT_JsonProcessingLibrary
                     return "Industrial";
             }
 
-            return armorGearId + " TYPE NOT FOUND";
+            string badArmorType = "ARMOR TYPE NOT FOUND: " + armorGearId;
+
+            Logging.AddLogToQueue(badArmorType, LogLevel.Error, LogCategories.MechDefs);
+
+            return badArmorType;
         }
 
         private void GetDefaultGearList()

@@ -38,8 +38,8 @@ namespace BTA_WikiGeneration
 
         public static void OutputFactoryStoresToString()
         {
-            StreamWriter individualTablesWriter = new StreamWriter(".\\FactoryStoreTables.txt", false);
-            StreamWriter singleTableWriter = new StreamWriter(".\\AllFactoryStoresTable.txt", false);
+            StreamWriter individualTablesWriter = new StreamWriter(".\\Output\\FactoryStoreTables.txt", false);
+            StreamWriter singleTableWriter = new StreamWriter(".\\Output\\AllFactoryStoresTable.txt", false);
 
             singleTableWriter.Write(CreateStoreTableHeader(new List<string> { "Planet", "Faction", "Rep Required" }, "sortable"));
 
@@ -100,8 +100,8 @@ namespace BTA_WikiGeneration
             List<string> sortedFactionNames = factionNames.Keys.ToList();
             sortedFactionNames.Sort();
 
-            StreamWriter singleTableWriter = new StreamWriter(".\\FactionStoresTable.txt", false);
-            StreamWriter individualTablesWriter = new StreamWriter(".\\IndividualFactionStoreTables.txt", false);
+            StreamWriter singleTableWriter = new StreamWriter(".\\Output\\FactionStoresTable.txt", false);
+            StreamWriter individualTablesWriter = new StreamWriter(".\\Output\\IndividualFactionStoreTables.txt", false);
 
             singleTableWriter.Write(CreateStoreTableHeader(new List<string> { "Faction" }, "sortable"));
 

@@ -36,6 +36,10 @@ namespace BTA_WikiGeneration
             if (!modsFolder.EndsWith('\\'))
                 modsFolder += "\\";
 
+            if(Directory.Exists(".\\Output"))
+                Directory.Delete(".\\Output", true);
+            Directory.CreateDirectory(".\\Output");
+
             Console.WriteLine("Loading Widely Used Mod Data...");
             QuirkHandler.LoadQuirkHandlerData(modsFolder);
 

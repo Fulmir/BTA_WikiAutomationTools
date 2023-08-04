@@ -41,9 +41,11 @@ namespace UtilityClassLibrary
         {
             ActiveLogging = true;
 
-            StreamWriter logWriter = new StreamWriter(".\\BTA_WikiPageGenLog.txt", false, Encoding.UTF8);
+            Directory.CreateDirectory(".\\Logging");
 
-            while (!cancellationToken.IsCancellationRequested)
+            StreamWriter logWriter = new StreamWriter($".\\Logging\\BTA_WikiPageGenLog{UtilityStatics.LocalDateTimeToFileString()}.txt", false, Encoding.UTF8);
+
+            while (!cancellationToken.IsCancellationRequested || !_LogMessages.IsEmpty)
             {
                 if(_LogMessages.TryDequeue(out LogMessage message))
                 {
@@ -104,9 +106,11 @@ namespace UtilityClassLibrary
                     return "-------- PLANET DATA REPORT --------";
                 case LogCategories.Stores:
                     return "-------- STORE DATA REPORT --------";
+                case LogCategories.Bonuses:
+                    return "-------- GEAR BONUS DATA REPORT --------";
             }
 
-            return "-------- CATEGORY NOT FOUND --------";
+            return $"-------- [ERROR] CATEGORY NOT FOUND {category.ToString()} --------";
         }
 
         private static string GetMessagePrefixForLogLevel(LogLevel logLevel)
