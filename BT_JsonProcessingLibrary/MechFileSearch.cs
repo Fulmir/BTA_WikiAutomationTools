@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -74,7 +75,7 @@ namespace BT_JsonProcessingLibrary
                     BasicFileData chassisDef = chassisDefIndex[ModJsonHandler.GetChassisDefId(mechJson, mechDef)];
                     if (!File.Exists(mechDef.Path))
                         return;
-
+                    
                     var tempChassisDoc = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd(), UtilityStatics.GeneralJsonDocOptions);
 
                     string variantName = tempChassisDoc.RootElement.GetProperty("VariantName").ToString().Trim();
@@ -85,7 +86,7 @@ namespace BT_JsonProcessingLibrary
                         return;
 
                     AddToGroupKeyToNameTracker(allMechs[variantName].MechGroupName, variantName);
-
+                    
                     if (IsHeroMech(variantName))
                         AddToNestedDictionary(variantName, ref HeroMechs);
 
