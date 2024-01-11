@@ -25,7 +25,7 @@ namespace BT_JsonProcessingLibrary
         private static Dictionary<string, string> AmmoBoxCategoriesToDisplayNames = new Dictionary<string, string>();
         private static Dictionary<string, string> WeaponCategoriesToDisplayNames = new Dictionary<string, string>();
 
-        public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        public static Regex engineSizeRegex = new Regex(@"(?<=emod_engine_|emod_bacore_)(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex structureRegex = new Regex(@"(\w*structureslots\w*)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public static Regex armorRegex = new Regex(@"(emod_armorslots\w*|Gear_armorslots\w*|Gear_Reflective_Coating)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

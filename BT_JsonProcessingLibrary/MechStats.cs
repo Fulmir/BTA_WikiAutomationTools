@@ -10,11 +10,20 @@ using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
-    public class MechStats
+    public class MechStats : UnitStats
     {
-        public string MechName { get; set; }
-        public string MechModel { get; set; }
-        public int MechWeight { get; set; } = 0;
+        //public string ChassisName { get; set; }
+        public string MechGroupName
+        {
+            get
+            {
+                if (MechVariantDataOverrides.TryGetNameOverride(VariantName, out var nameOverride))
+                    return nameOverride;
+                return ChassisName;
+            }
+        }
+        //public string VariantName { get; set; }
+        //public int Weight { get; set; } = 0;
         public string Role { get; set; } = string.Empty;
         public Dictionary<string, int> Hardpoints { get; set; } = new Dictionary<string, int>()
         {
@@ -26,25 +35,32 @@ namespace BT_JsonProcessingLibrary
             { "omni", 0 },
             { "bombbay", 0 },
             { "meleeweapon", 0 }
+            //,
+            //{ "battlearmor", 0 }
         };
-        public string EngineTypeId { get; set; } = string.Empty;
-        public string EngineCoreId { get; set; } = string.Empty;
-        public int EngineSize { get; set; } = 0;
-        public string HeatsinkTypeId { get; set; } = string.Empty;
-        public string StructureTypeId { get; set; } = string.Empty;
-        public string ArmorTypeId { get; set; } = string.Empty;
+        public override string[] Locations { get; } = { "Head", "CenterTorso", "LeftTorso", "RightTorso", "LeftArm", "RightArm", "LeftLeg", "RightLeg" };
+        //public string EngineTypeId { get; set; } = string.Empty;
+        //public string EngineCoreId { get; set; } = string.Empty;
+        //public int EngineSize { get; set; } = 0;
+        //public string HeatsinkTypeId { get; set; } = string.Empty;
+        //public string StructureTypeId { get; set; } = string.Empty;
+        //public string ArmorTypeId { get; set; } = string.Empty;
         public string GyroTypeId { get; set; } = string.Empty;
         public double? CoreTonnage { get; set; }
         public double? BareTonnage { get; set; }
-        public double WalkSpeed { get; set; } = 0;
-        public double RunSpeed { get; set; } = 0;
-        public double JumpDistance { get; set; } = 0;
-        public JsonDocument ChassisDefFile { get; set; }
-        public JsonDocument MechDefFile { get; set; }
+        //public double WalkSpeed { get; set; } = 0;
+        //public double RunSpeed { get; set; } = 0;
+        //public double JumpDistance { get; set; } = 0;
+        //public double TotalDamage { get; set; } = 0;
+        //public double TotalDamageHeat { get; set; } = 0;
+        //public double TotalDamageStability { get; set; } = 0;
+        //public JsonDocument ChassisDefFile { get; set; }
+        //public JsonDocument UnitDefFile { get; set; }
         public List<EquipmentData> DefaultGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> FixedGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> BaseGear { get; set; } = new List<EquipmentData>();
         public List<EquipmentData> MeleeWeapons { get; set; } = new List<EquipmentData>();
+        public List<EquipmentData> RangedWeapons { get; set; } = new List<EquipmentData>();
         public Dictionary<string, QuirkDef> MechQuirks { get; set; } = new Dictionary<string, QuirkDef>();
         public AffinityDef? MechAffinity { get; set; }
         public AssemblyVariant? VariantAssemblyRules { get; set; }
@@ -53,44 +69,44 @@ namespace BT_JsonProcessingLibrary
         public string? PrefabId { get; set; }
         public string PrefabIdentifier { get; set; }
 
-        public MechStats(string mechModel, string modsFolder)
+        //public MechStats(string mechModel, string modsFolder)
+        //{
+        //    VariantName = mechModel;
+
+        //    List<BasicFileData> files = ModJsonHandler.SearchFiles(modsFolder, @"*_" + VariantName.Replace(' ', '_') + ".json");
+
+        //    if (files.Count > 2 || files.Count < 2)
+        //    {
+        //        string countProblem = $"Found {files.Count} for {VariantName}. File names are: ";
+        //        foreach (BasicFileData file in files)
+        //        {
+        //            countProblem += $"\n\r{file.FileName}";
+        //        }
+        //        Logging.AddLogToQueue(countProblem, LogLevel.Warning, LogCategories.MechDefs);
+        //    }
+
+        //    foreach (BasicFileData file in files)
+        //    {
+        //        if (file.FileName.StartsWith("mechdef"))
+        //        {
+        //            UnitDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
+        //        }
+        //        else if (file.FileName.StartsWith("chassisdef"))
+        //        {
+        //            ChassisDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
+        //        }
+        //    }
+
+        //    CalculateMechStats();
+        //}
+
+        public MechStats(string chassisName, string variantName, BasicFileData chassisDef, BasicFileData unitDef) : base(chassisName, variantName, chassisDef, unitDef)
         {
-            MechModel = mechModel;
-
-            List<BasicFileData> files = ModJsonHandler.SearchFiles(modsFolder, @"*_" + MechModel.Replace(' ', '_') + ".json");
-
-            if (files.Count > 2 || files.Count < 2)
-            {
-                string countProblem = $"Found {files.Count} for {MechModel}. File names are: ";
-                foreach (BasicFileData file in files)
-                {
-                    countProblem += $"\n\r{file.FileName}";
-                }
-                Logging.AddLogToQueue(countProblem, LogLevel.Warning, LogCategories.MechDefs);
-            }
-
-            foreach (BasicFileData file in files)
-            {
-                if (file.FileName.StartsWith("mechdef"))
-                {
-                    MechDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
-                }
-                else if (file.FileName.StartsWith("chassisdef"))
-                {
-                    ChassisDefFile = JsonDocument.Parse(new StreamReader(file.Path).ReadToEnd());
-                }
-            }
-
-            CalculateMechStats();
-        }
-
-        public MechStats(string chassisName, string variantName, BasicFileData chassisDef, BasicFileData mechDef)
-        {
-            MechName = chassisName;
-            MechModel = variantName;
+            ChassisName = chassisName;
+            VariantName = variantName;
 
             ChassisDefFile = JsonDocument.Parse(new StreamReader(chassisDef.Path).ReadToEnd(), UtilityStatics.GeneralJsonDocOptions);
-            MechDefFile = JsonDocument.Parse(new StreamReader(mechDef.Path).ReadToEnd());
+            UnitDefFile = JsonDocument.Parse(new StreamReader(unitDef.Path).ReadToEnd());
 
             CalculateMechStats();
         }
@@ -115,15 +131,17 @@ namespace BT_JsonProcessingLibrary
 
             CountWeaponHardpoints();
 
+            CalculateDamageTotals();
+
             if (AffinityHandler.TryGetAssemblyVariant(this, out AssemblyVariant variant))
             {
-                PrefabId = $"{variant.PrefabId}_{MechWeight}";
+                PrefabId = $"{variant.PrefabId}_{Weight}";
                 if (AffinityHandler.TryGetAffinityForMech(PrefabId, this.GetPrefabIdentifier(), out AffinityDef tempAffinityDef)) MechAffinity = tempAffinityDef;
                 VariantAssemblyRules = variant;
             }
             else
             {
-                PrefabIdentifier = $"{this.GetPrefabIdentifier()}_{MechWeight}";
+                PrefabIdentifier = $"{this.GetPrefabIdentifier()}_{Weight}";
                 if (AffinityHandler.TryGetAffinityForMech(null, PrefabIdentifier, out AffinityDef tempAffinityDef))
                     MechAffinity = tempAffinityDef;
             }
@@ -136,13 +154,13 @@ namespace BT_JsonProcessingLibrary
 
         public void OutputStatsToFile(StreamWriter writer)
         {
-            OutputStatsToString(writer);
+            OutputStatsToTableRowString(writer);
         }
 
-        public void OutputStatsToString(TextWriter writer)
+        public void OutputStatsToTableRowString(TextWriter writer)
         {
-            writer.WriteLine(OutputTableLine(MechModel));
-            writer.WriteLine(OutputTableLine(MechWeight + "t"));
+            writer.WriteLine(OutputTableLine(VariantName));
+            writer.WriteLine(OutputTableLine(Weight + "t"));
             writer.WriteLine(OutputTableLine(Role));
             foreach (string hardpointType in Hardpoints.Keys)
             {
@@ -160,6 +178,55 @@ namespace BT_JsonProcessingLibrary
             writer.WriteLine(OutputTableLine(RunSpeed.ToString()));
             writer.WriteLine(OutputTableLine(JumpDistance.ToString()));
             writer.WriteLine("|-");
+        }
+
+
+        public void OutputMechToPageTab(TextWriter writer)
+        {
+            writer.WriteLine($"<tab name=\"{VariantName}\">");
+            writer.WriteLine("{{InfoboxVehicle");
+            writer.WriteLine(OutputTableLine($"vehiclename = {VariantName}"));
+            writer.WriteLine(OutputTableLine($"image = {ChassisName}.png"));
+            writer.WriteLine(OutputTableLine($"class = {ModJsonHandler.GetWeightClassFromTonnage(Weight)}"));
+            writer.WriteLine(OutputTableLine($"weight = {Weight}t"));
+            writer.WriteLine(OutputTableLine($"speed = {WalkSpeed}/{RunSpeed}"));
+            writer.WriteLine(OutputTableLine($"propulsion = {ConvertVehicleMovementTypeToString(VehicleMoveType)}"));
+
+            writer.WriteLine(OutputTableLine($"maxdamage = {TotalDamage}"));
+            writer.WriteLine(OutputTableLine($"maxstability = {TotalDamageStability}"));
+            writer.WriteLine(OutputTableLine($"maxheat = {TotalDamageHeat}"));
+
+            writer.WriteLine(OutputTableLine($"armor = {TotalLocationStatType(ArmorByLocation, ArmorModifiersByLocation)}"));
+            writer.WriteLine(OutputTableLine($"structure = {TotalLocationStatType(StructureByLocation, StructureModifiersByLocation)}"));
+            writer.WriteLine(OutputTableLine($"frontarmor = {PrintLocationArmorAndStructure("Front")}"));
+            writer.WriteLine(OutputTableLine($"leftarmor = {PrintLocationArmorAndStructure("Left")}"));
+            writer.WriteLine(OutputTableLine($"rightarmor = {PrintLocationArmorAndStructure("Right")}"));
+            writer.WriteLine(OutputTableLine($"reararmor = {PrintLocationArmorAndStructure("Rear")}"));
+            if (StructureByLocation.ContainsKey("Turret"))
+                writer.WriteLine(OutputTableLine($"turretarmor = {PrintLocationArmorAndStructure("Turret")}"));
+
+            writer.WriteLine(OutputTableLine($"weapon1 = {OutputEquipmentForTable(Weapons)}"));
+
+            writer.WriteLine(OutputTableLine($"ammo1 = {OutputEquipmentForTable(Ammo)}"));
+
+            writer.WriteLine(OutputTableLine($"gear1 = {OutputEquipmentForTable(UtilityGear)}"));
+
+            writer.WriteLine("}}");
+            writer.WriteLine("<br>");
+            writer.WriteLine("===Description===");
+
+            string baseDescription = ModJsonHandler.GetDescriptionDetailsFromJsonDoc(base.UnitDefFile);
+            string[] tempDescriptionParse = baseDescription.Split("<b>");
+            string communityContentText = "";
+            if (baseDescription.Contains("COMMUNITY CONTENT"))
+                communityContentText = "<b>" + tempDescriptionParse[tempDescriptionParse.Length - 1];
+
+            writer.WriteLine(tempDescriptionParse[0] + communityContentText);
+
+            writer.WriteLine("<br>");
+            writer.WriteLine("===Factions===");
+            FactionDataHandler.TagsListToFactionsSection(Tags, writer);
+            writer.WriteLine("</tab>");
         }
 
         private string OutputMeleeWeapons()
@@ -213,19 +280,19 @@ namespace BT_JsonProcessingLibrary
                     return "XXL";
                 case "emod_engineslots_cxxl_center":
                     return "cXXL";
-                case "emod_engineslots_Primitive_center":
+                case "emod_engineslots_primitive_center":
                     return "PFE";
-                case "emod_engineslots_fission":
+                case "emod_engineslots_fission_center":
                     return "Fission";
                 case "emod_engineslots_sxl_center":
                     return "sXL";
                 case "emod_engineslots_dense_center":
                     return "DFE";
-                case "emod_Engine_LAM":
+                case "emod_engineslots_lam_center":
                     return "LAM";
                 case "emod_engineslots_compact_center":
                     return "CFE";
-                case "emod_engineslots_FuelCell":
+                case "emod_engineslots_fuelcell_center":
                     return "FCE";
                 case "emod_engineslots_ICE_center":
                     return "ICE";
@@ -289,7 +356,7 @@ namespace BT_JsonProcessingLibrary
                     return "Clan Endo";
                 case "emod_structureslots_endosteelprototype":
                     return "Proto Endo";
-                case "Gear_structureslots_Composite":
+                case "emod_structureslots_composite":
                     return "Composite";
                 case "emod_structureslots_endocomposite":
                     return "Endo-Composite";
@@ -305,7 +372,7 @@ namespace BT_JsonProcessingLibrary
                     return "Endo Carbide";
                 case "emod_structureslots_sanctuaryendosteel":
                     return "Sanctuary Endo";
-                case "Gear_structureslots_Reinforced":
+                case "emod_structureslots_reinforced":
                     return "Reinforced";
             }
 
@@ -340,11 +407,11 @@ namespace BT_JsonProcessingLibrary
                     return "Heavy Ferro";
                 case "emod_armorslots_clanferrolamellor":
                     return "Ferro Lamellor";
-                case "Gear_armorslots_Primitive":
+                case "emod_armorslots_primitive":
                     return "Primitive";
-                case "Gear_armorslots_Hardened":
+                case "emod_armorslots_hardened":
                     return "Hardened";
-                case "Gear_armorslots_Hardened_CLAN":
+                case "emod_armorslots_hardened_CLAN":
                     return "Clan Hardened";
                 case "emod_armorslots_heavyplating":
                     return "Heavy";
@@ -352,7 +419,7 @@ namespace BT_JsonProcessingLibrary
                     return "Light Ferro";
                 case "emod_armorslots_reactive":
                     return "Reactive";
-                case "Gear_Reflective_Coating":
+                case "emod_armorslots_reflective":
                     return "Reflective";
                 case "emod_armorslots_lightplating":
                     return "Light";
@@ -370,6 +437,8 @@ namespace BT_JsonProcessingLibrary
                     return "Ferro Vanadium";
                 case "emod_armorslots_industrial":
                     return "Industrial";
+                case "emod_armorslots_ferroplating":
+                    return "Ferro Plating";
             }
 
             string badArmorType = "ARMOR TYPE NOT FOUND: " + armorGearId;
@@ -440,12 +509,12 @@ namespace BT_JsonProcessingLibrary
                         }
                 }
             else
-                Logging.AddLogToQueue($"FAILURE TO GET FIXED GEAR FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET FIXED GEAR FOR {VariantName}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetBaseGearList()
         {
-            if (MechDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
+            if (UnitDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
                 foreach (JsonElement gear in gearInventory.EnumerateArray())
                 {
                     if (gear.TryGetProperty("ComponentDefID", out JsonElement itemId))
@@ -455,15 +524,15 @@ namespace BT_JsonProcessingLibrary
                         }
                 }
             else
-                Logging.AddLogToQueue($"FAILURE TO GET BASE GEAR FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET BASE GEAR FOR {VariantName}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetUnitTonnage()
         {
             if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
-                MechWeight = tonnage.GetInt32();
+                Weight = tonnage.GetInt32();
             else
-                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE FOR {VariantName}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetUnitStockRole()
@@ -471,7 +540,7 @@ namespace BT_JsonProcessingLibrary
             if (ChassisDefFile.RootElement.TryGetProperty("StockRole", out JsonElement role))
                 Role = role.ToString();
             else
-                Logging.AddLogToQueue($"FAILURE TO GET STOCK ROLE FOR {MechModel}", LogLevel.Error, LogCategories.MechDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET STOCK ROLE FOR {VariantName}", LogLevel.Error, LogCategories.MechDefs);
         }
 
         private void GetCoreGear()
@@ -509,6 +578,9 @@ namespace BT_JsonProcessingLibrary
                         case GearCategory.MeleeWeapon:
                             MeleeWeapons.Add(item);
                             break;
+                        case GearCategory.RangedWeapon:
+                            RangedWeapons.Add(item);
+                            break;
                     }
                 }
             }
@@ -516,7 +588,7 @@ namespace BT_JsonProcessingLibrary
 
         private void CalculateAllMovements()
         {
-            double baseMoveInMeters = EngineSize / MechWeight * MoveSpeedHandler.BaseWalkSpeedMultiplier;
+            double baseMoveInMeters = EngineSize / Weight * MoveSpeedHandler.BaseWalkSpeedMultiplier;
 
             List<string> gearIds = new List<string>();
             gearIds.AddRange(from gearEntry in FixedGear select gearEntry.Id);
@@ -538,6 +610,20 @@ namespace BT_JsonProcessingLibrary
                 WalkSpeed = ConvertMetersToHexes(baseMoveInMeters);
                 RunSpeed = ConvertMetersToHexes(baseMoveInMeters * 1.5);
                 JumpDistance = 0;
+            }
+        }
+
+        private void CalculateDamageTotals()
+        {
+            TotalDamage = 0;
+            TotalDamageHeat = 0;
+            TotalDamageStability = 0;
+
+            foreach (EquipmentData weapon in RangedWeapons)
+            {
+                TotalDamage += (weapon.Damage ?? 0) * (weapon.Shots ?? 0);
+                TotalDamageHeat += (weapon.DamageHeat ?? 0) * (weapon.Shots ?? 0);
+                TotalDamageStability += (weapon.DamageStability ?? 0) * (weapon.Shots ?? 0);
             }
         }
 
@@ -564,10 +650,30 @@ namespace BT_JsonProcessingLibrary
                     {
                         Hardpoints["omni"]++;
                     }
-                    else
+                    else if(mountType.ToString().ToLower() != "battlearmor")
                     {
                         Hardpoints[mountType.ToString().ToLower()]++;
                     }
+                }
+            }
+        }
+
+        private void PopulateArmorAndStructureByLocation()
+        {
+            foreach (JsonElement locationData in base.UnitDefFile.RootElement.GetProperty("Locations").EnumerateArray())
+            {
+                string location = locationData.GetProperty("Location").ToString();
+                int armorValue = locationData.GetProperty("CurrentArmor").GetInt32();
+                int structureValue = locationData.GetProperty("CurrentInternalStructure").GetInt32();
+
+                if (this.Locations.Contains(location))
+                {
+                    ArmorByLocation[location] = armorValue;
+                    StructureByLocation[location] = structureValue;
+                }
+                else
+                {
+                    Logging.AddLogToQueue($"Invalid location {location} found in vehicle {VehicleUiName}", LogLevel.Error, LogCategories.VehicleDefs);
                 }
             }
         }
@@ -578,7 +684,7 @@ namespace BT_JsonProcessingLibrary
                 return prefab.ToString();
             else
             {
-                Logging.AddLogToQueue($"NO PREFAB IDENTIFIER FOR {this.MechModel}", LogLevel.Warning, LogCategories.MechDefs);
+                Logging.AddLogToQueue($"NO PREFAB IDENTIFIER FOR {this.VariantName}", LogLevel.Warning, LogCategories.MechDefs);
                 return "ERROR PREFAB";
             }
         }
@@ -596,7 +702,7 @@ namespace BT_JsonProcessingLibrary
                     }
                 }
             }
-            if (MechDefFile.RootElement.TryGetProperty("MechTags", out JsonElement mechTags))
+            if (UnitDefFile.RootElement.TryGetProperty("MechTags", out JsonElement mechTags))
             {
                 if (mechTags.TryGetProperty("items", out JsonElement tagsElement))
                 {
@@ -608,11 +714,11 @@ namespace BT_JsonProcessingLibrary
                 }
             }
 
-            if (Tags.Contains("BLACKLISTED") || Tags.Contains("NOSALVAGE"))
+            if (Tags.Contains("BLACKLISTED") || Tags.Contains("NOSALVAGE") || Tags.Contains("ProtoMech"))
                 Blacklisted = true;
             else
                 Blacklisted = false;
-            if (MechFileSearch.WhitelistMechVariants.Contains(MechModel))
+            if (MechFileSearch.WhitelistMechVariants.Contains(VariantName))
                 Blacklisted = false;
         }
     }

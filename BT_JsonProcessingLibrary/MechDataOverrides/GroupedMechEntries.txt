@@ -1,0 +1,4 @@
+﻿Variant,Group Name
+ALC-T0,Erinyes
+MGA-R3,Erinyes
+TSP-H0,Erinyes

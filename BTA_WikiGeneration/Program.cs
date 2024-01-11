@@ -22,14 +22,17 @@ namespace BTA_WikiGeneration
                     modsFolder = args[index + 1];
             }
 
+            string? toolTarget = Environment.GetEnvironmentVariable("BattletechToolTarget");
+
             if (modsFolder.Length == 0)
             {
+                toolTarget = toolTarget ?? "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
                 Console.WriteLine("File path to top level folder to search? eg: C:/Games/...");
-                Console.WriteLine("If blank defaults to: C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\");
+                Console.WriteLine($"If blank defaults to: {toolTarget}");
                 Console.Write(":");
                 modsFolder = Console.ReadLine() ?? "";
                 if (string.IsNullOrEmpty(modsFolder))
-                    modsFolder = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\BATTLETECH\\Mods\\";
+                    modsFolder = toolTarget;
                 Console.WriteLine("");
             }
 

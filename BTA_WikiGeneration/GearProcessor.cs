@@ -1,43 +1,48 @@
 ﻿using BT_JsonProcessingLibrary;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace BTA_WikiGeneration
 {
-    public static class WeaponsProcessor
+    internal class GearProcessor
     {
-        private static ConcurrentDictionary<string, Dictionary<string,List<WeaponTableData>>> WeaponsDict = new ConcurrentDictionary<string, Dictionary<string, List<WeaponTableData>>>();
+        private static ConcurrentDictionary<string, Dictionary<string, List<WeaponTableData>>> GearDict = new ConcurrentDictionary<string, Dictionary<string, List<WeaponTableData>>>();
 
         // TODO: FINISH THIS CLASS
-        public static void GetAllWeapons(string modsFolder)
+        public static void GetAllGear(string modsFolder)
         {
-            foreach(BasicFileData weaponFile in ModJsonHandler.SearchFiles(modsFolder, "Weapon_*.json"))
+            foreach (BasicFileData gearFile in ModJsonHandler.SearchFiles(modsFolder, new List<string>{ "Gear_*.json", "emod_*.json"}))
             {
-                StreamReader weaponFileReader = new StreamReader(weaponFile.Path);
-                JsonDocument weaponFileJson = JsonDocument.Parse(weaponFileReader.ReadToEnd());
+                StreamReader gearFileReader = new StreamReader(gearFile.Path);
+                JsonDocument gearFileJson = JsonDocument.Parse(gearFileReader.ReadToEnd());
 
-                string weaponId = ModJsonHandler.GetIdFromJsonDoc(weaponFileJson);
+                string gearId = ModJsonHandler.GetIdFromJsonDoc(gearFileJson);
 
-                if(!WeaponsDict.ContainsKey(weaponId))
-                    WeaponsDict.TryAdd(weaponId, new Dictionary<string, List<WeaponTableData>>());
+                if (!GearDict.ContainsKey(gearId))
+                    GearDict.TryAdd(gearId, new Dictionary<string, List<WeaponTableData>>());
 
                 List<string> upgradeDefs = new List<string>();
 
-                foreach(JsonElement upgradeId in weaponFileJson.RootElement.GetProperty("Custom").GetProperty("AddonReference").GetProperty("WeaponAddonIds").EnumerateArray())
+                foreach (JsonElement upgradeId in gearFileJson.RootElement.GetProperty("Custom").GetProperty("AddonReference").GetProperty("WeaponAddonIds").EnumerateArray())
                 {
                     string upgradeIdString = upgradeId.ToString();
                     BasicFileData upgradeDefFile = ModJsonHandler.SearchFiles(modsFolder, upgradeIdString + ".json")[0];
 
-                    if (!WeaponsDict[weaponId].ContainsKey(upgradeIdString))
-                        WeaponsDict[weaponId].Add(upgradeIdString, new List<WeaponTableData>());
+                    if (!GearDict[gearId].ContainsKey(upgradeIdString))
+                        GearDict[gearId].Add(upgradeIdString, new List<WeaponTableData>());
 
                     StreamReader upgradeReader = new StreamReader(upgradeDefFile.Path);
                     JsonDocument upgradeFileJson = JsonDocument.Parse(upgradeReader.ReadToEnd());
 
-                    foreach(JsonElement upgradeTag in upgradeFileJson.RootElement.GetProperty("targetComponentTags").EnumerateArray())
+                    foreach (JsonElement upgradeTag in upgradeFileJson.RootElement.GetProperty("targetComponentTags").EnumerateArray())
                     {
                         foreach (JsonElement upgradeMode in upgradeFileJson.RootElement.GetProperty("modes").EnumerateArray())
-                            WeaponsDict[weaponId][upgradeIdString].Add(new WeaponTableData(upgradeTag.ToString(), upgradeMode));
+                            GearDict[gearId][upgradeIdString].Add(new WeaponTableData(upgradeTag.ToString(), upgradeMode));
                     }
                 }
             }
@@ -47,7 +52,7 @@ namespace BTA_WikiGeneration
         {
             StreamWriter weaponWriter = new StreamWriter(".\\Output\\AttachmentsPageData.txt", false);
 
-            List<string> sortedKeys = WeaponsDict.Keys.ToList();
+            List<string> sortedKeys = GearDict.Keys.ToList();
             sortedKeys.Sort();
 
             foreach (string attachmentGearId in sortedKeys)
@@ -91,7 +96,7 @@ namespace BTA_WikiGeneration
                 weaponWriter.WriteLine("<br/>");
                 weaponWriter.WriteLine("'''Equipped Effects By Weapon:'''");
 
-                weaponWriter.WriteLine(WeaponTableGenerator.OutputWeaponEntriesToTable(WeaponsDict[attachmentGearId]));
+                weaponWriter.WriteLine(WeaponTableGenerator.OutputWeaponEntriesToTable(GearDict[attachmentGearId]));
                 weaponWriter.WriteLine("<br/>");
 
                 weaponWriter.WriteLine("'''Critical Effects:'''");

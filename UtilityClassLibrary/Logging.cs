@@ -66,14 +66,16 @@ namespace UtilityClassLibrary
             
             foreach(LogCategories category in _ReportsByCategory.Keys)
             {
-                logWriter.WriteLine();
-                logWriter.WriteLine();
-                logWriter.WriteLine(GetSectionTitleFromCategory(category));
-                logWriter.WriteLine();
+                bool consoleToggle = true;
 
-                foreach(LogMessage message in _ReportsByCategory[category])
-                { 
-                    logWriter.WriteLine(GetMessagePrefixForLogLevel(message.Level) + message.Message);
+                WriteLineToStreamAndConsole(logWriter, consoleToggle);
+                WriteLineToStreamAndConsole(logWriter, consoleToggle);
+                WriteLineToStreamAndConsole(logWriter, GetSectionTitleFromCategory(category), consoleToggle);
+                WriteLineToStreamAndConsole(logWriter, consoleToggle);
+
+                foreach (LogMessage message in _ReportsByCategory[category])
+                {
+                    WriteLineToStreamAndConsole(logWriter, GetMessagePrefixForLogLevel(message.Level) + message.Message, consoleToggle);
                 }
             }
 
@@ -83,6 +85,15 @@ namespace UtilityClassLibrary
 
             ActiveLogging = false;
         }
+
+        private static void WriteLineToStreamAndConsole(StreamWriter logWriter, string message = "", bool writeToConsole = true)
+        {
+            logWriter.WriteLine(message);
+            if(writeToConsole) 
+                Console.WriteLine(message);
+        }
+
+        private static void WriteLineToStreamAndConsole(StreamWriter logWriter, bool writeToConsole) => WriteLineToStreamAndConsole(logWriter, "", writeToConsole);
 
         private static string GetSectionTitleFromCategory(LogCategories category)
         {

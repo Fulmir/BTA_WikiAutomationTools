@@ -47,7 +47,7 @@ namespace UtilityClassLibrary.WikiLinkOverrides
         {
             if (AmmoCategoryLinkOverrides.ContainsKey(ammoCategory))
             {
-                ammoTypeLink = $"[[Ammunition#{AmmoCategoryLinkOverrides[ammoCategory].Link}|{AmmoCategoryLinkOverrides[ammoCategory].UiName}]]";
+                ammoTypeLink = $"[[Ammunition#{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(AmmoCategoryLinkOverrides[ammoCategory].Link)}|{AmmoCategoryLinkOverrides[ammoCategory].UiName}]]";
                 return true;
             }
             ammoTypeLink = "N/A";

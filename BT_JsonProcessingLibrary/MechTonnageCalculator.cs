@@ -15,7 +15,7 @@ namespace BT_JsonProcessingLibrary
 
         public static double GetCoreWeight(MechStats mechStats)
         {
-            double baseChassisWeight = Math.Round((double)mechStats.MechWeight / 10, 1);
+            double baseChassisWeight = Math.Round((double)mechStats.Weight / 10, 1);
 
             List<EquipmentData> allEquipment = new List<EquipmentData>();
             allEquipment.AddRange(mechStats.BaseGear);
@@ -136,12 +136,12 @@ namespace BT_JsonProcessingLibrary
             if (engineHeatsinkData.HasValue)
                 eCoolingWeight = (int)engineHeatsinkData.Value.Tonnage;
 
-            return mechStats.MechWeight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
+            return mechStats.Weight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
         }
 
         public static double GetBareWeight(MechStats mechStats)
         {
-            double baseChassisWeight = Math.Round((double)mechStats.MechWeight / 10, 1);
+            double baseChassisWeight = Math.Round((double)mechStats.Weight / 10, 1);
 
             EquipmentData? engineTypeData = null;
             EquipmentData? engineCoreData = null;
@@ -252,7 +252,7 @@ namespace BT_JsonProcessingLibrary
             if (engineHeatsinkData.HasValue)
                 eCoolingWeight = (int)engineHeatsinkData.Value.Tonnage;
 
-            return mechStats.MechWeight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
+            return mechStats.Weight - (realStructureWeight + gyroTonnage + engineTonnage + eCoolingWeight + fixedGearWeight + (1 - cockpitCount) + (2 - lifeSupportCount));
         }
 
         private static bool TryGetEngineWeightFactor(EquipmentData engineTypeData, out double engineFactor)

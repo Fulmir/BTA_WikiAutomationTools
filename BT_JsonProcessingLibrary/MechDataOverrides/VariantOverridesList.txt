@@ -15,6 +15,9 @@ COR-TB,Corsair_(75T)
 COR-MKD,Corsair_(75T)
 COR-3PA,Corsair_(55T)
 COR-3X,Corsair_(55T)
+ALC-T0,Erinyes
+MGA-R3,Erinyes
+TSP-H0,Erinyes
 EXE-II-PRIME,Executioner_II
 FS9-O,Firestarter_Omni
 FS9-OA,Firestarter_Omni
@@ -24,8 +27,14 @@ FS9-OD,Firestarter_Omni
 FS9-OF,Firestarter_Omni
 FS9-OR,Firestarter_Omni
 FS9-OX,Firestarter_Omni
+FLE-14,Flea_(15T)
+FLE-18,Flea_(15T)
 GRF-1A,Griffin_(60T)
 GRF-2N-X,Griffin_(60T)
+MN-1B,Munin
+MN-1M,Munin
+MN-1S,Munin
+RGNK-2,Ragnarok
 RFL-2N,Rifleman_(50T)
 STK-4A,Stalker_(75T)
 STK-4M,Stalker_(75T)

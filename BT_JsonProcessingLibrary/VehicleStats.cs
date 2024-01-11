@@ -8,18 +8,21 @@ using UtilityClassLibrary;
 
 namespace BT_JsonProcessingLibrary
 {
-    public class VehicleStats
+    public class VehicleStats : UnitStats
     {
-        public string VehicleUiName { get; set; }
-        public string VehicleChassisName { get; set; }
-        public int VehicleWeight { get; set; } = 0;
-        public string EngineTypeId { get; set; } = string.Empty;
-        public string EngineCoreId { get; set; } = string.Empty;
-        public int EngineSize { get; set; } = 0;
+        //public string UiName { get; set; }
+        //public string ChassisName { get; set; }
+        //public int Weight { get; set; } = 0;
+        //public string EngineTypeId { get; set; } = string.Empty;
+        //public string EngineCoreId { get; set; } = string.Empty;
+        //public int EngineSize { get; set; } = 0;
         public VehicleMovementTypes VehicleMoveType { get; set; }
         public string HeatsinkTypeId { get; set; } = string.Empty;
         public string StructureTypeId { get; set; } = string.Empty;
         public string ArmorTypeId { get; set; } = string.Empty;
+        public double TotalDamage { get; set; } = 0;
+        public double TotalDamageHeat { get; set; } = 0;
+        public double TotalDamageStability { get; set; } = 0;
         public Dictionary<string, double> StructureByLocation { get; set; } = new Dictionary<string, double>();
         public Dictionary<string, List<Statisticdata>> StructureModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
         public double GlobalStructureModifier { get; set; } = 1;
@@ -27,27 +30,27 @@ namespace BT_JsonProcessingLibrary
         public Dictionary<string, List<Statisticdata>> ArmorModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
         public double GlobalArmorModifier { get; set; } = 1;
         public Dictionary<string, List<EquipmentData>> VehicleGearByLocation { get; set; } = new Dictionary<string, List<EquipmentData>>();
-        private string[] VehicleLocations { get; } = { "Front", "Left", "Right", "Rear", "Turret" };
-        public List<EquipmentData> VehicleWeapons { get; set; } = new List<EquipmentData>();
-        public List<EquipmentData> VehicleAmmo { get; set; } = new List<EquipmentData>();
-        public List<EquipmentData> VehicleUtilityGear { get; set; } = new List<EquipmentData>();
+        public override string[] Locations { get; } = { "Front", "Left", "Right", "Rear", "Turret" };
+        //public List<EquipmentData> Weapons { get; set; } = new List<EquipmentData>();
+        //public List<EquipmentData> Ammo { get; set; } = new List<EquipmentData>();
+        //public List<EquipmentData> UtilityGear { get; set; } = new List<EquipmentData>();
         public double WalkSpeed { get; set; } = 0;
         public double RunSpeed { get; set; } = 0;
-        public JsonDocument VehicleChassisDefFile { get; set; }
-        public JsonDocument VehicleDefFile { get; set; }
-        public List<string> Tags { get; set; } = new List<string>();
-        public List<string> WikiTags { get; set; } = new List<string>();
-        public bool PlayerControllable { get; set; }
-        public bool Blacklisted { get; set; }
+        //public JsonDocument ChassisDefFile { get; set; }
+        //public JsonDocument UnitDefFile { get; set; }
+        //public List<string> Tags { get; set; } = new List<string>();
+        //public List<string> WikiTags { get; set; } = new List<string>();
+        //public bool PlayerControllable { get; set; }
+        //public bool Blacklisted { get; set; }
 
 
         public VehicleStats(BasicFileData vehicleChassisDef, BasicFileData vehicleDef)
         {
-            VehicleChassisDefFile = JsonDocument.Parse(new StreamReader(vehicleChassisDef.Path).ReadToEnd());
-            VehicleDefFile = JsonDocument.Parse(new StreamReader(vehicleDef.Path).ReadToEnd());
+            ChassisDefFile = JsonDocument.Parse(new StreamReader(vehicleChassisDef.Path).ReadToEnd());
+            UnitDefFile = JsonDocument.Parse(new StreamReader(vehicleDef.Path).ReadToEnd());
 
-            VehicleUiName = ModJsonHandler.GetUiNameFromJsonDoc(VehicleDefFile);
-            VehicleChassisName = ModJsonHandler.GetNameFromJsonDoc(VehicleChassisDefFile);
+            VariantName = ModJsonHandler.GetUiNameFromJsonDoc(UnitDefFile);
+            ChassisName = ModJsonHandler.GetNameFromJsonDoc(ChassisDefFile);
 
             InstatiateLocationData();
 
@@ -56,7 +59,7 @@ namespace BT_JsonProcessingLibrary
 
         private void InstatiateLocationData()
         {
-            foreach (string location in VehicleLocations)
+            foreach (string location in Locations)
             {
                 VehicleGearByLocation.Add(location, new List<EquipmentData>());
                 ArmorModifiersByLocation.Add(location, new List<Statisticdata>());
@@ -81,6 +84,8 @@ namespace BT_JsonProcessingLibrary
             GetUnitTonnage();
 
             CalculateAllMovements();
+
+            CalculateDamageTotals();
         }
 
         public void OutputStatsToFile(StreamWriter writer)
@@ -90,8 +95,8 @@ namespace BT_JsonProcessingLibrary
 
         public void OutputStatsToString(TextWriter writer)
         {
-            writer.WriteLine(OutputTableLine(VehicleUiName));
-            writer.WriteLine(OutputTableLine(VehicleWeight + "t"));
+            writer.WriteLine(OutputTableLine(VariantName));
+            writer.WriteLine(OutputTableLine(Weight + "t"));
             writer.WriteLine(OutputTableLine(PlayerControllable ? "Yes" : "No"));
             writer.WriteLine(OutputTableLine(ConvertVehicleMovementTypeToString(VehicleMoveType)));
             writer.WriteLine(OutputTableLine($"{WalkSpeed.ToString()}/{RunSpeed.ToString()}"));
@@ -99,32 +104,31 @@ namespace BT_JsonProcessingLibrary
             writer.WriteLine(OutputTableLine(EngineSize.ToString()));
             writer.WriteLine(OutputTableLine(TotalLocationStatType(ArmorByLocation, ArmorModifiersByLocation)));
             writer.WriteLine(OutputTableLine(TotalLocationStatType(StructureByLocation, StructureModifiersByLocation)));
-            foreach(string location in VehicleLocations)
+            foreach(string location in Locations)
             {
                 writer.WriteLine(OutputTableLine(PrintLocationArmorAndStructure(location)));
             }
-            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(VehicleUtilityGear)));
-            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(VehicleWeapons)));
-            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(VehicleAmmo)));
+            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(UtilityGear)));
+            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(Weapons)));
+            writer.WriteLine(OutputTableLine(OutputEquipmentForTable(Ammo)));
             writer.WriteLine("|-");
         }
 
         public void OutputVehicleToPageTab(TextWriter writer)
         {
-            writer.WriteLine($"<tab name=\"{VehicleUiName}\">");
+            writer.WriteLine($"<tab name=\"{VariantName}\">");
             writer.WriteLine("{{InfoboxVehicle");
-            writer.WriteLine(OutputTableLine($"vehiclename = {VehicleUiName}"));
-            writer.WriteLine(OutputTableLine($"image = Vehicle_{VehicleChassisName}.png"));
+            writer.WriteLine(OutputTableLine($"vehiclename = {VariantName}"));
+            writer.WriteLine(OutputTableLine($"image = Vehicle_{ChassisName}.png"));
             writer.WriteLine(OutputTableLine("controllable = Yes"));
-            writer.WriteLine(OutputTableLine($"class = {ModJsonHandler.GetWeightClassFromTonnage(VehicleWeight)}"));
-            writer.WriteLine(OutputTableLine($"weight = {VehicleWeight}t"));
+            writer.WriteLine(OutputTableLine($"class = {ModJsonHandler.GetWeightClassFromTonnage(Weight)}"));
+            writer.WriteLine(OutputTableLine($"weight = {Weight}t"));
             writer.WriteLine(OutputTableLine($"speed = {WalkSpeed}/{RunSpeed}"));
             writer.WriteLine(OutputTableLine($"propulsion = {ConvertVehicleMovementTypeToString(VehicleMoveType)}"));
 
-            // TODO: Implement these...
-            writer.WriteLine(OutputTableLine($"maxdamage = {VehicleChassisName}.png"));
-            writer.WriteLine(OutputTableLine($"maxstability = {VehicleChassisName}.png"));
-            writer.WriteLine(OutputTableLine($"maxheat = {VehicleChassisName}.png"));
+            writer.WriteLine(OutputTableLine($"maxdamage = {TotalDamage}"));
+            writer.WriteLine(OutputTableLine($"maxstability = {TotalDamageStability}"));
+            writer.WriteLine(OutputTableLine($"maxheat = {TotalDamageHeat}"));
 
             writer.WriteLine(OutputTableLine($"armor = {TotalLocationStatType(ArmorByLocation, ArmorModifiersByLocation)}"));
             writer.WriteLine(OutputTableLine($"structure = {TotalLocationStatType(StructureByLocation, StructureModifiersByLocation)}"));
@@ -135,17 +139,17 @@ namespace BT_JsonProcessingLibrary
             if(StructureByLocation.ContainsKey("Turret"))
                 writer.WriteLine(OutputTableLine($"turretarmor = {PrintLocationArmorAndStructure("Turret")}"));
 
-            writer.WriteLine(OutputTableLine($"weapon1 = {OutputEquipmentForTable(VehicleWeapons)}"));
+            writer.WriteLine(OutputTableLine($"weapon1 = {OutputEquipmentForTable(Weapons)}"));
 
-            writer.WriteLine(OutputTableLine($"ammo1 = {OutputEquipmentForTable(VehicleAmmo)}"));
+            writer.WriteLine(OutputTableLine($"ammo1 = {OutputEquipmentForTable(Ammo)}"));
 
-            writer.WriteLine(OutputTableLine($"gear1 = {OutputEquipmentForTable(VehicleUtilityGear)}"));
+            writer.WriteLine(OutputTableLine($"gear1 = {OutputEquipmentForTable(UtilityGear)}"));
 
             writer.WriteLine("}}");
             writer.WriteLine("<br>");
             writer.WriteLine("===Description===");
 
-            string baseDescription = ModJsonHandler.GetDescriptionDetailsFromJsonDoc(VehicleDefFile);
+            string baseDescription = ModJsonHandler.GetDescriptionDetailsFromJsonDoc(UnitDefFile);
             string[] tempDescriptionParse = baseDescription.Split("<b>");
             string communityContentText = "";
             if(baseDescription.Contains("COMMUNITY CONTENT"))
@@ -186,7 +190,7 @@ namespace BT_JsonProcessingLibrary
         private string TotalLocationStatType(Dictionary<string, double> locationMap, Dictionary<string, List<Statisticdata>> locationModifierMap)
         {
             double totalValue = 0;
-            foreach(string location in VehicleLocations)
+            foreach(string location in Locations)
             {
                 if(locationMap.ContainsKey(location))
                     totalValue += GetFinalStatForLocation(location, locationMap, locationModifierMap);
@@ -291,7 +295,7 @@ namespace BT_JsonProcessingLibrary
 
         private void GetVehicleGearList()
         {
-            if (VehicleDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
+            if (UnitDefFile.RootElement.TryGetProperty("inventory", out JsonElement gearInventory))
                 foreach (JsonElement gear in gearInventory.EnumerateArray())
                 {
                     string gearLocation = gear.GetProperty("MountedLocation").ToString();
@@ -318,23 +322,23 @@ namespace BT_JsonProcessingLibrary
                         }
 
                         if (componentType == "Weapon")
-                            VehicleWeapons.Add(equipmentData);
+                            Weapons.Add(equipmentData);
                         else if (componentType == "AmmunitionBox")
-                            VehicleAmmo.Add(equipmentData);
+                            Ammo.Add(equipmentData);
                         else
                         {
                             if (equipmentData.GearType.Contains(GearCategory.TankStuff))
                             {
                                 if (IsListableTankEquipment(gearId))
-                                    VehicleUtilityGear.Add(equipmentData);
+                                    UtilityGear.Add(equipmentData);
                             }
                             else if(!equipmentData.IsCoreGear() && !equipmentData.GearType.Contains(GearCategory.Heatsink))
-                                VehicleUtilityGear.Add(equipmentData);
+                                UtilityGear.Add(equipmentData);
                         }
                     }
                 }
             else
-                Logging.AddLogToQueue($"FAILURE TO GET VEHICLE GEAR {VehicleChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET VEHICLE GEAR {ChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
         }
 
         private bool IsListableTankEquipment(string gearId)
@@ -375,17 +379,17 @@ namespace BT_JsonProcessingLibrary
 
         private void GetUnitTonnage()
         {
-            if (VehicleChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
-                VehicleWeight = tonnage.GetInt32();
+            if (ChassisDefFile.RootElement.TryGetProperty("Tonnage", out JsonElement tonnage))
+                Weight = tonnage.GetInt32();
             else
-                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE {VehicleChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
+                Logging.AddLogToQueue($"FAILURE TO GET TONNAGE {ChassisName}", LogLevel.Error, LogCategories.VehicleDefs);
         }
 
         private void GetCoreGear()
         {
             List<EquipmentData> AllGearList = new List<EquipmentData>();
 
-            foreach (string location in VehicleLocations)
+            foreach (string location in Locations)
             {
                 AllGearList.AddRange(VehicleGearByLocation[location]);
             }
@@ -419,7 +423,7 @@ namespace BT_JsonProcessingLibrary
 
         private void MovementDecode()
         {
-            if (VehicleUiName.Contains("Aerospace"))
+            if (VariantName.Contains("Aerospace"))
                 VehicleMoveType = VehicleMovementTypes.Jet;
             else if (Tags.Contains("unit_vtol"))
                 VehicleMoveType = VehicleMovementTypes.VTOL;
@@ -441,11 +445,11 @@ namespace BT_JsonProcessingLibrary
 
         private void CalculateAllMovements()
         {
-            string movementDef = VehicleChassisDefFile.RootElement.GetProperty("MovementCapDefID").ToString();
+            string movementDef = ChassisDefFile.RootElement.GetProperty("MovementCapDefID").ToString();
 
             if (!movementDef.Contains('-'))
             {
-                Logging.AddLogToQueue($"Vehicle has incorrect movement def: {ModJsonHandler.GetIdFromJsonDoc(VehicleChassisDefFile)}", LogLevel.Warning, LogCategories.VehicleDefs);
+                Logging.AddLogToQueue($"Vehicle has incorrect movement def: {ModJsonHandler.GetIdFromJsonDoc(ChassisDefFile)}", LogLevel.Warning, LogCategories.VehicleDefs);
 
                 WalkSpeed = 0;
                 RunSpeed = 0;
@@ -459,9 +463,23 @@ namespace BT_JsonProcessingLibrary
             }
         }
 
+        private void CalculateDamageTotals()
+        {
+            TotalDamage = 0;
+            TotalDamageHeat = 0;
+            TotalDamageStability = 0;
+
+            foreach(EquipmentData weapon in Weapons)
+            {
+                TotalDamage += (weapon.Damage ?? 0) * (weapon.Shots ?? 0);
+                TotalDamageHeat += (weapon.DamageHeat ?? 0) * (weapon.Shots ?? 0);
+                TotalDamageStability += (weapon.DamageStability ?? 0) * (weapon.Shots ?? 0);
+            }
+        }
+
         private void PopulateTagsForVehicle()
         {
-            if (VehicleDefFile.RootElement.TryGetProperty("VehicleTags", out JsonElement chassisTags))
+            if (UnitDefFile.RootElement.TryGetProperty("VehicleTags", out JsonElement chassisTags))
             {
                 if (chassisTags.TryGetProperty("items", out JsonElement tagsElement))
                 {
@@ -481,20 +499,20 @@ namespace BT_JsonProcessingLibrary
 
         private void PopulateArmorAndStructureByLocation()
         {
-            foreach(JsonElement locationData in VehicleDefFile.RootElement.GetProperty("Locations").EnumerateArray())
+            foreach(JsonElement locationData in UnitDefFile.RootElement.GetProperty("Locations").EnumerateArray())
             {
                 string location = locationData.GetProperty("Location").ToString();
                 int armorValue = locationData.GetProperty("CurrentArmor").GetInt32();
                 int structureValue = locationData.GetProperty("CurrentInternalStructure").GetInt32();
 
-                if (this.VehicleLocations.Contains(location))
+                if (this.Locations.Contains(location))
                 {
                     ArmorByLocation[location] = armorValue;
                     StructureByLocation[location] = structureValue;
                 }
                 else
                 {
-                    Logging.AddLogToQueue($"Invalid location {location} found in vehicle {VehicleUiName}", LogLevel.Error, LogCategories.VehicleDefs);
+                    Logging.AddLogToQueue($"Invalid location {location} found in vehicle {VariantName}", LogLevel.Error, LogCategories.VehicleDefs);
                 }
             }
         }

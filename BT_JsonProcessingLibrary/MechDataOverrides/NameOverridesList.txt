@@ -1,0 +1,16 @@
+Variant,Name Override
+ALC-T0,Erinyes
+MGA-R3,Erinyes
+TSP-H0,Erinyes
+FS9-O,Firestarter Omni
+FS9-OA,Firestarter Omni
+FS9-OB,Firestarter Omni
+FS9-OC,Firestarter Omni
+FS9-OD,Firestarter Omni
+FS9-OF,Firestarter Omni
+FS9-OR,Firestarter Omni
+FS9-OX,Firestarter Omni
+MN-1B,Munin
+MN-1M,Munin
+MN-1S,Munin
+RGNK-2,Ragnarok

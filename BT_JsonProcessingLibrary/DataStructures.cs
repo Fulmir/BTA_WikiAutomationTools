@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,33 @@ namespace BT_JsonProcessingLibrary
     {
         public string FileName { get; set; }
         public string Path { get; set; }
+
+        public static bool operator ==(BasicFileData left, BasicFileData right)
+        {
+            if(left.FileName != right.FileName)
+                return false;
+            if (left.Path != right.Path)
+                return false;
+            return true;
+        }
+
+        public static bool operator !=(BasicFileData left, BasicFileData right)
+        {
+            if (left.FileName == right.FileName)
+                return false;
+            if (left.Path == right.Path)
+                return false;
+            return true;
+        }
+
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            if (obj == null)
+                return false;
+            if (obj.GetType() == typeof(BasicFileData))
+                return this == (BasicFileData)obj;
+            return base.Equals(obj);
+        }
     }
 
     public struct Hardpoint
@@ -51,6 +79,10 @@ namespace BT_JsonProcessingLibrary
         public double? GlobalArmorFactor { get; set; }
         public Statisticdata? LocalStructureFactor { get; set; }
         public Statisticdata? LocalArmorFactor { get; set; }
+        public double? Damage { get; set; }
+        public double? DamageHeat { get; set; }
+        public double? DamageStability { get; set; }
+        public int? Shots { get; set; }
 
         private void ProcessGearJson()
         {
@@ -128,7 +160,17 @@ namespace BT_JsonProcessingLibrary
                 }
 
             if (Id.StartsWith("Weapon"))
+            {
                 GearType.Add(GearCategory.Weapon);
+                if (!GearType.Contains(GearCategory.MeleeWeapon))
+                    GearType.Add(GearCategory.RangedWeapon);
+
+                ModJsonHandler.TryGetDamageValuesForWeapon(GearJsonDoc, out double damage, out double heatDamage, out double stabilityDamage, out int shots);
+                Damage = damage;
+                DamageHeat = heatDamage;
+                DamageStability = stabilityDamage;
+                Shots = shots;
+;           }
             if (Id.StartsWith("Ammo_AmmunitionBox"))
                 GearType.Add(GearCategory.AmmoBox);
             if (MechGearHandler.structureRegex.IsMatch(Id) && !GearType.Contains(GearCategory.Structure))
@@ -385,15 +427,15 @@ namespace BT_JsonProcessingLibrary
                 CritChanceBonus = critChanceMultiElement.GetDouble();
 
             if (modifierEffects.TryGetProperty("MinRange", out var minRangeElement))
-                MinRange = minRangeElement.GetInt32();
+                MinRange = minRangeElement.GetDouble();
             if (modifierEffects.TryGetProperty("ShortRange", out var shortRangeElement))
-                ShortRange = shortRangeElement.GetInt32();
+                ShortRange = shortRangeElement.GetDouble();
             if (modifierEffects.TryGetProperty("MiddleRange", out var midRangeElement))
-                MediumRange = midRangeElement.GetInt32();
+                MediumRange = midRangeElement.GetDouble();
             if (modifierEffects.TryGetProperty("LongRange", out var longRangeElement))
-                LongRange = longRangeElement.GetInt32();
+                LongRange = longRangeElement.GetDouble();
             if (modifierEffects.TryGetProperty("MaxRange", out var maxRangeElement))
-                MaxRange = maxRangeElement.GetInt32();
+                MaxRange = maxRangeElement.GetDouble();
 
             if (modifierEffects.TryGetProperty("ClusteringModifier", out var clusterModElement))
                 ClusteringMod = clusterModElement.GetDouble();
@@ -522,11 +564,11 @@ namespace BT_JsonProcessingLibrary
         public int? AccuracyMod { get; set; }
         public int? EvasionIgnored { get; set; }
         public double? CritChanceBonus { get; set; }
-        public int? MinRange { get; set; }
-        public int? ShortRange { get; set; }
-        public int? MediumRange { get; set; }
-        public int? LongRange { get; set; }
-        public int? MaxRange { get; set; }
+        public double? MinRange { get; set; }
+        public double? ShortRange { get; set; }
+        public double? MediumRange { get; set; }
+        public double? LongRange { get; set; }
+        public double? MaxRange { get; set; }
         public bool? FiresInMelee { get; set; }
         public List<string> Bonuses { get; set; } = new List<string>();
 
@@ -724,6 +766,7 @@ namespace BT_JsonProcessingLibrary
         Structure,
         WeaponAttachment,
         MeleeWeapon,
+        RangedWeapon,
         Weapon,
         Cockpit,
         LifeSupportA,

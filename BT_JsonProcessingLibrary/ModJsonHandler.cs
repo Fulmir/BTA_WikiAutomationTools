@@ -27,6 +27,18 @@ namespace BT_JsonProcessingLibrary
             return values;
         }
 
+        public static List<BasicFileData> SearchFiles(string startingPath, List<string> filePattern)
+        {
+            List<BasicFileData> files = new List<BasicFileData>();
+
+            foreach (string pattern in filePattern)
+            {
+                files.AddRange(SearchFiles(startingPath, pattern));
+            }
+
+            return files.Distinct().ToList();
+        }
+
         public static JsonDocument GetJsonDocument(string filePath)
         {
             StreamReader reader = new StreamReader(filePath);
@@ -215,6 +227,33 @@ namespace BT_JsonProcessingLibrary
             statusEffectList = new List<StatusEffect>();
 
             return false;
+        }
+
+        public static bool TryGetDamageValuesForWeapon(JsonDocument weaponJsonDoc, out double damage, out double heatDamage, out double stabilityDamage, out int shots)
+        {
+            damage = 0;
+            heatDamage = 0;
+            stabilityDamage = 0;
+            shots = 0;
+
+            if (weaponJsonDoc.RootElement.TryGetProperty("Damage", out JsonElement weaponDamage))
+            {
+                damage = weaponDamage.GetDouble();
+            }
+            if (weaponJsonDoc.RootElement.TryGetProperty("HeatDamage", out JsonElement weaponHeatDamage))
+            {
+                heatDamage = weaponHeatDamage.GetDouble();
+            }
+            if (weaponJsonDoc.RootElement.TryGetProperty("Instability", out JsonElement weaponStabDamage))
+            {
+                stabilityDamage = weaponStabDamage.GetDouble();
+            }
+            if (weaponJsonDoc.RootElement.TryGetProperty("ShotsWhenFired", out JsonElement weaponShots))
+            {
+                shots = weaponShots.GetInt32();
+            }
+
+            return true;
         }
 
         public static string GetWeightClassFromTonnage(int tonnage)

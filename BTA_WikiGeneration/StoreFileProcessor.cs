@@ -504,9 +504,9 @@ namespace BTA_WikiGeneration
                     foreach (StoreEntry storeEntry in storeDict[heading])
                     {
                         if(uniqueHighlightItemIdsList.Contains(storeEntry.Id))
-                            storeTableBuilder.Append($"{{{{Highlight|[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]|LightBlue}}}}<br>");
+                            storeTableBuilder.Append($"{{{{Highlight|[[{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(storeEntry.LinkPageTarget)}#{(storeEntry.PageSubTarget != null ? MediaWikiTextEncoder.ConvertToMediaWikiSafeText(storeEntry.PageSubTarget) : "")}|{storeEntry.UiName}]]|LightBlue}}}}<br>");
                         else
-                            storeTableBuilder.Append($"[[{storeEntry.LinkPageTarget}#{storeEntry.PageSubTarget ?? ""}|{storeEntry.UiName}]]<br>");
+                            storeTableBuilder.Append($"[[{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(storeEntry.LinkPageTarget)}#{(storeEntry.PageSubTarget != null ? MediaWikiTextEncoder.ConvertToMediaWikiSafeText(storeEntry.PageSubTarget) : "")}|{storeEntry.UiName}]]<br>");
                     }
                 storeTableBuilder.AppendLine("");
             }

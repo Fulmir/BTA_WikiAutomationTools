@@ -1,0 +1,53 @@
+﻿Battletech Advanced 3062 currently features over 2,400 'Mech variants in total.
+
+Below you will find an alphabetically sorted list of 'Mechs, divided by weight class, a list of all variants, and their weight, hardpoints, and stock role, for a very rough look at its power at a glance. All mechs have their total hardpoints listed rather than their default configuration's used hardpoints.
+
+<div id="" class="" style="clear: right; margin: -1em 0 0 10px; float: right; padding: 10px; background: transparent; width: 200px; ">__TOC__</div>
+
+==Legend==
+{| class="wikitable" style="text-align: left;"
+|-
+| Hardpoints: || Type and maximum number of weapon hardpoints.
+* [[File:Ballistic_Icon.png|30px|Ballistic hardpoint icon]]: Ballistic Hardpoints
+* [[File:Energy_Icon.png|30px|Energy hardpoint icon]]: Energy Hardpoints
+* [[File:Missile_Icon.png|30px|Missile hardpoint icon]]: Missile Hardpoints
+* [[File:Artillery_Icon.png|30px|Artillery hardpoint icon]]: Artillery Hardpoints
+* [[File:Support_Icon.png|30px|Support hardpoint icon]]: Support Weapon Hardpoints
+* [[File:Omni_Icon.png|30px|Omni hardpoint icon]]: Omni Hardpoints
+* [[File:Bomb_Icon.png|30px|Bomb hardpoint icon]]: Bomb Hardpoints
+* [[File:Melee_Icon.png|30px|Melee hardpoint icon]]: Melee Hardpoints
+|-
+| Engine: || Type of engine and size of core installed. It can be changed unless Engine is noted in Fixed Equipment.
+* STD: Standard Fusion Engine
+* LFE: Light Fusion Engine
+* XL: Extralight Fusion Engine
+* XXL: Extra-Extralight Fusion Engine
+* cXL: Clan Extralight Fusion Engine
+* cXXL: Clan Extra-Extralight Fusion Engine
+* JRXL: Jury-Rigged Extra-Light Engine
+* sXL: Sanctuary Extra-light Fusion Engine
+* DNS: Sanctuary Dense Engine
+* PFE: Primitive Fusion Engine
+* ICE: Internal Combustion Engine 
+* LAM: LAM Engine
+* CFE: Compact Engine
+* FCE: Fuel Cell Engine
+* 3GE: 3rd Gen. Engine
+* 3G-XXL: 3rd Gen. XXL Engine
+* 3G-UL: 3rd Gen. Ultra-Light Engine
+|-
+| Speed: || Maximum movement speed. Notation: Move Hex / Sprint Hex / Jump Hex
+|-
+| Heat Sink: || Type of heatsink kit installed. It can be changed unless HS Kit is noted in Fixed Equipment.
+* SHS: Standard/Single Heat Sink Kit (-4 heat/turn/heatsink, 1 ton and 1 slot per external heatsink)
+* DHS: Inner Sphere Double Heat Sink Kit (-6 heat/turn/heatsink, 1 ton and 3 slots per external heatsink)
+* cDHS: Clan Double Heatsink Kit (-6 heat/turn/heatsink, 1 ton and 2 slots per external heatsink)
+* pDHS: Prototype Double Heat Sink Kit (-6 heat/turn/heatsink, 1 ton and 1 slot per external heatsink, volatile)
+* sDHS: Sanctuary Double Heat Sink Kit (-5 heat/turn/heatsink, -1 heat at end of turn/sink, 1 ton and 2 slots per external heatsink, can mix with single heat sinks)
+* LDHS: Laser Double Heat Sink Kit (Fixed heat sinking regardless of biome)
+* 3GHS: 3rd Gen. Heat Sink Kit (Community Content heat sinks. -6 heat/turn/heatsink, 1 ton and 1 slot)
+|-
+| Free Tonnage: || 
+* Core Gear: With the exception of the engine, core, e-cooling and gyro (i.e. anything in the CT core gear), all non-fixed equipment and armor is stripped to give a free tonnage value. This is the default free tonnage measurement for OmniMechs with locked gear.
+* Bare: All components and armor are stripped. This shows the weight taken up by structure and gives a broader idea of total free tonnage on BattleMechs
+|}

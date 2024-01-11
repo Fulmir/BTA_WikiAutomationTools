@@ -209,7 +209,7 @@ namespace BT_JsonProcessingLibrary
 
             foreach (string chassisName in sortedVehicleChassisNames)
             {
-                int tonnage = targetDictionary[chassisName].First().Value.VehicleWeight;
+                int tonnage = targetDictionary[chassisName].First().Value.Weight;
 
                 StringWriter variantWriter;
                 if (breakUpListByTonnage)
@@ -233,7 +233,7 @@ namespace BT_JsonProcessingLibrary
                 foreach (string vehicleId in sortedVehicleIds)
                 {
                     if (targetDictionary[chassisName][vehicleId].PlayerControllable)
-                        firstPlayerControllableVehicle = targetDictionary[chassisName][vehicleId].VehicleUiName;
+                        firstPlayerControllableVehicle = targetDictionary[chassisName][vehicleId].VariantName;
                 }
 
                 StartVehicleTitleSection(variantWriter, chassisName, firstPlayerControllableVehicle, targetDictionary[chassisName].Count);
@@ -301,9 +301,9 @@ namespace BT_JsonProcessingLibrary
                     PlayerControllableVehicles[vehicleChassisName][vehicleId].OutputVehicleToPageTab(vehiclePageWriter);
                     aggregateWikiTags.AddRange(PlayerControllableVehicles[vehicleChassisName][vehicleId].WikiTags);
 
-                    if (vehicleNameCheckList.Contains(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName))
+                    if (vehicleNameCheckList.Contains(PlayerControllableVehicles[vehicleChassisName][vehicleId].VariantName))
                         Logging.AddLogToQueue($"Vehicle name duplicated for id: {vehicleId}", LogLevel.Warning, LogCategories.VehicleDefs);
-                    vehicleNameCheckList.Add(PlayerControllableVehicles[vehicleChassisName][vehicleId].VehicleUiName);
+                    vehicleNameCheckList.Add(PlayerControllableVehicles[vehicleChassisName][vehicleId].VariantName);
                 }
 
                 vehiclePageWriter.WriteLine("</tabs>");
@@ -408,7 +408,7 @@ namespace BT_JsonProcessingLibrary
             if(firstVehicleName == "")
                 writer.WriteLine($"'''{chassisName.ToUpper()}'''");
             else
-                writer.WriteLine($"'''[[{linkName}#{firstVehicleName}|{chassisName.ToUpper()}]]'''");
+                writer.WriteLine($"'''[[{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(linkName)}#{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(firstVehicleName)}|{chassisName.ToUpper()}]]'''");
             writer.WriteLine();
         }
     }

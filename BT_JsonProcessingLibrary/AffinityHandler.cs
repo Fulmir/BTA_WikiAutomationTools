@@ -100,7 +100,7 @@ namespace BT_JsonProcessingLibrary
                 if (mech.MechAffinity.HasValue)
                     affinities[mech.MechAffinity.Value.Id] = mech.MechAffinity.Value;
                 else if (!mech.Blacklisted)
-                    Logging.AddLogToQueue($"MECH {mech.MechModel} HAS NO AFFINITY!", LogLevel.Reporting, LogCategories.Affinities);
+                    Logging.AddLogToQueue($"MECH {mech.VariantName} HAS NO AFFINITY!", LogLevel.Reporting, LogCategories.Affinities);
             }
 
             return affinities.Values.ToList();

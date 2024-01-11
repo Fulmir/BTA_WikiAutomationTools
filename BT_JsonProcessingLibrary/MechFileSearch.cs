@@ -33,9 +33,13 @@ namespace BT_JsonProcessingLibrary
         private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> CommunityContentMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
         private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> CustomMechs = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
 
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> MechPages = new ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>>();
+
         private static Dictionary<string, BasicFileData> chassisDefIndex = new Dictionary<string, BasicFileData>();
 
         private static ConcurrentDictionary<string, MechStats> allMechs = new ConcurrentDictionary<string, MechStats>();
+
+        //private static ConcurrentDictionary<string, int> chassisCounter = new ConcurrentDictionary<string, int>();
 
         private static ConcurrentDictionary<string, List<MechNameCounter>> GroupKeyToNameTracker = new ConcurrentDictionary<string, List<MechNameCounter>>();
 
@@ -44,7 +48,7 @@ namespace BT_JsonProcessingLibrary
             CustomMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\CustomMechsList.txt");
             WhitelistMechVariants = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\MechVariantsWhitelist.txt");
             SeparateMechEntries = TextFileListProcessor.GetStringListFromFile(".\\MechClassificationFiles\\SeparateMechEntries.txt");
-            MechLinkOverrides.PopulateMechOverrides();
+            MechVariantDataOverrides.PopulateOverrideLists();
 
             ParallelOptions parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = 8;
@@ -80,7 +84,7 @@ namespace BT_JsonProcessingLibrary
                     if (allMechs[variantName].Blacklisted)
                         return;
 
-                    AddToGroupKeyToNameTracker(chassisName, variantName);
+                    AddToGroupKeyToNameTracker(allMechs[variantName].MechGroupName, variantName);
 
                     if (IsHeroMech(variantName))
                         AddToNestedDictionary(variantName, ref HeroMechs);
@@ -97,22 +101,37 @@ namespace BT_JsonProcessingLibrary
                     else if (SanctuaryMechDirectories.IsMatch(chassisDef.Path))
                         AddToNestedDictionary(variantName, ref SanctuaryMechs);
 
-                    else if (QuadMechDirectories.IsMatch(chassisDef.Path))
+                    else if (IsQuadMech(variantName, chassisDef.Path))
                         AddToNestedDictionary(variantName, ref QuadMechs);
 
                     else
                         AddToNestedDictionary(variantName, ref InnerSphereMechs);
+
+                    AddToMechPagesDictionary(chassisName, variantName);
                 }
             });
         }
 
         private static void AddToNestedDictionary(string variantName, ref ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> target)
         {
-            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechWeight;
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].Weight;
             if (!target.ContainsKey(mechGroupKey))
                 target[mechGroupKey] = new ConcurrentDictionary<string, MechStats>();
 
             target[mechGroupKey][variantName] = allMechs[variantName];
+        }
+
+        private static void AddToMechPagesDictionary(string chassisName, string variantName)
+        {
+            string mechPageName = GetMechNameForLink(chassisName, variantName);
+            if (!MechPages.ContainsKey(mechPageName))
+                MechPages[mechPageName] = new ConcurrentDictionary<string, MechStats>();
+
+            //if (!chassisCounter.ContainsKey(mechPageName))
+            //    chassisCounter[mechPageName] = 0;
+            //chassisCounter[mechPageName]++;
+
+            MechPages[mechPageName][variantName] = allMechs[variantName];
         }
 
         private static string CleanNameForKey(string chassisName)
@@ -124,7 +143,7 @@ namespace BT_JsonProcessingLibrary
         {
             chassisName = CleanNameForKey(chassisName);
 
-            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].MechWeight;
+            string mechGroupKey = VariantNameToGroupKey(variantName) + "_" + allMechs[variantName].Weight;
             if (!GroupKeyToNameTracker.ContainsKey(mechGroupKey))
                 GroupKeyToNameTracker[mechGroupKey] = new List<MechNameCounter>();
 
@@ -146,6 +165,9 @@ namespace BT_JsonProcessingLibrary
         }
         private static string VariantNameToGroupKey(string variantName)
         {
+            if(MechVariantDataOverrides.TryGetGroupOverride(variantName, out string groupOverride))
+                return groupOverride;
+
             Match nameMatch = NumbersInGroupKey.Match(variantName.Trim());
             if (nameMatch.Success)
             {
@@ -165,7 +187,7 @@ namespace BT_JsonProcessingLibrary
 
             foreach (MechStats mech in targetDictionary[mechGroupKey].Values)
             {
-                string cleanedName = CleanNameForKey(mech.MechName);
+                string cleanedName = CleanNameForKey(mech.ChassisName);
                 if (mechNameCounters.TryGetValue(cleanedName, out MechNameCounter nameCount))
                 {
                     nameCount.UseCount++;
@@ -251,6 +273,53 @@ namespace BT_JsonProcessingLibrary
             mechTablePageWriter.Close();
         }
 
+        //public static void PrintMechPagesToFiles()
+        //{
+        //    string wikiPagesFolder = ".\\Output\\MechWikiPages\\";
+
+        //    if (Directory.Exists(wikiPagesFolder))
+        //        Directory.Delete(wikiPagesFolder, true);
+        //    Directory.CreateDirectory(wikiPagesFolder);
+
+        //    foreach (string mechPageTitle in MechPages.Keys)
+        //    {
+        //        List<string> mechVariantCheckList = new List<string>();
+
+        //        string linkName = mechPageTitle;
+        //        if (VehicleLinkOverrides.TryGetLinkOverride(mechPageTitle, out string linkNameOverride))
+        //        {
+        //            linkName = linkNameOverride;
+        //        }
+
+        //        StreamWriter mechPageWriter = new StreamWriter(wikiPagesFolder + linkName + ".wiki", false);
+
+        //        mechPageWriter.WriteLine("<tabs>");
+
+        //        List<string> sortedMechVariants = MechPages[mechPageTitle].Keys.ToList();
+        //        sortedMechVariants.Sort(new ReferentialStringComparer<MechStats>(MechPages[mechPageTitle], "MechModel", new List<string>()));
+
+        //        List<string> aggregateWikiTags = new List<string>();
+
+        //        foreach (string mechVariant in sortedMechVariants)
+        //        {
+        //            MechPages[mechPageTitle][mechVariant].OutputMechToPageTab(mechPageWriter);
+        //            aggregateWikiTags.AddRange(MechPages[mechPageTitle][mechVariant].WikiTags);
+
+        //            if (mechVariantCheckList.Contains(MechPages[mechPageTitle][mechVariant].MechModel))
+        //                Logging.AddLogToQueue($"Mech variant duplicated for id: {mechVariant}", LogLevel.Warning, LogCategories.VehicleDefs);
+        //            mechVariantCheckList.Add(MechPages[mechPageTitle][mechVariant].MechModel);
+        //        }
+
+        //        mechPageWriter.WriteLine("</tabs>");
+        //        mechPageWriter.WriteLine();
+        //        mechPageWriter.WriteLine();
+
+        //        GetWikiCategoriesForTags(aggregateWikiTags, mechPageWriter);
+
+        //        mechPageWriter.Close();
+        //    }
+        //}
+
         private static string OutputDictionaryToStringByTonnage(string pluggableTitleString, ref ConcurrentDictionary<string, ConcurrentDictionary<string, MechStats>> targetDictionary, bool breakUpListByTonnage, bool useGlobalNamesList)
         {
             Dictionary<string, List<string>> mechNamesToMechGroupKeys = new Dictionary<string, List<string>>();
@@ -327,27 +396,27 @@ namespace BT_JsonProcessingLibrary
                     {
                         if ((variant.VariantAssemblyRules != null &&
                             (variant.VariantAssemblyRules.Value.Exclude || !variant.VariantAssemblyRules.Value.Include))
-                            || SeparateMechEntries.Contains(variant.MechModel))
+                            || SeparateMechEntries.Contains(variant.VariantName))
                         {
                             excludedVariantsCount++;
-                            excludedVariants.Add(variant.MechModel);
+                            excludedVariants.Add(variant.VariantName);
                         }
-                        else if (variant.MechName.Contains("Primitive"))
+                        else if (variant.ChassisName.Contains("Primitive"))
                         {
                             excludedVariantsCount++;
-                            otherVariants.Add(variant.MechModel);
-                            variantMechName = variant.MechName;
+                            otherVariants.Add(variant.VariantName);
+                            variantMechName = variant.MechGroupName;
                         }
-                        else if (MechLinkOverrides.HasOverrideForVariant(variant.MechModel))
+                        else if (MechVariantDataOverrides.HasLinkOverrideForVariant(variant.VariantName))
                         {
                             excludedVariantsCount++;
-                            otherVariants.Add(variant.MechModel);
+                            otherVariants.Add(variant.VariantName);
                             if(variantMechName == "ERROR")
-                                variantMechName = variant.MechName;
+                                variantMechName = variant.MechGroupName;
                         }
                     }
 
-                    int tonnage = targetDictionary[mechGroupKey].First().Value.MechWeight;
+                    int tonnage = targetDictionary[mechGroupKey].First().Value.Weight;
 
                     StringWriter variantWriter;
                     if (breakUpListByTonnage)
@@ -377,7 +446,7 @@ namespace BT_JsonProcessingLibrary
                     foreach (string variant in excludedVariants)
                     {
                         MechStats excludedVariant = allMechs[variant];
-                        StartMechTitleSection(variantWriter, excludedVariant.MechName, excludedVariant.MechModel, 1);
+                        StartMechTitleSection(variantWriter, excludedVariant.MechGroupName, excludedVariant.VariantName, 1);
 
                         foreach (QuirkDef quirk in excludedVariant.MechQuirks.Values)
                             QuirkHandler.OutputQuirkToString(quirk, variantWriter);
@@ -385,11 +454,11 @@ namespace BT_JsonProcessingLibrary
                         if (excludedVariant.MechAffinity.HasValue)
                             AffinityHandler.OutputAffinityToString(excludedVariant.MechAffinity.Value, variantWriter);
 
-                        excludedVariant.OutputStatsToString(variantWriter);
+                        excludedVariant.OutputStatsToTableRowString(variantWriter);
                     }
                     if (otherVariants.Count() > 0)
                     {
-                        StartMechTitleSection(variantWriter, variantMechName, otherTempMechs.First().MechModel, otherVariants.Count());
+                        StartMechTitleSection(variantWriter, variantMechName, otherTempMechs.First().VariantName, otherVariants.Count());
 
                         List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(otherTempMechs);
                         foreach (QuirkDef quirk in tempQuirkList)
@@ -400,11 +469,11 @@ namespace BT_JsonProcessingLibrary
                             AffinityHandler.OutputAffinityToString(affinity, variantWriter);
 
                         foreach (MechStats mechVariant in otherTempMechs)
-                            mechVariant.OutputStatsToString(variantWriter);
+                            mechVariant.OutputStatsToTableRowString(variantWriter);
                     }
                     if (sortedVariantModels.Count - excludedVariantsCount >= 1)
                     {
-                        StartMechTitleSection(variantWriter, mechName, tempMechs.First().MechModel, sortedVariantModels.Count - excludedVariantsCount);
+                        StartMechTitleSection(variantWriter, mechName, tempMechs.First().VariantName, sortedVariantModels.Count - excludedVariantsCount);
 
                         List<QuirkDef> tempQuirkList = QuirkHandler.CompileQuirksForVariants(tempMechs);
                         foreach (QuirkDef quirk in tempQuirkList)
@@ -415,7 +484,7 @@ namespace BT_JsonProcessingLibrary
                             AffinityHandler.OutputAffinityToString(affinity, variantWriter);
 
                         foreach (MechStats mechVariant in tempMechs)
-                            mechVariant.OutputStatsToString(variantWriter);
+                            mechVariant.OutputStatsToTableRowString(variantWriter);
                     }
                 }
             }
@@ -501,11 +570,8 @@ namespace BT_JsonProcessingLibrary
 
         private static void StartMechTitleSection(StringWriter writer, string mechName, string firstVariantName, int variantCount)
         {
-            string cleanMechName = "";
-            if (MechLinkOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
-                cleanMechName = linkOverride;
-            else
-                cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');
+            string cleanMechName = GetMechNameForLink(mechName, firstVariantName);
+
             string imageName = mechName.Replace("Royal", "", StringComparison.OrdinalIgnoreCase).Replace("Primitive", "", StringComparison.OrdinalIgnoreCase).Trim().Replace(' ', '_').Replace("'", "");
 
             string displayMechName = mechName;
@@ -515,8 +581,19 @@ namespace BT_JsonProcessingLibrary
             writer.WriteLine($"|rowspan=\"{variantCount}\"|");
             writer.WriteLine($"[[File:{imageName}.png|125px|border|center]]");
             writer.WriteLine();
-            writer.WriteLine($"'''[[{cleanMechName}#{firstVariantName}|{displayMechName.ToUpper()}]]'''");
+            writer.WriteLine($"'''[[{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(cleanMechName)}#{MediaWikiTextEncoder.ConvertToMediaWikiSafeText(firstVariantName)}|{displayMechName.ToUpper()}]]'''");
             writer.WriteLine();
+        }
+
+        private static string GetMechNameForLink(string mechName, string firstVariantName)
+        {
+            string cleanMechName = "";
+            if (MechVariantDataOverrides.TryGetLinkOverride(firstVariantName, out string linkOverride))
+                cleanMechName = linkOverride;
+            else
+                cleanMechName = mechName.Replace("Prototype", "").Trim().Replace(' ', '_');
+
+            return cleanMechName;
         }
 
         private static bool IsHeroMech(string variantName)
@@ -531,6 +608,15 @@ namespace BT_JsonProcessingLibrary
             if (allMechs[variantName].Tags.Contains("ClanMech"))
                 return true;
             if (ClanMechDirectories.IsMatch(chassisDefPath))
+                return true;
+            return false;
+        }
+
+        private static bool IsQuadMech(string variantName, string chassisDefPath)
+        {
+            if(QuadMechDirectories.IsMatch(chassisDefPath))
+                return true;
+            if (allMechs[variantName].Tags.Contains("QuadMech"))
                 return true;
             return false;
         }

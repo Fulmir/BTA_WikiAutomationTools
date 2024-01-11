@@ -35,7 +35,13 @@
     <None Update="MechClassificationFiles\SeparateMechEntries.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MechLinkOverrides\VariantOverridesList.txt">
+    <None Update="MechDataOverrides\GroupedMechEntries.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechDataOverrides\VariantOverridesList.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MechDataOverrides\NameOverridesList.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="VehicleClassificationFiles\VehicleBlacklistById.txt">
