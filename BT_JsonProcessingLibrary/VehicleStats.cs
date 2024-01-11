@@ -17,25 +17,25 @@ namespace BT_JsonProcessingLibrary
         //public string EngineCoreId { get; set; } = string.Empty;
         //public int EngineSize { get; set; } = 0;
         public VehicleMovementTypes VehicleMoveType { get; set; }
-        public string HeatsinkTypeId { get; set; } = string.Empty;
-        public string StructureTypeId { get; set; } = string.Empty;
-        public string ArmorTypeId { get; set; } = string.Empty;
-        public double TotalDamage { get; set; } = 0;
-        public double TotalDamageHeat { get; set; } = 0;
-        public double TotalDamageStability { get; set; } = 0;
-        public Dictionary<string, double> StructureByLocation { get; set; } = new Dictionary<string, double>();
-        public Dictionary<string, List<Statisticdata>> StructureModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
-        public double GlobalStructureModifier { get; set; } = 1;
-        public Dictionary<string, double> ArmorByLocation { get; set; } = new Dictionary<string, double>();
-        public Dictionary<string, List<Statisticdata>> ArmorModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
-        public double GlobalArmorModifier { get; set; } = 1;
-        public Dictionary<string, List<EquipmentData>> VehicleGearByLocation { get; set; } = new Dictionary<string, List<EquipmentData>>();
+        //public string HeatsinkTypeId { get; set; } = string.Empty;
+        //public string StructureTypeId { get; set; } = string.Empty;
+        //public string ArmorTypeId { get; set; } = string.Empty;
+        //public double TotalDamage { get; set; } = 0;
+        //public double TotalDamageHeat { get; set; } = 0;
+        //public double TotalDamageStability { get; set; } = 0;
+        //public Dictionary<string, double> StructureByLocation { get; set; } = new Dictionary<string, double>();
+        //public Dictionary<string, List<Statisticdata>> StructureModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
+        //public double GlobalStructureModifier { get; set; } = 1;
+        //public Dictionary<string, double> ArmorByLocation { get; set; } = new Dictionary<string, double>();
+        //public Dictionary<string, List<Statisticdata>> ArmorModifiersByLocation { get; set; } = new Dictionary<string, List<Statisticdata>>();
+        //public double GlobalArmorModifier { get; set; } = 1;
+        //public Dictionary<string, List<EquipmentData>> VehicleGearByLocation { get; set; } = new Dictionary<string, List<EquipmentData>>();
         public override string[] Locations { get; } = { "Front", "Left", "Right", "Rear", "Turret" };
         //public List<EquipmentData> Weapons { get; set; } = new List<EquipmentData>();
         //public List<EquipmentData> Ammo { get; set; } = new List<EquipmentData>();
         //public List<EquipmentData> UtilityGear { get; set; } = new List<EquipmentData>();
-        public double WalkSpeed { get; set; } = 0;
-        public double RunSpeed { get; set; } = 0;
+        //public double WalkSpeed { get; set; } = 0;
+        //public double RunSpeed { get; set; } = 0;
         //public JsonDocument ChassisDefFile { get; set; }
         //public JsonDocument UnitDefFile { get; set; }
         //public List<string> Tags { get; set; } = new List<string>();

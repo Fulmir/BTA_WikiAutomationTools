@@ -44,7 +44,7 @@ namespace BT_JsonProcessingLibrary
         public bool Blacklisted { get; set; }
 
 
-        public UnitStats(string chassisName, string variantName, BasicFileData chassisDef, BasicFileData mechDef)
+        public UnitStats(string chassisName, string variantName, BasicFileData chassisDef, BasicFileData unitDef)
         {
             ChassisName = chassisName;
             VariantName = variantName;
